@@ -1,0 +1,31 @@
+# Phase 2 — AWS S3 + CloudFront deployment via Terraform
+# This workflow will be activated after Vercel deployment is stable.
+# Requires: AWS OIDC trust, S3 remote state bucket, CloudFront distribution.
+
+name: Deploy to AWS (Phase 2)
+
+on:
+  workflow_dispatch:  # Manual trigger only until Phase 2 is ready
+
+jobs:
+  deploy:
+    name: Terraform Apply + S3 Sync
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+      - name: Terraform Init
+        run: terraform init
+        working-directory: ./terraform
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
+        working-directory: ./terraform
