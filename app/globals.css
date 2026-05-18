@@ -1,26 +1,61 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* Class-based dark mode for next-themes */
+@custom-variant dark (&:is(.dark, .dark *));
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jetbrains-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Light mode tokens */
+:root {
+  --bg: #ffffff;
+  --bg-subtle: #f4f4f5;
+  --surface: #fafafa;
+  --border: #e4e4e7;
+  --text: #09090b;
+  --text-muted: #71717a;
+  --accent: #4f46e5;
+  --accent-hover: #4338ca;
+}
+
+/* Dark mode tokens */
+.dark {
+  --bg: #09090b;
+  --bg-subtle: #18181b;
+  --surface: #141416;
+  --border: #27272a;
+  --text: #fafafa;
+  --text-muted: #a1a1aa;
+  --accent: #6366f1;
+  --accent-hover: #818cf8;
+}
+
+* {
+  border-color: var(--border);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Smooth theme transitions */
+*,
+*::before,
+*::after {
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+/* But not for transforms/opacity (would slow animations) */
+[data-framer-component-type],
+[style*='transform'],
+[style*='opacity'] {
+  transition: none;
 }
