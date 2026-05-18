@@ -210,7 +210,7 @@ See `.env.example` for the template.
 | Tempo V2 UI   | `/work/tempo-v2-ui`    | ✅ Live    |
 | Projects      | `/projects`            | 🔨 Planned |
 | outbox-kit    | `/projects/outbox-kit` | 🔨 Planned |
-| Writing       | `/writing`             | 🔨 Planned |
+| Writing       | `/writing`             | ✅ Live    |
 | Life          | `/life`                | ✅ Live    |
 | Now           | `/now`                 | 🔨 Planned |
 | Resume        | `/resume`              | 🔨 Planned |

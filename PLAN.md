@@ -144,8 +144,8 @@
 | PR Reviewer       | `/projects/pr-reviewer`  | 📋     |                                                                                                                                                          |
 | Agentic RAG       | `/projects/agentic-rag`  | 📋     |                                                                                                                                                          |
 | Stock Picker      | `/projects/stock-picker` | 📋     |                                                                                                                                                          |
-| Writing List      | `/writing`               | 📋     | Blog post list                                                                                                                                           |
-| Blog Posts        | `/writing/[slug]`        | 📋     | MDX-driven                                                                                                                                               |
+| Writing List      | `/writing`               | ✅     | 3 peer-reviewed papers (JCSTS, IJCE, Sarcouncil) — external links with abstract + tags                                                                   |
+| Blog Posts        | `/writing/[slug]`        | 📋     | MDX-driven internal posts (planned — current /writing is publications-only)                                                                              |
 | Life              | `/life`                  | 📋     | Strava dashboard (YTD stats + activity feed) · CrossFit, hiking, travel, books, sports (F1/NFL/tennis/cricket), stock market, astronomy, current affairs |
 | Now               | `/now`                   | 📋     | Monthly update: building/reading/doing                                                                                                                   |
 | Resume            | `/resume`                | 📋     | Embedded PDF + download                                                                                                                                  |
