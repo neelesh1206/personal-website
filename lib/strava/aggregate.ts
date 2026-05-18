@@ -113,15 +113,24 @@ function parseLocalDate(localIso: string): Date {
 
 export function computeWeeklyStreak(activities: StravaActivity[]): number {
   if (activities.length === 0) return 0
+
+  const sorted = [...activities].sort(
+    (a, b) => new Date(b.start_date).getTime() - new Date(a.start_date).getTime()
+  )
+  const mostRecent = sorted[0]
+  if (!mostRecent) return 0
+
+  const twoWeeksMs = 14 * 24 * 60 * 60 * 1000
+  if (Date.now() - new Date(mostRecent.start_date).getTime() > twoWeeksMs) return 0
+
   const weeks = new Set(activities.map((a) => isoWeekKey(parseLocalDate(a.start_date_local))))
-  const now = new Date()
-  const todayLocal = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()))
+  const cursor = parseLocalDate(mostRecent.start_date_local)
   let streak = 0
   for (;;) {
-    const key = isoWeekKey(todayLocal)
+    const key = isoWeekKey(cursor)
     if (!weeks.has(key)) break
     streak += 1
-    todayLocal.setUTCDate(todayLocal.getUTCDate() - 7)
+    cursor.setUTCDate(cursor.getUTCDate() - 7)
   }
   return streak
 }
