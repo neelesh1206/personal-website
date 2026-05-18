@@ -14,28 +14,28 @@ A portfolio website built to showcase enterprise-grade full-stack engineering. T
 
 ## Tech Stack
 
-| Layer      | Choice                                   | Why                                                                 |
-| ---------- | ---------------------------------------- | ------------------------------------------------------------------- |
-| Framework  | Next.js 16 (App Router)                  | Latest stable; server components, streaming, built-in metadata API  |
-| Language   | TypeScript — `strict: true`              | `noUncheckedIndexedAccess`, `noImplicitReturns` enabled             |
-| Styling    | Tailwind CSS v4                          | Utility-first; class-based dark mode via `@custom-variant`          |
-| Dark Mode  | next-themes                              | SSR-safe, no flash on load; light default                           |
-| Fonts      | next/font — Inter + JetBrains Mono       | Self-hosted, zero layout shift                                      |
-| Content    | MDX files in `/content`                  | Git-based CMS, no external dependency                               |
-| Database   | Neon (serverless Postgres) + Drizzle ORM | TypeScript-native ORM; serverless driver fits Vercel edge           |
-| Email      | Resend                                   | Resume auto-delivery and new-contact notifications                  |
-| Strava API | Strava v3 (OAuth 2.0, server-side)       | Live activity dashboard on `/life` — refresh-token flow, ISR-cached |
-| Forms      | React Hook Form + Zod                    | Type-safe validation, minimal re-renders                            |
-| Analytics  | Vercel Analytics + Speed Insights        | Privacy-friendly, no cookie banner needed                           |
-| Icons      | lucide-react                             | Tree-shakeable                                                      |
-| Animations | framer-motion (selective)                | Entrance animations only; no gimmicks                               |
-| Testing    | Vitest (unit) + Playwright (E2E)         | Treats own project with production rigor                            |
-| Linting    | ESLint flat config + Prettier            | Enforced style from day one                                         |
-| Git Hooks  | Husky + lint-staged                      | Lint + format on every commit                                       |
-| CI/CD      | GitHub Actions                           | Lint → typecheck → test → build on every PR                         |
-| Deployment | Vercel (Phase 1 active)                  | Auto-deploy on push to `main`, PR previews                          |
-| IaC        | Terraform — AWS S3 + CloudFront + OAC    | Phase 2; scaffolded in repo, OIDC not IAM keys                      |
-| Node       | v24 LTS (pinned via `.nvmrc`)            | Consistent across local, CI, and Vercel                             |
+| Layer      | Choice                                         | Why                                                                 |
+| ---------- | ---------------------------------------------- | ------------------------------------------------------------------- |
+| Framework  | Next.js 16 (App Router)                        | Latest stable; server components, streaming, built-in metadata API  |
+| Language   | TypeScript — `strict: true`                    | `noUncheckedIndexedAccess`, `noImplicitReturns` enabled             |
+| Styling    | Tailwind CSS v4                                | Utility-first; class-based dark mode via `@custom-variant`          |
+| Dark Mode  | next-themes                                    | SSR-safe, no flash on load; light default                           |
+| Fonts      | next/font — Inter + JetBrains Mono             | Self-hosted, zero layout shift                                      |
+| Content    | MDX files in `/content`                        | Git-based CMS, no external dependency                               |
+| Database   | Neon (serverless Postgres) + Drizzle ORM       | TypeScript-native ORM; serverless driver fits Vercel edge           |
+| Email      | Resend                                         | Resume auto-delivery and new-contact notifications                  |
+| Strava API | Strava v3 (OAuth 2.0, server-side)             | Live activity dashboard on `/life` — refresh-token flow, ISR-cached |
+| Forms      | React Hook Form + Zod                          | Type-safe validation, minimal re-renders                            |
+| Analytics  | Vercel Analytics + Speed Insights              | Privacy-friendly, no cookie banner needed                           |
+| Icons      | lucide-react                                   | Tree-shakeable                                                      |
+| Animations | framer-motion (selective)                      | Entrance animations only; no gimmicks                               |
+| Testing    | Vitest (unit, 95% coverage) + Playwright (E2E) | v8 coverage with 70% threshold per metric, enforced in CI           |
+| Linting    | ESLint flat config + Prettier                  | Enforced style from day one                                         |
+| Git Hooks  | Husky + lint-staged                            | Lint + format on every commit                                       |
+| CI/CD      | GitHub Actions                                 | Lint → typecheck → test → build on every PR                         |
+| Deployment | Vercel (Phase 1 active)                        | Auto-deploy on push to `main`, PR previews                          |
+| IaC        | Terraform — AWS S3 + CloudFront + OAC          | Phase 2; scaffolded in repo, OIDC not IAM keys                      |
+| Node       | v24 LTS (pinned via `.nvmrc`)                  | Consistent across local, CI, and Vercel                             |
 
 ---
 
@@ -139,6 +139,8 @@ npm run lint          # ESLint
 npm run format        # Prettier write
 npm run format:check  # Prettier check (used in CI)
 npm run test          # Vitest unit tests
+npm run test:coverage # Vitest unit tests + v8 coverage report (./coverage/)
+npm run test:watch    # Vitest in watch mode
 npm run test:e2e      # Playwright E2E tests
 npm run db:generate   # generate Drizzle migration
 npm run db:migrate    # apply migrations to Neon (uses .env.local)
@@ -153,8 +155,12 @@ npm run db:studio     # Drizzle Studio GUI
 Every pull request runs `.github/workflows/ci.yml`:
 
 ```
-Format check → ESLint → TypeScript → Vitest → Next.js build
+Format check → ESLint → TypeScript → Vitest (+ coverage) → Next.js build
 ```
+
+Coverage report is uploaded as a workflow artifact (`coverage-report`, 14-day retention). Per-metric threshold is **70%** (statements / branches / functions / lines); the build fails if coverage regresses below that. Current floor: ~95%.
+
+Open `coverage/index.html` locally after `npm run test:coverage` to browse the line-by-line report.
 
 Merge to `main` → Vercel auto-deploys.
 
