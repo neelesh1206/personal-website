@@ -11,6 +11,8 @@ export const defaultMetadata: Metadata = {
   description:
     'Senior Full-Stack Software Engineer with 8+ years at Walmart Global Tech. Built systems that scaled Walmart homepages 150x. Next.js, TypeScript, Java, distributed systems.',
   authors: [{ name: 'Neelesh Kakaraparthi', url: siteUrl }],
+  // sameAs used for JSON-LD Person schema
+
   creator: 'Neelesh Kakaraparthi',
   openGraph: {
     type: 'website',

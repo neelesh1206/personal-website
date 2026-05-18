@@ -5,7 +5,7 @@
 name: Deploy to AWS (Phase 2)
 
 on:
-  workflow_dispatch:  # Manual trigger only until Phase 2 is ready
+  workflow_dispatch: # Manual trigger only until Phase 2 is ready
 
 jobs:
   deploy:

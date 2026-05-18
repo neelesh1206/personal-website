@@ -67,7 +67,7 @@ export function Footer() {
               <GitHubIcon />
             </a>
             <a
-              href="https://linkedin.com/in/neelesh-kakaraparthi"
+              href="https://www.linkedin.com/in/neelesh-kakaraparthi-161b8554/"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="LinkedIn"
