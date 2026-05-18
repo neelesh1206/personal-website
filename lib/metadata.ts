@@ -14,6 +14,25 @@ export const defaultMetadata: Metadata = {
   // sameAs used for JSON-LD Person schema
 
   creator: 'Neelesh Kakaraparthi',
+  applicationName: 'Neelesh Kakaraparthi',
+  keywords: [
+    'Neelesh Kakaraparthi',
+    'Neelesh',
+    'Kakaraparthi',
+    'Senior Full-Stack Software Engineer',
+    'Staff SWE',
+    'Walmart Global Tech',
+    'PRISM',
+    'Tempo',
+    'Next.js',
+    'TypeScript',
+    'Java',
+    'Spring Boot',
+    'Distributed Systems',
+    'Redmond WA',
+    'Seattle',
+  ],
+  alternates: { canonical: siteUrl },
   openGraph: {
     type: 'website',
     locale: 'en_US',

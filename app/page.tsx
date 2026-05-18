@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { ArrowRight, MapPin, Hammer, BookOpen, Compass } from 'lucide-react'
 import { defaultMetadata } from '@/lib/metadata'
 import { caseStudies } from '@/lib/case-studies/data'
+import { HomePageJsonLd } from '@/components/seo/JsonLd'
 
 export const metadata = defaultMetadata
 
@@ -36,6 +37,7 @@ const featuredProjects = [
 export default function HomePage() {
   return (
     <div className="mx-auto max-w-5xl px-4 sm:px-6">
+      <HomePageJsonLd />
       {/* ── Hero ─────────────────────────────────────────────────── */}
       <section className="flex min-h-[calc(100vh-4rem)] flex-col justify-center py-20">
         {/* Availability badge */}
