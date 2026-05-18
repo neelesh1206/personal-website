@@ -9,23 +9,10 @@ export type StravaAthlete = {
   profile_medium: string
 }
 
-export type StravaActivityType =
-  | 'Run'
-  | 'Ride'
-  | 'Hike'
-  | 'Walk'
-  | 'Swim'
-  | 'WeightTraining'
-  | 'Workout'
-  | 'Yoga'
-  | 'VirtualRide'
-  | 'TrailRun'
-  | string
-
 export type StravaActivity = {
   id: number
   name: string
-  type: StravaActivityType
+  type: string
   sport_type: string
   start_date: string
   start_date_local: string
@@ -39,6 +26,7 @@ export type StravaActivity = {
   max_heartrate?: number
   kudos_count: number
   achievement_count: number
+  pr_count?: number
 }
 
 export type StravaTotals = {
@@ -49,8 +37,8 @@ export type StravaTotals = {
 }
 
 export type StravaAthleteStats = {
-  biggest_ride_distance: number
-  biggest_climb_elevation_gain: number
+  biggest_ride_distance: number | null
+  biggest_climb_elevation_gain: number | null
   recent_run_totals: StravaTotals
   recent_ride_totals: StravaTotals
   recent_swim_totals: StravaTotals
@@ -62,9 +50,37 @@ export type StravaAthleteStats = {
   all_swim_totals: StravaTotals
 }
 
+export type SportGroup = 'Run' | 'Hike' | 'Ride' | 'Swim' | 'Training' | 'Other'
+
+export type SportTotals = StravaTotals & {
+  sport: SportGroup
+  longest_distance: number
+  biggest_climb: number
+}
+
+export type LastFourWeeks = {
+  count: number
+  distance: number
+  moving_time: number
+  elevation_gain: number
+  activitiesPerWeek: number
+  avgDistancePerWeek: number
+  avgElevationPerWeek: number
+  avgTimePerWeek: number
+}
+
 export type StravaDashboardData = {
   athlete: StravaAthlete
-  stats: StravaAthleteStats
+  ytdBySport: SportTotals[]
+  ytdTotal: StravaTotals
+  allTimeTotal: StravaTotals
+  lastFourWeeks: LastFourWeeks
+  streakWeeks: number
+  ytdPrCount: number
+  ytdAchievementCount: number
+  biggestClimbEverFt: number
+  longestRunMi: number
+  longestRideMi: number
   recentActivities: StravaActivity[]
   fetchedAt: string
 }
