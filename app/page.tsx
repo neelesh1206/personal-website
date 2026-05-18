@@ -1,33 +1,14 @@
 import Link from 'next/link'
 import { ArrowRight, MapPin, Hammer, BookOpen, Compass } from 'lucide-react'
 import { defaultMetadata } from '@/lib/metadata'
+import { caseStudies } from '@/lib/case-studies/data'
 
 export const metadata = defaultMetadata
 
-const featuredWork = [
-  {
-    slug: 'prism',
-    tag: 'Case Study',
-    title: 'PRISM — cxt-msg-asset-service',
-    description:
-      'Designed and built the content-messaging system-of-record that scaled Walmart homepages from 20 to 3,500+ — powering personalisation across 38 storefronts.',
-    metrics: ['150× homepage scale', '+6.8% ATF CTR', '+16% page-build efficiency'],
-    stack: ['Java 21', 'Spring Boot', 'Kafka', 'PostgreSQL'],
-    accent: 'from-indigo-500/10 to-purple-500/10 dark:from-indigo-500/5 dark:to-purple-500/5',
-    border: 'hover:border-indigo-300 dark:hover:border-indigo-700',
-  },
-  {
-    slug: 'tempo-v3',
-    tag: 'Case Study',
-    title: 'Tempo V3 UI + Fastify BFF',
-    description:
-      "Led the full-stack migration of Walmart's merchant authoring tool from Electrode V1 to Next.js 15 + Fastify BFF — live across 38 storefronts, first end-to-end distributed tracing in Tempo's history.",
-    metrics: ['38 storefronts', '>92% trace propagation', '~60% build time reduction'],
-    stack: ['Next.js 15', 'TypeScript', 'Fastify', 'GKE'],
-    accent: 'from-sky-500/10 to-cyan-500/10 dark:from-sky-500/5 dark:to-cyan-500/5',
-    border: 'hover:border-sky-300 dark:hover:border-sky-700',
-  },
-]
+const FEATURED_SLUGS = ['prism-backend', 'tempo-v3-ui', 'tempo-runtime']
+const featuredWork = FEATURED_SLUGS.map((slug) => caseStudies.find((c) => c.slug === slug)!).filter(
+  Boolean
+)
 
 const featuredProjects = [
   {
@@ -149,59 +130,108 @@ export default function HomePage() {
           </Link>
         </div>
 
-        <div className="grid gap-5 sm:grid-cols-2">
+        <div className="grid gap-5 lg:grid-cols-3">
           {featuredWork.map((item) => (
             <Link
               key={item.slug}
               href={`/work/${item.slug}`}
-              className={`group relative overflow-hidden rounded-2xl border border-zinc-200 bg-gradient-to-br p-6 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg dark:border-zinc-800 dark:hover:shadow-zinc-900/50 ${item.accent} ${item.border}`}
+              className={`group relative flex flex-col gap-4 overflow-hidden rounded-2xl border border-zinc-200 bg-gradient-to-br p-6 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg dark:border-zinc-800 dark:hover:shadow-zinc-900/50 ${item.accent.gradient} ${item.accent.border}`}
             >
-              {/* Tag */}
-              <span className="mb-3 inline-block text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
-                {item.tag}
+              <span
+                className={`text-xs font-semibold uppercase tracking-wider ${item.accent.text}`}
+              >
+                {item.platformLabel}
               </span>
 
-              {/* Title */}
-              <h3 className="mb-2 text-lg font-bold text-zinc-900 dark:text-zinc-50">
-                {item.title}
-              </h3>
+              <div>
+                <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-50">{item.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">
+                  {item.tagline}
+                </p>
+              </div>
 
-              {/* Description */}
-              <p className="mb-4 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
-                {item.description}
-              </p>
-
-              {/* Metrics */}
-              <div className="mb-4 flex flex-wrap gap-2">
-                {item.metrics.map((m) => (
+              <div className="flex flex-wrap gap-1.5">
+                {item.metrics.slice(0, 3).map((m) => (
                   <span
-                    key={m}
-                    className="rounded-full bg-white/80 px-2.5 py-1 text-xs font-semibold text-zinc-700 ring-1 ring-zinc-200 dark:bg-zinc-800/80 dark:text-zinc-300 dark:ring-zinc-700"
+                    key={m.label}
+                    className="rounded-md bg-white/70 px-2 py-1 text-xs ring-1 ring-zinc-200 dark:bg-zinc-900/60 dark:ring-zinc-700"
                   >
-                    {m}
+                    <strong className="tabular-nums text-zinc-900 dark:text-zinc-50">
+                      {m.value}
+                    </strong>{' '}
+                    <span className="text-zinc-500 dark:text-zinc-400">{m.label}</span>
                   </span>
                 ))}
               </div>
 
-              {/* Stack */}
               <div className="flex flex-wrap gap-1.5">
-                {item.stack.map((s) => (
+                {item.stack.slice(0, 4).map((s) => (
                   <span
                     key={s}
-                    className="rounded px-2 py-0.5 text-xs text-zinc-500 ring-1 ring-zinc-200 dark:text-zinc-500 dark:ring-zinc-700"
+                    className="rounded px-2 py-0.5 text-[11px] text-zinc-500 ring-1 ring-zinc-200 dark:text-zinc-400 dark:ring-zinc-700"
                   >
                     {s}
                   </span>
                 ))}
               </div>
 
-              {/* Read more */}
-              <div className="mt-4 flex items-center gap-1 text-sm font-medium text-indigo-600 dark:text-indigo-400">
+              <div className="mt-auto flex items-center gap-1 text-sm font-medium text-zinc-900 dark:text-zinc-50">
                 Read case study
                 <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
               </div>
             </Link>
           ))}
+        </div>
+      </section>
+
+      {/* ── Platform Map ───────────────────────────────────────────── */}
+      <section className="mb-20">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+            Platform map
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm text-zinc-600 dark:text-zinc-400">
+            Two platforms, six interlocking services. PRISM owns the content model; Tempo owns the
+            rendering model. They meet at the storefront.
+          </p>
+        </div>
+        <div className="overflow-x-auto rounded-2xl border border-zinc-200 dark:border-zinc-800">
+          <table className="w-full text-sm">
+            <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:bg-zinc-900/50 dark:text-zinc-400">
+              <tr>
+                <th className="px-4 py-3">Service</th>
+                <th className="px-4 py-3">Platform</th>
+                <th className="px-4 py-3">Role</th>
+                <th className="px-4 py-3 hidden md:table-cell">Hot path</th>
+                <th className="px-4 py-3 hidden sm:table-cell">Stack</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+              {caseStudies.map((cs) => (
+                <tr
+                  key={cs.slug}
+                  className="transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-900/40"
+                >
+                  <td className="px-4 py-3">
+                    <Link
+                      href={`/work/${cs.slug}`}
+                      className="font-medium text-zinc-900 hover:text-indigo-600 dark:text-zinc-50 dark:hover:text-indigo-400"
+                    >
+                      {cs.title}
+                    </Link>
+                  </td>
+                  <td className={`px-4 py-3 font-medium ${cs.accent.text}`}>{cs.platformLabel}</td>
+                  <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">{cs.role}</td>
+                  <td className="px-4 py-3 hidden md:table-cell text-zinc-500 dark:text-zinc-400">
+                    {cs.customerFacing ? 'Customer-facing' : 'Authoring'}
+                  </td>
+                  <td className="px-4 py-3 hidden sm:table-cell text-zinc-500 dark:text-zinc-400">
+                    {cs.stack.slice(0, 3).join(' · ')}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </section>
 

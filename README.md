@@ -76,6 +76,7 @@ The `/life` page renders a live Strava activity dashboard — YTD distance, all-
 
 - **Visitor contact form** (`/connect`) — Zod-validated, persists to Neon, auto-sends resume PDF via Resend, notifies owner.
 - **Live Strava dashboard** (`/life`) — YTD run/ride/swim totals, all-time stats, recent activities. Server-side OAuth refresh-token flow, ISR-cached hourly; credentials never reach the browser. See architecture note above.
+- **Six production case studies** (`/work`) — PRISM (backend + UI) and Tempo (V3 UI, Service, Runtime, V2 UI) — sourced from project biographies, rendered from a single typed data file (`lib/case-studies/data.ts`), with platform grouping, metric chips, problem/architecture/shipped sections, and prev/next nav. Statically generated via `generateStaticParams`.
 - **Dark / light mode** — class-based via `next-themes`, light default, no flash on load.
 - **Mobile-first responsive layout**, full a11y semantics, JSON-LD Person schema for SEO.
 - **Vercel Analytics + Speed Insights** — privacy-friendly, cookieless.
@@ -196,21 +197,24 @@ See `.env.example` for the template.
 
 ## Pages
 
-| Page         | Route                  | Status     |
-| ------------ | ---------------------- | ---------- |
-| Home         | `/`                    | ✅ Live    |
-| About        | `/about`               | 🔨 Planned |
-| Case Studies | `/work`                | 🔨 Planned |
-| PRISM        | `/work/prism`          | 🔨 Planned |
-| Tempo V3     | `/work/tempo-v3`       | 🔨 Planned |
-| Tango        | `/work/tango`          | 🔨 Planned |
-| Projects     | `/projects`            | 🔨 Planned |
-| outbox-kit   | `/projects/outbox-kit` | 🔨 Planned |
-| Writing      | `/writing`             | 🔨 Planned |
-| Life         | `/life`                | ✅ Live    |
-| Now          | `/now`                 | 🔨 Planned |
-| Resume       | `/resume`              | 🔨 Planned |
-| Connect      | `/connect`             | 🔨 Planned |
+| Page          | Route                  | Status     |
+| ------------- | ---------------------- | ---------- |
+| Home          | `/`                    | ✅ Live    |
+| About         | `/about`               | 🔨 Planned |
+| Case Studies  | `/work`                | ✅ Live    |
+| PRISM Backend | `/work/prism-backend`  | ✅ Live    |
+| Prism V3 UI   | `/work/prism-ui`       | ✅ Live    |
+| Tempo V3 UI   | `/work/tempo-v3-ui`    | ✅ Live    |
+| Tempo Service | `/work/tempo-service`  | ✅ Live    |
+| Tempo Runtime | `/work/tempo-runtime`  | ✅ Live    |
+| Tempo V2 UI   | `/work/tempo-v2-ui`    | ✅ Live    |
+| Projects      | `/projects`            | 🔨 Planned |
+| outbox-kit    | `/projects/outbox-kit` | 🔨 Planned |
+| Writing       | `/writing`             | 🔨 Planned |
+| Life          | `/life`                | ✅ Live    |
+| Now           | `/now`                 | 🔨 Planned |
+| Resume        | `/resume`              | 🔨 Planned |
+| Connect       | `/connect`             | 🔨 Planned |
 
 ---
 

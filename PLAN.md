@@ -128,25 +128,28 @@
 
 ### Status Key: ✅ Done · 🔨 In Progress · 📋 Planned
 
-| Page                | Route                    | Status | Notes                                                                                                                                                    |
-| ------------------- | ------------------------ | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Home                | `/`                      | ✅     | Hero, currently strip, featured work, projects, connect CTA                                                                                              |
-| About               | `/about`                 | 📋     | Bio, career arc, 3 things I'm known for                                                                                                                  |
-| Case Studies List   | `/work`                  | 📋     | Cards for all 3 case studies                                                                                                                             |
-| PRISM Case Study    | `/work/prism`            | 📋     | Full PCODR write-up with diagrams                                                                                                                        |
-| Tempo V3 Case Study | `/work/tempo-v3`         | 📋     | Full PCODR write-up with diagrams                                                                                                                        |
-| Tango Case Study    | `/work/tango`            | 📋     | Shorter supporting case study                                                                                                                            |
-| Projects List       | `/projects`              | 📋     | Cards for all 4 projects                                                                                                                                 |
-| outbox-kit          | `/projects/outbox-kit`   | 📋     |                                                                                                                                                          |
-| PR Reviewer         | `/projects/pr-reviewer`  | 📋     |                                                                                                                                                          |
-| Agentic RAG         | `/projects/agentic-rag`  | 📋     |                                                                                                                                                          |
-| Stock Picker        | `/projects/stock-picker` | 📋     |                                                                                                                                                          |
-| Writing List        | `/writing`               | 📋     | Blog post list                                                                                                                                           |
-| Blog Posts          | `/writing/[slug]`        | 📋     | MDX-driven                                                                                                                                               |
-| Life                | `/life`                  | 📋     | Strava dashboard (YTD stats + activity feed) · CrossFit, hiking, travel, books, sports (F1/NFL/tennis/cricket), stock market, astronomy, current affairs |
-| Now                 | `/now`                   | 📋     | Monthly update: building/reading/doing                                                                                                                   |
-| Resume              | `/resume`                | 📋     | Embedded PDF + download                                                                                                                                  |
-| Connect             | `/connect`               | 📋     | Visitor form + auto resume delivery                                                                                                                      |
+| Page              | Route                    | Status | Notes                                                                                                                                                    |
+| ----------------- | ------------------------ | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Home              | `/`                      | ✅     | Hero, currently strip, featured work, projects, connect CTA                                                                                              |
+| About             | `/about`                 | 📋     | Bio, career arc, 3 things I'm known for                                                                                                                  |
+| Case Studies List | `/work`                  | ✅     | Platform-grouped (PRISM, Tempo); 6 cards                                                                                                                 |
+| PRISM Backend     | `/work/prism-backend`    | ✅     | cxt-msg-asset-service — Java 21, partitioned PG, Forklift outbox                                                                                         |
+| Prism V3 UI       | `/work/prism-ui`         | ✅     | Next.js 15 editor unifying asset/request/message flows                                                                                                   |
+| Tempo V3 UI       | `/work/tempo-v3-ui`      | ✅     | Lead frontend/BFF; Fastify proxy fanning out to 15 services                                                                                              |
+| Tempo Service     | `/work/tempo-service`    | ✅     | Java 17 authoring backend; Oracle → GCP Postgres                                                                                                         |
+| Tempo Runtime     | `/work/tempo-runtime`    | ✅     | Node → Go, Cosmos → Cassandra; 82% memory, 18× cold start                                                                                                |
+| Tempo V2 UI       | `/work/tempo-v2-ui`      | ✅     | Legacy editor (sunset); versioning + RBAC + dynamic forms                                                                                                |
+| Projects List     | `/projects`              | 📋     | Cards for all 4 projects                                                                                                                                 |
+| outbox-kit        | `/projects/outbox-kit`   | 📋     |                                                                                                                                                          |
+| PR Reviewer       | `/projects/pr-reviewer`  | 📋     |                                                                                                                                                          |
+| Agentic RAG       | `/projects/agentic-rag`  | 📋     |                                                                                                                                                          |
+| Stock Picker      | `/projects/stock-picker` | 📋     |                                                                                                                                                          |
+| Writing List      | `/writing`               | 📋     | Blog post list                                                                                                                                           |
+| Blog Posts        | `/writing/[slug]`        | 📋     | MDX-driven                                                                                                                                               |
+| Life              | `/life`                  | 📋     | Strava dashboard (YTD stats + activity feed) · CrossFit, hiking, travel, books, sports (F1/NFL/tennis/cricket), stock market, astronomy, current affairs |
+| Now               | `/now`                   | 📋     | Monthly update: building/reading/doing                                                                                                                   |
+| Resume            | `/resume`                | 📋     | Embedded PDF + download                                                                                                                                  |
+| Connect           | `/connect`               | 📋     | Visitor form + auto resume delivery                                                                                                                      |
 
 ---
 
@@ -156,11 +159,16 @@
 
 Each case study: **Problem → Constraints → Options Evaluated → Decision + Architecture → Result → Lessons**
 
-| Case Study                    | Headline Metric                                     | Status |
-| ----------------------------- | --------------------------------------------------- | ------ |
-| PRISM `cxt-msg-asset-service` | 150× homepage scale, +6.8% CTR                      | 📋     |
-| Tempo V3 UI + Fastify BFF     | 38 storefronts, >92% trace propagation              | 📋     |
-| Tango — Taxonomy Management   | Sub-second editor, replaced ticket-driven workflows | 📋     |
+| Case Study                    | Headline Metric                                        | Status |
+| ----------------------------- | ------------------------------------------------------ | ------ |
+| PRISM `cxt-msg-asset-service` | 150× homepage scale, +6.8% CTR, 12k msgs / 24k assets  | ✅     |
+| Prism V3 UI                   | Unifies asset/request/message workflows; 6 services    | ✅     |
+| Tempo V3 UI + Fastify BFF     | 38 storefronts, >92% trace propagation, 15-service BFF | ✅     |
+| Tempo Service                 | ~27 TPS authoring, 38 tenants, Oracle → GCP Postgres   | ✅     |
+| Tempo Runtime (Go rewrite)    | 82% memory ↓, 18× cold start ↓, 100K reads/sec/region  | ✅     |
+| Tempo V2 UI                   | Versioning + diff, tenant×pageType RBAC, dynamic forms | ✅     |
+
+**Source of truth:** project biographies under `/Users/neelesh/Downloads/project-biographies/*.md`. Rendered from a single typed data file (`lib/case-studies/data.ts`) — slug, metrics, problem, structured sections, "what I shipped" bullets, stack. Statically generated via `generateStaticParams` so each `/work/<slug>` is prerendered.
 
 ### Projects
 
