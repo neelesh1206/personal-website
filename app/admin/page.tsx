@@ -38,19 +38,20 @@ export default async function AdminPage() {
         <div>
           <p className="text-sm font-medium text-indigo-600 dark:text-indigo-400">Admin</p>
           <h1 className="mt-1 text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-            Visitor analytics
+            Contact submissions
           </h1>
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            Contact form submissions. Vercel Analytics covers page views — see your{' '}
+          <p className="mt-1 max-w-2xl text-sm text-zinc-500 dark:text-zinc-400">
+            Form submissions from <code>/connect</code>. For page-view analytics (visitors,
+            referrers, devices, Core Web Vitals), see the{' '}
             <a
-              href="https://vercel.com/neelesh1206/personal-website/analytics"
+              href="https://vercel.com/neelesh1206s-projects/personal-website/analytics"
               target="_blank"
               rel="noopener noreferrer"
               className="text-indigo-600 hover:underline dark:text-indigo-400"
             >
-              Vercel dashboard
-            </a>{' '}
-            for those.
+              Vercel Analytics dashboard
+            </a>
+            .
           </p>
         </div>
         <form action="/api/admin/logout" method="POST">
