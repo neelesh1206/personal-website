@@ -61,6 +61,18 @@ Native CSS cascade layers and `@theme` directive — no `tailwind.config.ts` nee
 
 Vercel handles the live site with zero config. The Terraform code in `/terraform` provisions S3 + CloudFront with OAC (not legacy OAI) and GitHub Actions OIDC trust — no long-lived IAM keys. Phase 2 activates after Vercel v1 is stable.
 
+### Why lazy-init the Neon + Resend clients
+
+`lib/db/index.ts` and `lib/email/resend.ts` defer client construction until first use (Proxy wrapper for Drizzle, lazy getter for Resend). Reason: Next imports route modules during page-data collection on every build — and CI doesn't have `DATABASE_URL` or `RESEND_API_KEY`. Eager construction (`neon(process.env.DATABASE_URL!)` at module load) would crash the build the moment a route imported a query helper. Lazy init means the modules import cleanly without credentials and only fail when an actual request needs them — a much narrower blast radius.
+
+### SEO posture
+
+Three layers:
+
+1. **Discoverability** — `app/sitemap.ts` enumerates all live URLs (static + case-study slugs from `lib/case-studies/data.ts`). `app/robots.ts` allows everything except `/admin` and `/api/*`. Both submitted to Google Search Console + Bing Webmaster.
+2. **Identity** — `<HomePageJsonLd />` injects `schema.org/Person` + `schema.org/WebSite` with `sameAs` pointers at LinkedIn, GitHub, Strava, and the three published papers. This is what Google uses to merge identity for name-search and knowledge-panel surfacing.
+3. **Per-page metadata** — `lib/metadata.ts` exports a `defaultMetadata` template with canonical URL, OG, Twitter card, and a keywords array. Every page uses `createMetadata({ title, description })` to merge in page-specific copy.
+
 ### Why server-side Strava (not client-side fetch)
 
 The `/life` page renders a live Strava activity dashboard — YTD distance, all-time totals, recent activities. The OAuth refresh-token flow runs entirely on the server: `STRAVA_CLIENT_SECRET` and `STRAVA_REFRESH_TOKEN` never reach the browser. Tokens are exchanged inside a Server Component, the dashboard renders with `revalidate: 3600` (ISR, hourly), and the token itself is cached for 5h (under the 6h Strava access-token TTL). Net effect: one API call per hour per region — not per visitor — and zero secrets exposed client-side. See `lib/strava/client.ts`.
@@ -77,7 +89,7 @@ The `/life` page renders a live Strava activity dashboard — YTD distance, all-
 - **Live Strava dashboard** (`/life`) — YTD run/ride/swim totals, all-time stats, recent activities. Server-side OAuth refresh-token flow, ISR-cached hourly; credentials never reach the browser. See architecture note above.
 - **Contact form** (`/connect`) — Zod-validated React Hook Form, hidden honeypot, server route saves to Neon then fans out two Resend emails in parallel (visitor copy + owner notification). Success/error states inline; the form clears on success.
 - **Owner-only admin dashboard** (`/admin`) — HMAC-signed session cookie (no third-party auth), 30-day activity bar chart, all-time / 30d / 7d counters, and a sortable submissions table. `/robots.txt` blocks crawlers from both `/admin` and `/api/*`.
-- **First-party visitor analytics** — privacy-conscious page-view counter (`page_views` table in Neon). Visitor identity is SHA-256(IP + UA + daily-salt), rotates at UTC midnight, never stored as PII. Client beacon (`<TrackPageView />`) fires once per pathname change; server route filters bots, dedupes via `UNIQUE (path, visitor_hash, view_date)`, and counts unique visitors with `COUNT(DISTINCT visitor_hash)`. Home page shows the live total via ISR (`revalidate: 300`). Complements Vercel Analytics — that's the page-view dashboard, this is the count you publicly display.
+- **First-party visitor analytics** — privacy-conscious page-view counter (`page_views` table in Neon). Visitor identity is SHA-256(IP + UA + daily-salt), rotates at UTC midnight, never stored as PII. Client beacon (`<TrackPageView />`) fires once per pathname change; server route filters bots and skip-listed paths, dedupes via `UNIQUE (path, visitor_hash, view_date)`. Home page renders a 3-card strip under the connect CTA — unique visitors / visitors today / page views — refreshed every 5 min via ISR (`revalidate: 300`). Complements Vercel Analytics: that's the page-view dashboard owned by Vercel; this is the count you publicly display, owned by you.
 - **Code-generated NK favicon** — `app/icon.tsx` + `app/apple-icon.tsx` render PNGs via `next/og` at the edge (no committed binary).
 - **Six production case studies** (`/work`) — PRISM (backend + UI) and Tempo (V3 UI, Service, Runtime, V2 UI) — sourced from project biographies, rendered from a single typed data file (`lib/case-studies/data.ts`), with platform grouping, metric chips, problem/architecture/shipped sections, and prev/next nav. Statically generated via `generateStaticParams`.
 - **Dark / light mode** — class-based via `next-themes`, light default, no flash on load.
@@ -109,7 +121,9 @@ nvm use                   # switches to Node 24 via .nvmrc
 npm install
 
 cp .env.example .env.local
-# Fill in: DATABASE_URL, RESEND_API_KEY, NEXT_PUBLIC_SITE_URL, CONTACT_NOTIFICATION_EMAIL
+# Fill in (see Environment Variables table below): DATABASE_URL, RESEND_API_KEY,
+# RESEND_FROM_ADDRESS, NEXT_PUBLIC_SITE_URL, CONTACT_NOTIFICATION_EMAIL,
+# ADMIN_PASSWORD, ANALYTICS_SALT, STRAVA_* (optional), PUBLIC_RESUME_URL (optional)
 
 npm run db:migrate        # creates contacts table in Neon dev branch
 npm run dev               # http://localhost:3000
@@ -127,7 +141,8 @@ npm run format:check  # Prettier check (used in CI)
 npm run test          # Vitest unit tests
 npm run test:e2e      # Playwright E2E tests
 npm run db:generate   # generate Drizzle migration
-npm run db:migrate    # apply migrations to Neon
+npm run db:migrate    # apply migrations to Neon (uses .env.local)
+npm run db:migrate:ci # apply migrations using DATABASE_URL from env (CI/CD only)
 npm run db:studio     # Drizzle Studio GUI
 ```
 

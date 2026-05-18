@@ -2,13 +2,22 @@
 
 # Claude Instructions for This Project
 
-## On Every Commit
+## On Every Commit — Non-Negotiable
 
-Before committing any code changes, always:
+Before staging files for a commit, run this checklist. Don't skip steps because "the change is small" — small changes accumulate into README drift, which is what just landed me in trouble.
 
-1. **Update `README.md`** — keep the Pages status table current (✅ Live / 🔨 Planned), reflect any new tech stack additions, and update architecture decisions if a new decision was made.
+1. **Update `README.md`** when the commit touches any of:
+   - A new user-facing route → update the **Pages** status table (✅ Live)
+   - A new feature → add a bullet under **Features**
+   - A new tech-stack choice or architectural pattern → row in the **Tech Stack** table and/or an **Architecture Decisions** subsection
+   - A new env var → row in the **Environment Variables** table
+   - A new npm script → line in the **Scripts** block
+   - A new workflow → mention under **CI/CD** or **DB Migrations**
+2. **Update `PLAN.md`** — mark completed items with ✅, add any new requirements discovered during implementation, update the Open Items list.
 
-2. **Update `PLAN.md`** — mark completed items with `[x]`, add any new requirements discovered during implementation, update the Open Items list.
+If a commit truly has no surface-area change worth documenting (e.g., a hotfix that touches a single line of internal logic), state that explicitly in the commit body — don't silently skip.
+
+Stage README/PLAN changes in the same commit as the code change. Don't push a "docs: update README" follow-up commit; the change belongs with the change that caused it.
 
 ## Coding Conventions
 
