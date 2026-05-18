@@ -119,28 +119,6 @@ export default async function HomePage() {
             <Compass size={14} className="text-indigo-500" />
             <span>Exploring Staff SWE opportunities</span>
           </div>
-          {stats.totalVisitors > 0 ? (
-            <>
-              <div className="hidden h-1 w-1 rounded-full bg-zinc-300 dark:bg-zinc-600 sm:block" />
-              <div
-                className="flex items-center gap-2 text-zinc-700 dark:text-zinc-300"
-                title={`${stats.totalViews.toLocaleString()} all-time page views`}
-              >
-                <Users size={14} className="text-indigo-500" />
-                <span>
-                  <strong className="tabular-nums text-zinc-900 dark:text-zinc-50">
-                    {stats.totalVisitors.toLocaleString()}
-                  </strong>{' '}
-                  unique visitor{stats.totalVisitors === 1 ? '' : 's'}
-                  <span className="text-zinc-400 dark:text-zinc-500"> · </span>
-                  <strong className="tabular-nums text-zinc-900 dark:text-zinc-50">
-                    {stats.visitorsToday.toLocaleString()}
-                  </strong>{' '}
-                  today
-                </span>
-              </div>
-            </>
-          ) : null}
         </div>
       </section>
 
@@ -328,7 +306,7 @@ export default async function HomePage() {
       </section>
 
       {/* ── Connect CTA ────────────────────────────────────────────── */}
-      <section className="mb-20 rounded-2xl bg-indigo-600 px-8 py-12 text-center dark:bg-indigo-600/90">
+      <section className="mb-8 rounded-2xl bg-indigo-600 px-8 py-12 text-center dark:bg-indigo-600/90">
         <h2 className="mb-2 text-2xl font-bold text-white">Want to reach out?</h2>
         <p className="mb-6 text-indigo-200">
           Leave your email and I&apos;ll send you my resume directly.
@@ -340,6 +318,61 @@ export default async function HomePage() {
           Get in touch <ArrowRight size={16} />
         </Link>
       </section>
+
+      {/* ── Site analytics strip ───────────────────────────────────── */}
+      <section
+        aria-label="Site visitor metrics"
+        className="mb-20 grid grid-cols-2 gap-3 sm:grid-cols-3"
+      >
+        <Metric
+          icon={Users}
+          label="Unique visitors"
+          value={stats.totalVisitors}
+          hint="distinct people, all time"
+        />
+        <Metric
+          icon={Users}
+          label="Visitors today"
+          value={stats.visitorsToday}
+          hint="resets at UTC midnight"
+        />
+        <Metric
+          icon={Users}
+          label="Page views"
+          value={stats.totalViews}
+          hint="every page load, deduped per visitor per day"
+          className="hidden sm:flex"
+        />
+      </section>
+    </div>
+  )
+}
+
+function Metric({
+  icon: Icon,
+  label,
+  value,
+  hint,
+  className = '',
+}: {
+  icon: typeof Users
+  label: string
+  value: number
+  hint: string
+  className?: string
+}) {
+  return (
+    <div
+      className={`flex flex-col rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950 ${className}`}
+    >
+      <div className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+        <Icon size={12} />
+        {label}
+      </div>
+      <div className="mt-2 text-2xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">
+        {value.toLocaleString()}
+      </div>
+      <div className="mt-1 text-[11px] text-zinc-400 dark:text-zinc-500">{hint}</div>
     </div>
   )
 }
