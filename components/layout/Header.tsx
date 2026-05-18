@@ -8,11 +8,11 @@ import { ThemeToggle } from './ThemeToggle'
 import { cn } from '@/lib/utils'
 
 const navLinks = [
-  { href: '/work', label: 'Work' },
-  { href: '/projects', label: 'Projects' },
-  { href: '/writing', label: 'Writing' },
-  { href: '/life', label: 'Life' },
-  { href: '/now', label: 'Now' },
+  { href: '/work', label: 'Work', priority: true },
+  { href: '/projects', label: 'Projects', priority: false },
+  { href: '/writing', label: 'Writing', priority: false },
+  { href: '/life', label: 'Life', priority: true },
+  { href: '/now', label: 'Now', priority: false },
 ]
 
 export function Header() {
@@ -39,17 +39,18 @@ export function Header() {
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-sm font-bold text-white">
             NK
           </span>
-          <span className="hidden sm:block tracking-tight">Neelesh K.</span>
+          <span className="tracking-tight">Neelesh K.</span>
         </Link>
 
-        {/* Desktop Nav — visible from sm (≥640px) */}
-        <nav className="hidden sm:flex items-center gap-0.5 md:gap-1">
+        {/* Nav — priority links (Work, Life) inline on phones; full set from sm. */}
+        <nav className="flex items-center gap-0.5 md:gap-1">
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
               className={cn(
                 'rounded-lg px-2 py-2 text-sm transition-colors md:px-3',
+                link.priority ? 'inline-flex' : 'hidden sm:inline-flex',
                 pathname.startsWith(link.href)
                   ? 'bg-zinc-100 font-medium text-zinc-900 dark:bg-zinc-800 dark:text-zinc-50'
                   : 'text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-zinc-50'
