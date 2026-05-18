@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { saveContact } from '@/lib/db/queries'
-import { resend } from '@/lib/email/resend'
+import { getResend } from '@/lib/email/resend'
 import { ownerEmail, visitorEmail } from '@/lib/email/templates'
 import { contactInputSchema } from '@/lib/validation/contact'
 
@@ -58,6 +58,7 @@ export async function POST(req: NextRequest) {
     createdAt: contact.createdAt,
   })
 
+  const resend = getResend()
   const results = await Promise.allSettled([
     resend.emails.send({
       from: fromAddress,
