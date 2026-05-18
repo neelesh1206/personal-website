@@ -146,6 +146,50 @@ Phase 2 (`.github/workflows/deploy-aws.yml`): manual trigger only until Vercel v
 
 ---
 
+## Database Migrations
+
+Drizzle migrations live in `db/migrations/*.sql` and are checked into git. They're applied two different ways depending on environment.
+
+### Local (dev)
+
+```bash
+# Edit lib/db/schema.ts → generate a migration → apply it
+npm run db:generate
+npm run db:migrate
+```
+
+`db:migrate` is wrapped in `dotenv-cli` so it picks up `DATABASE_URL` from `.env.local` automatically.
+
+### Production (Neon prod branch)
+
+Applied by `.github/workflows/db-migrate.yml`. Two triggers:
+
+| Trigger            | When it fires                                                                                                                                           |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Push to `main`** | Only when files under `db/migrations/`, `lib/db/schema.ts`, or `drizzle.config.ts` change. A normal feature commit never spins up the migrate runner.   |
+| **Manual**         | Actions → "DB Migrate (Production)" → **Run workflow**. Use this to fix prod drift (e.g. re-pointing Vercel at a fresh Neon branch) without committing. |
+
+The workflow:
+
+1. Reads `PROD_DATABASE_URL` from GitHub repo secrets (scoped to the `production` Environment so you can attach a manual-approval gate from the GitHub UI).
+2. Runs `npm run db:migrate:ci` — the `:ci` variant skips the `dotenv-cli` wrapper so the secret is consumed directly from the env.
+3. Verifies `to_regclass('contacts')` after apply.
+
+Drizzle's `__drizzle_migrations` tracking table makes apply **idempotent** — re-running the workflow is a no-op once everything's caught up.
+
+### Why not run migrations in the Vercel build?
+
+Build-time migrations couple every preview deploy to a destructive operation, slow builds by 5–10s, and try to migrate whichever branch happens to be in the build env (sometimes wrong). A separate, path-filtered Action keeps migrations explicit and decoupled from deploys — the enterprise default.
+
+### One-time setup
+
+1. In Neon → copy the **production branch** connection string.
+2. GitHub → repo → Settings → Environments → **New environment** → name `production`. Optionally add yourself as a **required reviewer** so manual runs need confirmation.
+3. Environments → `production` → **Environment secrets** → Add `PROD_DATABASE_URL` with the Neon URL.
+4. Push the first migration, or run the workflow manually once to backfill.
+
+---
+
 ## Project Structure
 
 ```
