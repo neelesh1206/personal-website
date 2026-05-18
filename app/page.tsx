@@ -322,7 +322,7 @@ export default async function HomePage() {
       {/* ── Site analytics strip ───────────────────────────────────── */}
       <section
         aria-label="Site visitor metrics"
-        className="mb-20 grid grid-cols-2 gap-3 sm:grid-cols-3"
+        className="mb-20 grid grid-cols-1 gap-3 sm:grid-cols-3"
       >
         <Metric
           icon={Users}
@@ -341,7 +341,6 @@ export default async function HomePage() {
           label="Page views"
           value={stats.totalViews}
           hint="every page load, deduped per visitor per day"
-          className="hidden sm:flex"
         />
       </section>
     </div>
