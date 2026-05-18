@@ -149,7 +149,8 @@
 | Life              | `/life`                  | 📋     | Strava dashboard (YTD stats + activity feed) · CrossFit, hiking, travel, books, sports (F1/NFL/tennis/cricket), stock market, astronomy, current affairs |
 | Now               | `/now`                   | 📋     | Monthly update: building/reading/doing                                                                                                                   |
 | Resume            | `/resume`                | 📋     | Embedded PDF + download                                                                                                                                  |
-| Connect           | `/connect`               | 📋     | Visitor form + auto resume delivery                                                                                                                      |
+| Connect           | `/connect`               | ✅     | Visitor form (React Hook Form + Zod), saves to Neon, fans out Resend visitor + owner emails, honeypot, error/success states                              |
+| Admin             | `/admin`                 | ✅     | Owner-only contacts dashboard — HMAC-signed cookie auth, 30-day bar chart, all-time / 30d / 7d counters, submissions table; blocked in robots.txt        |
 
 ---
 

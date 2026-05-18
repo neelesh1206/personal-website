@@ -76,6 +76,9 @@ The `/life` page renders a live Strava activity dashboard — YTD distance, all-
 
 - **Visitor contact form** (`/connect`) — Zod-validated, persists to Neon, auto-sends resume PDF via Resend, notifies owner.
 - **Live Strava dashboard** (`/life`) — YTD run/ride/swim totals, all-time stats, recent activities. Server-side OAuth refresh-token flow, ISR-cached hourly; credentials never reach the browser. See architecture note above.
+- **Contact form** (`/connect`) — Zod-validated React Hook Form, hidden honeypot, server route saves to Neon then fans out two Resend emails in parallel (visitor copy + owner notification). Success/error states inline; the form clears on success.
+- **Owner-only admin dashboard** (`/admin`) — HMAC-signed session cookie (no third-party auth), 30-day activity bar chart, all-time / 30d / 7d counters, and a sortable submissions table. `/robots.txt` blocks crawlers from both `/admin` and `/api/*`.
+- **Code-generated NK favicon** — `app/icon.tsx` + `app/apple-icon.tsx` render PNGs via `next/og` at the edge (no committed binary).
 - **Six production case studies** (`/work`) — PRISM (backend + UI) and Tempo (V3 UI, Service, Runtime, V2 UI) — sourced from project biographies, rendered from a single typed data file (`lib/case-studies/data.ts`), with platform grouping, metric chips, problem/architecture/shipped sections, and prev/next nav. Statically generated via `generateStaticParams`.
 - **Dark / light mode** — class-based via `next-themes`, light default, no flash on load.
 - **Mobile-first responsive layout**, full a11y semantics, JSON-LD Person schema for SEO.
@@ -181,15 +184,18 @@ Phase 2 (`.github/workflows/deploy-aws.yml`): manual trigger only until Vercel v
 
 ## Environment Variables
 
-| Variable                     | Description                                            |
-| ---------------------------- | ------------------------------------------------------ |
-| `DATABASE_URL`               | Neon Postgres connection string                        |
-| `RESEND_API_KEY`             | Resend API key                                         |
-| `NEXT_PUBLIC_SITE_URL`       | Full site URL (e.g. `https://neeleshkakaraparthi.dev`) |
-| `CONTACT_NOTIFICATION_EMAIL` | Email to notify on new contact submissions             |
-| `STRAVA_CLIENT_ID`           | Strava API application Client ID                       |
-| `STRAVA_CLIENT_SECRET`       | Strava API application Client Secret (server-only)     |
-| `STRAVA_REFRESH_TOKEN`       | Long-lived Strava refresh token (one-time OAuth mint)  |
+| Variable                     | Description                                              |
+| ---------------------------- | -------------------------------------------------------- |
+| `DATABASE_URL`               | Neon Postgres connection string                          |
+| `RESEND_API_KEY`             | Resend API key                                           |
+| `NEXT_PUBLIC_SITE_URL`       | Full site URL (e.g. `https://neeleshkakaraparthi.dev`)   |
+| `CONTACT_NOTIFICATION_EMAIL` | Email to notify on new contact submissions               |
+| `STRAVA_CLIENT_ID`           | Strava API application Client ID                         |
+| `STRAVA_CLIENT_SECRET`       | Strava API application Client Secret (server-only)       |
+| `STRAVA_REFRESH_TOKEN`       | Long-lived Strava refresh token (one-time OAuth mint)    |
+| `RESEND_FROM_ADDRESS`        | Verified Resend sender (e.g. `Neelesh <hello@your.dev>`) |
+| `PUBLIC_RESUME_URL`          | Public URL to your resume PDF (used in visitor email)    |
+| `ADMIN_PASSWORD`             | Password for `/admin` (12+ chars, set in Vercel)         |
 
 See `.env.example` for the template.
 
@@ -214,7 +220,8 @@ See `.env.example` for the template.
 | Life          | `/life`                | ✅ Live    |
 | Now           | `/now`                 | 🔨 Planned |
 | Resume        | `/resume`              | 🔨 Planned |
-| Connect       | `/connect`             | 🔨 Planned |
+| Connect       | `/connect`             | ✅ Live    |
+| Admin         | `/admin`               | ✅ Live    |
 
 ---
 
