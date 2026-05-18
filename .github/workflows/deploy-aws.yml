@@ -7,6 +7,11 @@ name: Deploy to AWS (Phase 2)
 on:
   workflow_dispatch: # Manual trigger only until Phase 2 is ready
 
+env:
+  # Run actions/* with Node 24. Default flips Jun 2 2026; this silences
+  # the deprecation warning today.
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   deploy:
     name: Terraform Apply + S3 Sync
