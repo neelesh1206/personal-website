@@ -119,19 +119,19 @@ export default async function HomePage() {
             <Compass size={14} className="text-indigo-500" />
             <span>Exploring Staff SWE opportunities</span>
           </div>
-          {stats.totalVisitors > 0 ? (
+          {stats.totalViews > 0 ? (
             <>
               <div className="hidden h-1 w-1 rounded-full bg-zinc-300 dark:bg-zinc-600 sm:block" />
               <div
                 className="flex items-center gap-2 text-zinc-700 dark:text-zinc-300"
-                title={`${stats.totalViews.toLocaleString()} page views all time · ${stats.visitorsToday.toLocaleString()} today`}
+                title={`${stats.totalVisitors.toLocaleString()} unique visitor${stats.totalVisitors === 1 ? '' : 's'} · ${stats.visitorsToday.toLocaleString()} today`}
               >
                 <Users size={14} className="text-indigo-500" />
                 <span>
                   <strong className="tabular-nums text-zinc-900 dark:text-zinc-50">
-                    {stats.totalVisitors.toLocaleString()}
+                    {stats.totalViews.toLocaleString()}
                   </strong>{' '}
-                  visitor{stats.totalVisitors === 1 ? '' : 's'} so far
+                  all-time visit{stats.totalViews === 1 ? '' : 's'}
                 </span>
               </div>
             </>
