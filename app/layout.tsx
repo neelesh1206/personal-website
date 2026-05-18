@@ -13,12 +13,21 @@ const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
   display: 'swap',
+  // Restrict to weights actually used in the UI: regular (400) for body,
+  // medium (500) for buttons/labels, semibold (600) for stat values,
+  // bold (700) for headings. Skip the long tail to shrink the font payload.
+  weight: ['400', '500', '600', '700'],
+  preload: true,
 })
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
   variable: '--font-jetbrains-mono',
   display: 'swap',
+  weight: ['400', '500'],
+  // Mono is only used inside <code> blocks on internal pages, never above
+  // the fold on home — don't compete with Inter for preload priority.
+  preload: false,
 })
 
 export const metadata: Metadata = defaultMetadata

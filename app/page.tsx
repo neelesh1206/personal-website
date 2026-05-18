@@ -1,9 +1,10 @@
 import Link from 'next/link'
-import { ArrowRight, MapPin, Hammer, BookOpen, Compass, Users } from 'lucide-react'
+import { Suspense } from 'react'
+import { ArrowRight, MapPin, Hammer, BookOpen, Compass } from 'lucide-react'
 import { defaultMetadata } from '@/lib/metadata'
 import { caseStudies } from '@/lib/case-studies/data'
 import { HomePageJsonLd } from '@/components/seo/JsonLd'
-import { getSiteStats } from '@/lib/analytics/queries'
+import { VisitorMetrics, VisitorMetricsSkeleton } from '@/components/home/VisitorMetrics'
 
 export const revalidate = 300 // home rebuilds every 5 min for fresh visitor count
 
@@ -37,8 +38,7 @@ const featuredProjects = [
   },
 ]
 
-export default async function HomePage() {
-  const stats = await getSiteStats()
+export default function HomePage() {
   return (
     <div className="mx-auto max-w-5xl px-4 sm:px-6">
       <HomePageJsonLd />
@@ -319,58 +319,10 @@ export default async function HomePage() {
         </Link>
       </section>
 
-      {/* ── Site analytics strip ───────────────────────────────────── */}
-      <section aria-label="Site visitor metrics" className="mb-20 grid grid-cols-3 gap-2 sm:gap-3">
-        <Metric
-          icon={Users}
-          label="Unique visitors"
-          value={stats.totalVisitors}
-          hint="distinct people, all time"
-        />
-        <Metric
-          icon={Users}
-          label="Visitors today"
-          value={stats.visitorsToday}
-          hint="resets at UTC midnight"
-        />
-        <Metric
-          icon={Users}
-          label="Page views"
-          value={stats.totalViews}
-          hint="every page load, deduped per visitor per day"
-        />
-      </section>
-    </div>
-  )
-}
-
-function Metric({
-  icon: Icon,
-  label,
-  value,
-  hint,
-  className = '',
-}: {
-  icon: typeof Users
-  label: string
-  value: number
-  hint: string
-  className?: string
-}) {
-  return (
-    <div
-      className={`flex flex-col rounded-xl border border-zinc-200 bg-white p-3 sm:p-4 dark:border-zinc-800 dark:bg-zinc-950 ${className}`}
-    >
-      <div className="flex items-center gap-1 text-[10px] font-medium uppercase tracking-wider text-zinc-500 sm:gap-1.5 sm:text-xs dark:text-zinc-400">
-        <Icon size={12} />
-        <span className="leading-tight">{label}</span>
-      </div>
-      <div className="mt-2 text-xl font-semibold tabular-nums text-zinc-900 sm:text-2xl dark:text-zinc-50">
-        {value.toLocaleString()}
-      </div>
-      <div className="mt-1 hidden text-[11px] text-zinc-400 sm:block dark:text-zinc-500">
-        {hint}
-      </div>
+      {/* ── Site analytics strip (streamed) ────────────────────────── */}
+      <Suspense fallback={<VisitorMetricsSkeleton />}>
+        <VisitorMetrics />
+      </Suspense>
     </div>
   )
 }
