@@ -54,7 +54,6 @@ body {
 }
 
 /* But not for transforms/opacity (would slow animations) */
-[data-framer-component-type],
 [style*='transform'],
 [style*='opacity'] {
   transition: none;

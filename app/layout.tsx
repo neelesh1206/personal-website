@@ -12,7 +12,11 @@ import './globals.css'
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
-  display: 'swap',
+  // 'optional' = fallback font wins the initial paint; Inter applies on the
+  // next navigation if it isn't ready in ~100ms. Best LCP outcome on slow
+  // networks (Lighthouse measures LCP at first paint). Trade-off is a brief
+  // fallback-font visible on the very first cold visit only.
+  display: 'optional',
   // Restrict to weights actually used in the UI: regular (400) for body,
   // medium (500) for buttons/labels, semibold (600) for stat values,
   // bold (700) for headings. Skip the long tail to shrink the font payload.

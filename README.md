@@ -28,7 +28,7 @@ A portfolio website built to showcase enterprise-grade full-stack engineering. T
 | Forms      | React Hook Form + Zod                          | Type-safe validation, minimal re-renders                            |
 | Analytics  | Vercel Analytics + Speed Insights              | Privacy-friendly, no cookie banner needed                           |
 | Icons      | lucide-react                                   | Tree-shakeable                                                      |
-| Animations | framer-motion (selective)                      | Entrance animations only; no gimmicks                               |
+| Animations | Pure CSS transitions                           | No animation library — kept the bundle lean                         |
 | Testing    | Vitest (unit, 95% coverage) + Playwright (E2E) | v8 coverage with 70% threshold per metric, enforced in CI           |
 | Linting    | ESLint flat config + Prettier                  | Enforced style from day one                                         |
 | Git Hooks  | Husky + lint-staged                            | Lint + format on every commit                                       |
