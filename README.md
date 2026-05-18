@@ -74,7 +74,6 @@ The `/life` page renders a live Strava activity dashboard — YTD distance, all-
 
 ## Features
 
-- **Visitor contact form** (`/connect`) — Zod-validated, persists to Neon, auto-sends resume PDF via Resend, notifies owner.
 - **Live Strava dashboard** (`/life`) — YTD run/ride/swim totals, all-time stats, recent activities. Server-side OAuth refresh-token flow, ISR-cached hourly; credentials never reach the browser. See architecture note above.
 - **Contact form** (`/connect`) — Zod-validated React Hook Form, hidden honeypot, server route saves to Neon then fans out two Resend emails in parallel (visitor copy + owner notification). Success/error states inline; the form clears on success.
 - **Owner-only admin dashboard** (`/admin`) — HMAC-signed session cookie (no third-party auth), 30-day activity bar chart, all-time / 30d / 7d counters, and a sortable submissions table. `/robots.txt` blocks crawlers from both `/admin` and `/api/*`.
