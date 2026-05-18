@@ -77,6 +77,7 @@ The `/life` page renders a live Strava activity dashboard — YTD distance, all-
 - **Live Strava dashboard** (`/life`) — YTD run/ride/swim totals, all-time stats, recent activities. Server-side OAuth refresh-token flow, ISR-cached hourly; credentials never reach the browser. See architecture note above.
 - **Contact form** (`/connect`) — Zod-validated React Hook Form, hidden honeypot, server route saves to Neon then fans out two Resend emails in parallel (visitor copy + owner notification). Success/error states inline; the form clears on success.
 - **Owner-only admin dashboard** (`/admin`) — HMAC-signed session cookie (no third-party auth), 30-day activity bar chart, all-time / 30d / 7d counters, and a sortable submissions table. `/robots.txt` blocks crawlers from both `/admin` and `/api/*`.
+- **First-party visitor analytics** — privacy-conscious page-view counter (`page_views` table in Neon). Visitor identity is SHA-256(IP + UA + daily-salt), rotates at UTC midnight, never stored as PII. Client beacon (`<TrackPageView />`) fires once per pathname change; server route filters bots, dedupes via `UNIQUE (path, visitor_hash, view_date)`, and counts unique visitors with `COUNT(DISTINCT visitor_hash)`. Home page shows the live total via ISR (`revalidate: 300`). Complements Vercel Analytics — that's the page-view dashboard, this is the count you publicly display.
 - **Code-generated NK favicon** — `app/icon.tsx` + `app/apple-icon.tsx` render PNGs via `next/og` at the edge (no committed binary).
 - **Six production case studies** (`/work`) — PRISM (backend + UI) and Tempo (V3 UI, Service, Runtime, V2 UI) — sourced from project biographies, rendered from a single typed data file (`lib/case-studies/data.ts`), with platform grouping, metric chips, problem/architecture/shipped sections, and prev/next nav. Statically generated via `generateStaticParams`.
 - **Dark / light mode** — class-based via `next-themes`, light default, no flash on load.
@@ -239,6 +240,7 @@ Build-time migrations couple every preview deploy to a destructive operation, sl
 | `RESEND_FROM_ADDRESS`        | Verified Resend sender (e.g. `Neelesh <hello@your.dev>`) |
 | `PUBLIC_RESUME_URL`          | Public URL to your resume PDF (used in visitor email)    |
 | `ADMIN_PASSWORD`             | Password for `/admin` (12+ chars, set in Vercel)         |
+| `ANALYTICS_SALT`             | Random 32+ char string used in the visitor hash          |
 
 See `.env.example` for the template.
 

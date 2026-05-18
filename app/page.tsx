@@ -1,8 +1,11 @@
 import Link from 'next/link'
-import { ArrowRight, MapPin, Hammer, BookOpen, Compass } from 'lucide-react'
+import { ArrowRight, MapPin, Hammer, BookOpen, Compass, Users } from 'lucide-react'
 import { defaultMetadata } from '@/lib/metadata'
 import { caseStudies } from '@/lib/case-studies/data'
 import { HomePageJsonLd } from '@/components/seo/JsonLd'
+import { getSiteStats } from '@/lib/analytics/queries'
+
+export const revalidate = 300 // home rebuilds every 5 min for fresh visitor count
 
 export const metadata = defaultMetadata
 
@@ -34,7 +37,8 @@ const featuredProjects = [
   },
 ]
 
-export default function HomePage() {
+export default async function HomePage() {
+  const stats = await getSiteStats()
   return (
     <div className="mx-auto max-w-5xl px-4 sm:px-6">
       <HomePageJsonLd />
@@ -115,6 +119,23 @@ export default function HomePage() {
             <Compass size={14} className="text-indigo-500" />
             <span>Exploring Staff SWE opportunities</span>
           </div>
+          {stats.totalVisitors > 0 ? (
+            <>
+              <div className="hidden h-1 w-1 rounded-full bg-zinc-300 dark:bg-zinc-600 sm:block" />
+              <div
+                className="flex items-center gap-2 text-zinc-700 dark:text-zinc-300"
+                title={`${stats.totalViews.toLocaleString()} page views all time · ${stats.visitorsToday.toLocaleString()} today`}
+              >
+                <Users size={14} className="text-indigo-500" />
+                <span>
+                  <strong className="tabular-nums text-zinc-900 dark:text-zinc-50">
+                    {stats.totalVisitors.toLocaleString()}
+                  </strong>{' '}
+                  visitor{stats.totalVisitors === 1 ? '' : 's'} so far
+                </span>
+              </div>
+            </>
+          ) : null}
         </div>
       </section>
 
