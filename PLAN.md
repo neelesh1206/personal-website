@@ -30,6 +30,7 @@
 | Animations         | framer-motion (selective)                          | Subtle entrance animations, no gimmicks                     |
 | Domain             | neeleshkakaraparthi.dev (Cloudflare Registrar)     | Exact name match = strongest Google ranking signal          |
 | Node version       | 24 LTS (pinned via .nvmrc)                         | Latest LTS, consistent across local + CI                    |
+| Strava data        | Server Component + ISR revalidate:3600             | Tokens stay server-side; hourly refresh avoids rate limits  |
 
 ---
 
@@ -69,31 +70,83 @@
 - [ ] `/robots.txt`
 - [ ] Per-page OG images via `/api/og` route
 
+### Strava Integration (Life page — Activity Dashboard)
+
+**Goal:** Show real fitness data from Strava on the `/life` page — makes the personal section dynamic and genuinely interesting rather than static text.
+
+**What we display:**
+
+- Year-to-date stats: total activities, total distance (km), total elevation gain (m), total moving time
+- All-time stats: runs, rides, workouts
+- Recent activities feed: last 8 activities — type icon, name, distance, pace/duration, date
+- Activity type breakdown: visual split of Run / Ride / Workout / Other
+
+**Architecture:**
+
+- Strava API v3 (OAuth 2.0 — client credentials + refresh token flow)
+- Refresh token stored in env vars; access token auto-refreshed server-side (expires every 6h)
+- **Next.js Server Component** — tokens never sent to client
+- **ISR `revalidate: 3600`** — data refreshed hourly, no rate-limit risk
+- No chart library — pure CSS/Tailwind bar charts keep the bundle clean
+- `lib/strava.ts` — typed API client with auto token refresh
+
+**Data flow:**
+
+```
+/life page (Server Component, revalidate: 3600)
+  → lib/strava.ts → refreshAccessToken() if needed
+  → GET /athlete/stats          (YTD + all-time counts)
+  → GET /athlete/activities?per_page=8 (recent activity feed)
+  → render ActivityDashboard component (pure display, no client JS)
+```
+
+**New env vars required:**
+| Variable | Description |
+|---|---|
+| `STRAVA_CLIENT_ID` | From Strava app settings |
+| `STRAVA_CLIENT_SECRET` | From Strava app settings |
+| `STRAVA_REFRESH_TOKEN` | Long-lived refresh token (obtained once via OAuth) |
+
+**Components:**
+
+- `components/life/ActivityDashboard.tsx` — top-level dashboard wrapper
+- `components/life/StatCard.tsx` — single metric (count, distance, elevation)
+- `components/life/ActivityFeed.tsx` — scrollable recent activity list
+- `components/life/ActivityRow.tsx` — single activity: icon + name + metrics
+- `lib/strava.ts` — typed Strava API client (refreshToken, getAthleteStats, getActivities)
+
+**One-time setup (OAuth flow to get refresh token):**
+
+1. Create a Strava app at strava.com/settings/api
+2. Authorize once via browser to get the initial code
+3. Exchange code for `access_token` + `refresh_token` — store refresh token in env
+4. From then on, the server auto-refreshes the access token silently
+
 ---
 
 ## Pages
 
 ### Status Key: ✅ Done · 🔨 In Progress · 📋 Planned
 
-| Page                | Route                    | Status | Notes                                                                                                     |
-| ------------------- | ------------------------ | ------ | --------------------------------------------------------------------------------------------------------- |
-| Home                | `/`                      | ✅     | Hero, currently strip, featured work, projects, connect CTA                                               |
-| About               | `/about`                 | 📋     | Bio, career arc, 3 things I'm known for                                                                   |
-| Case Studies List   | `/work`                  | 📋     | Cards for all 3 case studies                                                                              |
-| PRISM Case Study    | `/work/prism`            | 📋     | Full PCODR write-up with diagrams                                                                         |
-| Tempo V3 Case Study | `/work/tempo-v3`         | 📋     | Full PCODR write-up with diagrams                                                                         |
-| Tango Case Study    | `/work/tango`            | 📋     | Shorter supporting case study                                                                             |
-| Projects List       | `/projects`              | 📋     | Cards for all 4 projects                                                                                  |
-| outbox-kit          | `/projects/outbox-kit`   | 📋     |                                                                                                           |
-| PR Reviewer         | `/projects/pr-reviewer`  | 📋     |                                                                                                           |
-| Agentic RAG         | `/projects/agentic-rag`  | 📋     |                                                                                                           |
-| Stock Picker        | `/projects/stock-picker` | 📋     |                                                                                                           |
-| Writing List        | `/writing`               | 📋     | Blog post list                                                                                            |
-| Blog Posts          | `/writing/[slug]`        | 📋     | MDX-driven                                                                                                |
-| Life                | `/life`                  | 📋     | CrossFit, hiking, travel, books, sports (F1/NFL/tennis/cricket), stock market, astronomy, current affairs |
-| Now                 | `/now`                   | 📋     | Monthly update: building/reading/doing                                                                    |
-| Resume              | `/resume`                | 📋     | Embedded PDF + download                                                                                   |
-| Connect             | `/connect`               | 📋     | Visitor form + auto resume delivery                                                                       |
+| Page                | Route                    | Status | Notes                                                                                                                                                    |
+| ------------------- | ------------------------ | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Home                | `/`                      | ✅     | Hero, currently strip, featured work, projects, connect CTA                                                                                              |
+| About               | `/about`                 | 📋     | Bio, career arc, 3 things I'm known for                                                                                                                  |
+| Case Studies List   | `/work`                  | 📋     | Cards for all 3 case studies                                                                                                                             |
+| PRISM Case Study    | `/work/prism`            | 📋     | Full PCODR write-up with diagrams                                                                                                                        |
+| Tempo V3 Case Study | `/work/tempo-v3`         | 📋     | Full PCODR write-up with diagrams                                                                                                                        |
+| Tango Case Study    | `/work/tango`            | 📋     | Shorter supporting case study                                                                                                                            |
+| Projects List       | `/projects`              | 📋     | Cards for all 4 projects                                                                                                                                 |
+| outbox-kit          | `/projects/outbox-kit`   | 📋     |                                                                                                                                                          |
+| PR Reviewer         | `/projects/pr-reviewer`  | 📋     |                                                                                                                                                          |
+| Agentic RAG         | `/projects/agentic-rag`  | 📋     |                                                                                                                                                          |
+| Stock Picker        | `/projects/stock-picker` | 📋     |                                                                                                                                                          |
+| Writing List        | `/writing`               | 📋     | Blog post list                                                                                                                                           |
+| Blog Posts          | `/writing/[slug]`        | 📋     | MDX-driven                                                                                                                                               |
+| Life                | `/life`                  | 📋     | Strava dashboard (YTD stats + activity feed) · CrossFit, hiking, travel, books, sports (F1/NFL/tennis/cricket), stock market, astronomy, current affairs |
+| Now                 | `/now`                   | 📋     | Monthly update: building/reading/doing                                                                                                                   |
+| Resume              | `/resume`                | 📋     | Embedded PDF + download                                                                                                                                  |
+| Connect             | `/connect`               | 📋     | Visitor form + auto resume delivery                                                                                                                      |
 
 ---
 
@@ -174,12 +227,15 @@ CREATE TABLE contacts (
 
 ## Environment Variables
 
-| Variable                     | Local                   | Vercel Preview       | Vercel Production                 |
-| ---------------------------- | ----------------------- | -------------------- | --------------------------------- |
-| `DATABASE_URL`               | Neon dev branch         | Neon dev branch      | Neon main branch                  |
-| `RESEND_API_KEY`             | Resend API key          | Same                 | Same                              |
-| `NEXT_PUBLIC_SITE_URL`       | `http://localhost:3000` | _(Vercel auto-sets)_ | `https://neeleshkakaraparthi.dev` |
-| `CONTACT_NOTIFICATION_EMAIL` | neelesh1206@gmail.com   | Same                 | Same                              |
+| Variable                     | Local                    | Vercel Preview       | Vercel Production                 |
+| ---------------------------- | ------------------------ | -------------------- | --------------------------------- |
+| `DATABASE_URL`               | Neon dev branch          | Neon dev branch      | Neon main branch                  |
+| `RESEND_API_KEY`             | Resend API key           | Same                 | Same                              |
+| `NEXT_PUBLIC_SITE_URL`       | `http://localhost:3000`  | _(Vercel auto-sets)_ | `https://neeleshkakaraparthi.dev` |
+| `CONTACT_NOTIFICATION_EMAIL` | neelesh1206@gmail.com    | Same                 | Same                              |
+| `STRAVA_CLIENT_ID`           | Strava app client ID     | Same                 | Same                              |
+| `STRAVA_CLIENT_SECRET`       | Strava app secret        | Same                 | Same                              |
+| `STRAVA_REFRESH_TOKEN`       | Long-lived refresh token | Same                 | Same                              |
 
 ---
 
@@ -229,7 +285,8 @@ personal-website/
 
 ## Open Items
 
-- [ ] Add LinkedIn profile URL (currently placeholder in Footer)
+- [x] Add LinkedIn profile URL (updated in Footer)
+- [ ] **Strava setup:** Create app at strava.com/settings/api, run one-time OAuth flow, store `STRAVA_REFRESH_TOKEN` in env vars + Vercel
 - [ ] Upload resume PDF to `/public/resume.pdf`
 - [ ] Add headshot for About page
 - [ ] Verify Resend sending domain on `neeleshkakaraparthi.dev`

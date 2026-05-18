@@ -14,27 +14,28 @@ A portfolio website built to showcase enterprise-grade full-stack engineering. T
 
 ## Tech Stack
 
-| Layer      | Choice                                   | Why                                                                |
-| ---------- | ---------------------------------------- | ------------------------------------------------------------------ |
-| Framework  | Next.js 16 (App Router)                  | Latest stable; server components, streaming, built-in metadata API |
-| Language   | TypeScript — `strict: true`              | `noUncheckedIndexedAccess`, `noImplicitReturns` enabled            |
-| Styling    | Tailwind CSS v4                          | Utility-first; class-based dark mode via `@custom-variant`         |
-| Dark Mode  | next-themes                              | SSR-safe, no flash on load; light default                          |
-| Fonts      | next/font — Inter + JetBrains Mono       | Self-hosted, zero layout shift                                     |
-| Content    | MDX files in `/content`                  | Git-based CMS, no external dependency                              |
-| Database   | Neon (serverless Postgres) + Drizzle ORM | TypeScript-native ORM; serverless driver fits Vercel edge          |
-| Email      | Resend                                   | Resume auto-delivery and new-contact notifications                 |
-| Forms      | React Hook Form + Zod                    | Type-safe validation, minimal re-renders                           |
-| Analytics  | Vercel Analytics + Speed Insights        | Privacy-friendly, no cookie banner needed                          |
-| Icons      | lucide-react                             | Tree-shakeable                                                     |
-| Animations | framer-motion (selective)                | Entrance animations only; no gimmicks                              |
-| Testing    | Vitest (unit) + Playwright (E2E)         | Treats own project with production rigor                           |
-| Linting    | ESLint flat config + Prettier            | Enforced style from day one                                        |
-| Git Hooks  | Husky + lint-staged                      | Lint + format on every commit                                      |
-| CI/CD      | GitHub Actions                           | Lint → typecheck → test → build on every PR                        |
-| Deployment | Vercel (Phase 1 active)                  | Auto-deploy on push to `main`, PR previews                         |
-| IaC        | Terraform — AWS S3 + CloudFront + OAC    | Phase 2; scaffolded in repo, OIDC not IAM keys                     |
-| Node       | v24 LTS (pinned via `.nvmrc`)            | Consistent across local, CI, and Vercel                            |
+| Layer      | Choice                                   | Why                                                                 |
+| ---------- | ---------------------------------------- | ------------------------------------------------------------------- |
+| Framework  | Next.js 16 (App Router)                  | Latest stable; server components, streaming, built-in metadata API  |
+| Language   | TypeScript — `strict: true`              | `noUncheckedIndexedAccess`, `noImplicitReturns` enabled             |
+| Styling    | Tailwind CSS v4                          | Utility-first; class-based dark mode via `@custom-variant`          |
+| Dark Mode  | next-themes                              | SSR-safe, no flash on load; light default                           |
+| Fonts      | next/font — Inter + JetBrains Mono       | Self-hosted, zero layout shift                                      |
+| Content    | MDX files in `/content`                  | Git-based CMS, no external dependency                               |
+| Database   | Neon (serverless Postgres) + Drizzle ORM | TypeScript-native ORM; serverless driver fits Vercel edge           |
+| Email      | Resend                                   | Resume auto-delivery and new-contact notifications                  |
+| Strava API | Strava v3 (OAuth 2.0, server-side)       | Live activity dashboard on `/life` — refresh-token flow, ISR-cached |
+| Forms      | React Hook Form + Zod                    | Type-safe validation, minimal re-renders                            |
+| Analytics  | Vercel Analytics + Speed Insights        | Privacy-friendly, no cookie banner needed                           |
+| Icons      | lucide-react                             | Tree-shakeable                                                      |
+| Animations | framer-motion (selective)                | Entrance animations only; no gimmicks                               |
+| Testing    | Vitest (unit) + Playwright (E2E)         | Treats own project with production rigor                            |
+| Linting    | ESLint flat config + Prettier            | Enforced style from day one                                         |
+| Git Hooks  | Husky + lint-staged                      | Lint + format on every commit                                       |
+| CI/CD      | GitHub Actions                           | Lint → typecheck → test → build on every PR                         |
+| Deployment | Vercel (Phase 1 active)                  | Auto-deploy on push to `main`, PR previews                          |
+| IaC        | Terraform — AWS S3 + CloudFront + OAC    | Phase 2; scaffolded in repo, OIDC not IAM keys                      |
+| Node       | v24 LTS (pinned via `.nvmrc`)            | Consistent across local, CI, and Vercel                             |
 
 ---
 
@@ -60,10 +61,24 @@ Native CSS cascade layers and `@theme` directive — no `tailwind.config.ts` nee
 
 Vercel handles the live site with zero config. The Terraform code in `/terraform` provisions S3 + CloudFront with OAC (not legacy OAI) and GitHub Actions OIDC trust — no long-lived IAM keys. Phase 2 activates after Vercel v1 is stable.
 
+### Why server-side Strava (not client-side fetch)
+
+The `/life` page renders a live Strava activity dashboard — YTD distance, all-time totals, recent activities. The OAuth refresh-token flow runs entirely on the server: `STRAVA_CLIENT_SECRET` and `STRAVA_REFRESH_TOKEN` never reach the browser. Tokens are exchanged inside a Server Component, the dashboard renders with `revalidate: 3600` (ISR, hourly), and the token itself is cached for 5h (under the 6h Strava access-token TTL). Net effect: one API call per hour per region — not per visitor — and zero secrets exposed client-side. See `lib/strava/client.ts`.
+
 ### Caching strategy (Phase 2 CloudFront)
 
 - Hashed assets (`/_next/static/*`): `max-age=31536000, immutable` — content-addressed, cached forever
 - HTML: `max-age=3600` with revalidation — routing layer must stay fresh
+
+---
+
+## Features
+
+- **Visitor contact form** (`/connect`) — Zod-validated, persists to Neon, auto-sends resume PDF via Resend, notifies owner.
+- **Live Strava dashboard** (`/life`) — YTD run/ride/swim totals, all-time stats, recent activities. Server-side OAuth refresh-token flow, ISR-cached hourly; credentials never reach the browser. See architecture note above.
+- **Dark / light mode** — class-based via `next-themes`, light default, no flash on load.
+- **Mobile-first responsive layout**, full a11y semantics, JSON-LD Person schema for SEO.
+- **Vercel Analytics + Speed Insights** — privacy-friendly, cookieless.
 
 ---
 
@@ -171,6 +186,9 @@ Phase 2 (`.github/workflows/deploy-aws.yml`): manual trigger only until Vercel v
 | `RESEND_API_KEY`             | Resend API key                                         |
 | `NEXT_PUBLIC_SITE_URL`       | Full site URL (e.g. `https://neeleshkakaraparthi.dev`) |
 | `CONTACT_NOTIFICATION_EMAIL` | Email to notify on new contact submissions             |
+| `STRAVA_CLIENT_ID`           | Strava API application Client ID                       |
+| `STRAVA_CLIENT_SECRET`       | Strava API application Client Secret (server-only)     |
+| `STRAVA_REFRESH_TOKEN`       | Long-lived Strava refresh token (one-time OAuth mint)  |
 
 See `.env.example` for the template.
 
@@ -189,7 +207,7 @@ See `.env.example` for the template.
 | Projects     | `/projects`            | 🔨 Planned |
 | outbox-kit   | `/projects/outbox-kit` | 🔨 Planned |
 | Writing      | `/writing`             | 🔨 Planned |
-| Life         | `/life`                | 🔨 Planned |
+| Life         | `/life`                | ✅ Live    |
 | Now          | `/now`                 | 🔨 Planned |
 | Resume       | `/resume`              | 🔨 Planned |
 | Connect      | `/connect`             | 🔨 Planned |
