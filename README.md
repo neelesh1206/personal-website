@@ -206,6 +206,32 @@ Build-time migrations couple every preview deploy to a destructive operation, sl
 
 ---
 
+## API Endpoints
+
+All routes run on the Node runtime under `app/api/*`.
+
+| Method | Route               | Auth                      | What it does                                                                                                                                                           |
+| ------ | ------------------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| POST   | `/api/contact`      | None (Zod + honeypot)     | Validates the visitor contact form, inserts into `contacts` table, fans out two Resend emails in parallel (visitor copy + owner notification). Returns `{ok:true,id}`. |
+| POST   | `/api/track`        | None (UA + path filtered) | Page-view beacon. Computes daily SHA-256 visitor hash, inserts into `page_views` with `ON CONFLICT DO NOTHING`. Skips bots and `/api`, `/admin`, `/_next`, `/sitemap`. |
+| POST   | `/api/admin/login`  | Password (form post)      | Verifies `ADMIN_PASSWORD` with a timing-safe compare. Sets HMAC-signed `admin_session` cookie (7 day TTL) and 303-redirects to `/admin`.                               |
+| POST   | `/api/admin/logout` | Cookie present            | Clears the `admin_session` cookie and 303-redirects to `/admin/login`.                                                                                                 |
+
+Database access happens through `lib/db/queries.ts` (contacts) and `lib/analytics/queries.ts` (page views) — both use Drizzle, both lazy-initialize the Neon client (see Architecture Decisions).
+
+### Manual operations
+
+| Operation                                        | How                                                                                                                                                                    |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Apply pending DB migrations to production**    | GitHub → Actions → "DB Migrate (Production)" → **Run workflow**. Approve if you set yourself as a required reviewer. Idempotent via `__drizzle_migrations`.            |
+| **Read all contact submissions**                 | Open `https://neeleshkakaraparthi.dev/admin/login`, sign in with `ADMIN_PASSWORD`. Submissions table renders the full `contacts` table with 30-day chart and counters. |
+| **Read page-view counts**                        | Visible on the home page (3-card strip below the Connect CTA). Refreshes every 5 min via ISR.                                                                          |
+| **Inspect page views directly in Neon**          | `SELECT COUNT(DISTINCT visitor_hash), COUNT(*), MAX(created_at) FROM page_views;` in Neon SQL editor or `npm run db:studio`.                                           |
+| **Rotate the visitor-hash salt** (privacy reset) | Update `ANALYTICS_SALT` in Vercel → redeploy. Historical hashes become unlinkable from new ones.                                                                       |
+| **Wipe all visitor analytics**                   | `DELETE FROM page_views;` (no rate limits or backups — this is a portfolio site).                                                                                      |
+
+---
+
 ## Project Structure
 
 ```

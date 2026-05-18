@@ -2,22 +2,41 @@
 
 # Claude Instructions for This Project
 
-## On Every Commit — Non-Negotiable
+## When to Update README + PLAN
 
-Before staging files for a commit, run this checklist. Don't skip steps because "the change is small" — small changes accumulate into README drift, which is what just landed me in trouble.
+The README is reference documentation for someone landing on the repo cold — recruiters, hiring managers, future-you on a different machine. **Document at the feature level and add operational instructions where they're needed. Skip minor diffs.**
 
-1. **Update `README.md`** when the commit touches any of:
-   - A new user-facing route → update the **Pages** status table (✅ Live)
-   - A new feature → add a bullet under **Features**
-   - A new tech-stack choice or architectural pattern → row in the **Tech Stack** table and/or an **Architecture Decisions** subsection
-   - A new env var → row in the **Environment Variables** table
-   - A new npm script → line in the **Scripts** block
-   - A new workflow → mention under **CI/CD** or **DB Migrations**
-2. **Update `PLAN.md`** — mark completed items with ✅, add any new requirements discovered during implementation, update the Open Items list.
+### Update `README.md` when the commit:
 
-If a commit truly has no surface-area change worth documenting (e.g., a hotfix that touches a single line of internal logic), state that explicitly in the commit body — don't silently skip.
+- **Adds a user-facing route** → Pages table (✅ Live)
+- **Adds or changes a feature** the user would notice → bullet under **Features**
+- **Introduces a new architectural pattern, library, or tech-stack choice** → Tech Stack table and/or Architecture Decisions
+- **Adds an API endpoint or DB table** → API Endpoints table
+- **Adds an env var** → Environment Variables table
+- **Adds a new operational task** ("how do I trigger X manually", "how do I rotate Y") → Manual Operations table
+- **Adds a workflow or CI/CD step** → CI/CD or DB Migrations section
+- **Adds an npm script** → Scripts block
 
-Stage README/PLAN changes in the same commit as the code change. Don't push a "docs: update README" follow-up commit; the change belongs with the change that caused it.
+### Don't update `README.md` for:
+
+- Bug fixes that don't change behavior or surface
+- UI tweaks (renaming a label, moving a button, breakpoint changes)
+- Internal refactors that don't touch the documented surface
+- Lint/format-only changes
+- Commits that revert prior commits
+
+If a commit doesn't touch any of the "do update" categories, that's fine — just don't silently _skip_ one that does.
+
+### Always update `PLAN.md` when the commit:
+
+- **Completes a planned item** → flip 📋 → ✅
+- **Discovers new requirements** → add to the relevant section + Open Items
+
+### Style rules
+
+- **Stage README/PLAN changes in the same commit as the code change.** No "docs: update README" follow-up commits — the doc change belongs with the feature change.
+- **Write for the cold reader.** Don't assume context from the PR or chat. The README is the only thing they have.
+- **Concise but explicit.** A one-line "Resume PDF served at `/resume.pdf`" beats a paragraph. Numbers and code paths > prose.
 
 ## Coding Conventions
 
