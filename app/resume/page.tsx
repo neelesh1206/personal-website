@@ -1,3 +1,7 @@
+import { permanentRedirect } from 'next/navigation'
+
+export const dynamic = 'force-static'
+
 export default function ResumePage() {
-  return <main>Resume — coming soon</main>
+  permanentRedirect('/resume.pdf')
 }
