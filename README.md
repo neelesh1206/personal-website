@@ -1,36 +1,199 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# neeleshkakaraparthi.dev
 
-## Getting Started
+Personal portfolio of **Neelesh Kakaraparthi** — Senior Full-Stack Software Engineer with 8+ years at Walmart Global Tech.
 
-First, run the development server:
+**Live:** [neeleshkakaraparthi.dev](https://neeleshkakaraparthi.dev)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## What This Is
+
+A portfolio website built to showcase enterprise-grade full-stack engineering. The site itself demonstrates the same standards used in production — TypeScript strict mode, a full CI/CD pipeline, automated testing, and dual-track deployment infrastructure. Every architectural decision is intentional and defensible.
+
+---
+
+## Tech Stack
+
+| Layer      | Choice                                   | Why                                                                |
+| ---------- | ---------------------------------------- | ------------------------------------------------------------------ |
+| Framework  | Next.js 16 (App Router)                  | Latest stable; server components, streaming, built-in metadata API |
+| Language   | TypeScript — `strict: true`              | `noUncheckedIndexedAccess`, `noImplicitReturns` enabled            |
+| Styling    | Tailwind CSS v4                          | Utility-first; class-based dark mode via `@custom-variant`         |
+| Dark Mode  | next-themes                              | SSR-safe, no flash on load; light default                          |
+| Fonts      | next/font — Inter + JetBrains Mono       | Self-hosted, zero layout shift                                     |
+| Content    | MDX files in `/content`                  | Git-based CMS, no external dependency                              |
+| Database   | Neon (serverless Postgres) + Drizzle ORM | TypeScript-native ORM; serverless driver fits Vercel edge          |
+| Email      | Resend                                   | Resume auto-delivery and new-contact notifications                 |
+| Forms      | React Hook Form + Zod                    | Type-safe validation, minimal re-renders                           |
+| Analytics  | Vercel Analytics + Speed Insights        | Privacy-friendly, no cookie banner needed                          |
+| Icons      | lucide-react                             | Tree-shakeable                                                     |
+| Animations | framer-motion (selective)                | Entrance animations only; no gimmicks                              |
+| Testing    | Vitest (unit) + Playwright (E2E)         | Treats own project with production rigor                           |
+| Linting    | ESLint flat config + Prettier            | Enforced style from day one                                        |
+| Git Hooks  | Husky + lint-staged                      | Lint + format on every commit                                      |
+| CI/CD      | GitHub Actions                           | Lint → typecheck → test → build on every PR                        |
+| Deployment | Vercel (Phase 1 active)                  | Auto-deploy on push to `main`, PR previews                         |
+| IaC        | Terraform — AWS S3 + CloudFront + OAC    | Phase 2; scaffolded in repo, OIDC not IAM keys                     |
+| Node       | v24 LTS (pinned via `.nvmrc`)            | Consistent across local, CI, and Vercel                            |
+
+---
+
+## Architecture Decisions
+
+### Why Next.js App Router (not Pages Router)
+
+App Router enables per-page metadata for SEO, server components to keep the JS bundle small, and streaming for case study pages with large MDX content. The portfolio content is semi-static — static generation fits perfectly.
+
+### Why Neon + Drizzle (not Prisma)
+
+Neon's serverless driver works with Vercel Edge without connection pooling overhead. Drizzle is TypeScript-native — the schema is the type, no code generation step. Migrations are plain SQL in `/db/migrations`, fully transparent.
+
+### Why Resend (not SendGrid or Nodemailer)
+
+React-based email template API, clean Next.js SDK. Free tier covers 3,000 emails/month. Contact form sends the resume PDF as an attachment and notifies the owner — two API calls, no queue needed at this scale.
+
+### Why Tailwind v4 (not v3)
+
+Native CSS cascade layers and `@theme` directive — no `tailwind.config.ts` needed. Dark mode via `@custom-variant dark` works cleanly with next-themes' class strategy.
+
+### Why dual-track deployment (Vercel + Terraform AWS)
+
+Vercel handles the live site with zero config. The Terraform code in `/terraform` provisions S3 + CloudFront with OAC (not legacy OAI) and GitHub Actions OIDC trust — no long-lived IAM keys. Phase 2 activates after Vercel v1 is stable.
+
+### Caching strategy (Phase 2 CloudFront)
+
+- Hashed assets (`/_next/static/*`): `max-age=31536000, immutable` — content-addressed, cached forever
+- HTML: `max-age=3600` with revalidation — routing layer must stay fresh
+
+---
+
+## Visitor Contact Flow
+
+```
+User fills form on /connect
+  → POST /api/contact
+    → Zod validates input
+    → Drizzle inserts into Neon contacts table
+    → Resend sends visitor an email with resume PDF attached
+    → Resend sends owner a new-contact notification
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Local Setup
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+git clone https://github.com/neelesh1206/personal-website.git
+cd personal-website
 
-## Learn More
+nvm use                   # switches to Node 24 via .nvmrc
+npm install
 
-To learn more about Next.js, take a look at the following resources:
+cp .env.example .env.local
+# Fill in: DATABASE_URL, RESEND_API_KEY, NEXT_PUBLIC_SITE_URL, CONTACT_NOTIFICATION_EMAIL
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+npm run db:migrate        # creates contacts table in Neon dev branch
+npm run dev               # http://localhost:3000
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Scripts
 
-## Deploy on Vercel
+```bash
+npm run dev           # dev server (Turbopack)
+npm run build         # production build
+npm run typecheck     # tsc --noEmit
+npm run lint          # ESLint
+npm run format        # Prettier write
+npm run format:check  # Prettier check (used in CI)
+npm run test          # Vitest unit tests
+npm run test:e2e      # Playwright E2E tests
+npm run db:generate   # generate Drizzle migration
+npm run db:migrate    # apply migrations to Neon
+npm run db:studio     # Drizzle Studio GUI
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## CI/CD
+
+Every pull request runs `.github/workflows/ci.yml`:
+
+```
+Format check → ESLint → TypeScript → Vitest → Next.js build
+```
+
+Merge to `main` → Vercel auto-deploys.
+
+Phase 2 (`.github/workflows/deploy-aws.yml`): manual trigger only until Vercel v1 is stable. Runs `terraform apply` + S3 sync + CloudFront invalidation via OIDC.
+
+---
+
+## Project Structure
+
+```
+├── app/                    # Next.js App Router
+│   ├── layout.tsx          # Root layout — fonts, providers, analytics
+│   ├── page.tsx            # Home
+│   ├── work/               # Case studies (PRISM, Tempo V3, Tango)
+│   ├── projects/           # Side projects
+│   ├── writing/            # MDX blog
+│   ├── life/               # Personal tab
+│   ├── now/                # /now page
+│   ├── resume/             # Embedded PDF viewer
+│   ├── connect/            # Visitor contact form
+│   └── api/contact/        # Form handler → Neon + Resend
+├── components/
+│   ├── layout/             # Header, Footer, ThemeProvider, ThemeToggle
+│   ├── ui/                 # Primitives
+│   └── connect/            # ContactForm
+├── content/
+│   ├── work/               # Case study MDX files
+│   ├── projects/           # Project MDX files
+│   └── blog/               # Blog post MDX files
+├── lib/
+│   ├── db/                 # Drizzle schema, connection, queries
+│   ├── email/              # Resend client + templates
+│   ├── metadata.ts         # SEO metadata factory
+│   └── utils.ts
+├── terraform/              # Phase 2 AWS IaC (S3 + CloudFront + OAC)
+├── .github/workflows/      # CI + Phase 2 deploy
+├── db/migrations/          # Drizzle SQL migrations
+└── tests/                  # Vitest unit + Playwright E2E
+```
+
+---
+
+## Environment Variables
+
+| Variable                     | Description                                            |
+| ---------------------------- | ------------------------------------------------------ |
+| `DATABASE_URL`               | Neon Postgres connection string                        |
+| `RESEND_API_KEY`             | Resend API key                                         |
+| `NEXT_PUBLIC_SITE_URL`       | Full site URL (e.g. `https://neeleshkakaraparthi.dev`) |
+| `CONTACT_NOTIFICATION_EMAIL` | Email to notify on new contact submissions             |
+
+See `.env.example` for the template.
+
+---
+
+## Pages
+
+| Page         | Route                  | Status     |
+| ------------ | ---------------------- | ---------- |
+| Home         | `/`                    | ✅ Live    |
+| About        | `/about`               | 🔨 Planned |
+| Case Studies | `/work`                | 🔨 Planned |
+| PRISM        | `/work/prism`          | 🔨 Planned |
+| Tempo V3     | `/work/tempo-v3`       | 🔨 Planned |
+| Tango        | `/work/tango`          | 🔨 Planned |
+| Projects     | `/projects`            | 🔨 Planned |
+| outbox-kit   | `/projects/outbox-kit` | 🔨 Planned |
+| Writing      | `/writing`             | 🔨 Planned |
+| Life         | `/life`                | 🔨 Planned |
+| Now          | `/now`                 | 🔨 Planned |
+| Resume       | `/resume`              | 🔨 Planned |
+| Connect      | `/connect`             | 🔨 Planned |
+
+---
+
+_Built by Neelesh Kakaraparthi · [neeleshkakaraparthi.dev](https://neeleshkakaraparthi.dev)_
