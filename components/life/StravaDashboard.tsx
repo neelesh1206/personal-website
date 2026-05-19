@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import { FetchedAt } from './FetchedAt'
 import {
   Activity,
   Award,
@@ -380,11 +381,7 @@ export function StravaDashboard({ data }: { data: StravaDashboardData }) {
       </section>
 
       <p className="text-xs text-zinc-400 dark:text-zinc-500">
-        Data fetched from Strava API · cached server-side · updated{' '}
-        {new Intl.DateTimeFormat('en-US', {
-          dateStyle: 'medium',
-          timeStyle: 'short',
-        }).format(new Date(fetchedAt))}
+        Data fetched from Strava API · cached server-side · updated <FetchedAt iso={fetchedAt} />
       </p>
     </div>
   )
