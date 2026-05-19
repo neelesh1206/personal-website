@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { Mail } from 'lucide-react'
+import { CurrentYear } from './CurrentYear'
 
 const footerLinks = [
   { href: '/work', label: 'Work' },
@@ -87,7 +88,8 @@ export function Footer() {
 
         <div className="mt-8 flex flex-col gap-1 border-t border-zinc-200 pt-6 dark:border-zinc-800 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-zinc-400 dark:text-zinc-500">
-            © {new Date().getFullYear()} Neelesh Kakaraparthi. All rights reserved.
+            © <CurrentYear serverYear={new Date().getFullYear()} /> Neelesh Kakaraparthi. All rights
+            reserved.
           </p>
           <p className="text-xs text-zinc-400 dark:text-zinc-500">
             Built with Next.js · Deployed on{' '}
