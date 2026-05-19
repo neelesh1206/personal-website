@@ -47,6 +47,7 @@ const PERSON_SCHEMA = {
     'https://www.linkedin.com/in/neelesh-kakaraparthi-161b8554/',
     'https://github.com/neelesh1206',
     'https://www.strava.com/athletes/152539784',
+    'https://marketmind.neeleshkakaraparthi.dev',
     'https://al-kindipublisher.com/index.php/jcsts/article/view/10276',
     'https://www.sarcouncil.com/download-article/SJMD-111-2025-303-309.pdf',
     'https://ideas.repec.org/a/bhx/ojijce/v7y2025i11p53-63id2972.html',

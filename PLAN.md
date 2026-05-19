@@ -139,8 +139,9 @@
 | Tempo Service     | `/work/tempo-service`    | ✅     | Java 17 authoring backend; Oracle → GCP Postgres                                                                                                         |
 | Tempo Runtime     | `/work/tempo-runtime`    | ✅     | Node → Go, Cosmos → Cassandra; 82% memory, 18× cold start                                                                                                |
 | Tempo V2 UI       | `/work/tempo-v2-ui`      | ✅     | Legacy editor (sunset); versioning + RBAC + dynamic forms                                                                                                |
-| Projects List     | `/projects`              | 📋     | Cards for all 4 projects                                                                                                                                 |
-| outbox-kit        | `/projects/outbox-kit`   | 📋     |                                                                                                                                                          |
+| Projects List     | `/projects`              | ✅     | Renders all projects from `lib/projects/data.ts`                                                                                                         |
+| MarketMind        | `/projects/marketmind`   | ✅     | Stock-prediction app — live at marketmind.neeleshkakaraparthi.dev. Full case-study layout (problem, sections, what shipped, stack).                      |
+| outbox-kit        | `/projects/outbox-kit`   | 🔨     | Stub card, content TBD when library ships                                                                                                                |
 | PR Reviewer       | `/projects/pr-reviewer`  | 📋     |                                                                                                                                                          |
 | Agentic RAG       | `/projects/agentic-rag`  | 📋     |                                                                                                                                                          |
 | Stock Picker      | `/projects/stock-picker` | 📋     |                                                                                                                                                          |

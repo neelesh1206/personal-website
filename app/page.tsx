@@ -3,7 +3,9 @@ import { Suspense } from 'react'
 import { ArrowRight, MapPin, Hammer, BookOpen, Compass } from 'lucide-react'
 import { defaultMetadata } from '@/lib/metadata'
 import { caseStudies } from '@/lib/case-studies/data'
+import { projects } from '@/lib/projects/data'
 import { HomePageJsonLd } from '@/components/seo/JsonLd'
+import { ProjectCard } from '@/components/projects/ProjectCard'
 import { VisitorMetrics, VisitorMetricsSkeleton } from '@/components/home/VisitorMetrics'
 
 export const revalidate = 300 // home rebuilds every 5 min for fresh visitor count
@@ -15,28 +17,7 @@ const featuredWork = FEATURED_SLUGS.map((slug) => caseStudies.find((c) => c.slug
   Boolean
 )
 
-const featuredProjects = [
-  {
-    slug: 'outbox-kit',
-    tag: 'Open Source',
-    title: 'outbox-kit',
-    description:
-      'TypeScript + Java library implementing the transactional outbox pattern — the same reliability primitive that runs Walmart homepages at 150× scale.',
-    stack: ['TypeScript', 'Java', 'Kafka', 'PostgreSQL'],
-    status: 'Building',
-    statusColor: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-  },
-  {
-    slug: 'pr-reviewer',
-    tag: 'AI Tool',
-    title: 'PR Reviewer',
-    description:
-      'Claude-powered GitHub App that reviews pull requests with structured outputs, inline comments, and acceptance rate tracking.',
-    stack: ['Claude API', 'Next.js', 'GitHub App', 'Postgres'],
-    status: 'Planned',
-    statusColor: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400',
-  },
-]
+const featuredProjects = projects.slice(0, 2)
 
 export default function HomePage() {
   return (
@@ -107,7 +88,15 @@ export default function HomePage() {
           </span>
           <div className="flex items-center gap-2 text-zinc-700 dark:text-zinc-300">
             <Hammer size={14} className="text-indigo-500" />
-            <span>Building this portfolio</span>
+            <span>
+              Building{' '}
+              <Link
+                href="/projects/marketmind"
+                className="font-medium text-zinc-900 underline-offset-4 hover:underline dark:text-zinc-50"
+              >
+                MarketMind
+              </Link>
+            </span>
           </div>
           <div className="hidden h-1 w-1 rounded-full bg-zinc-300 dark:bg-zinc-600 sm:block" />
           <div className="flex items-center gap-2 text-zinc-700 dark:text-zinc-300">
@@ -256,51 +245,8 @@ export default function HomePage() {
         </div>
 
         <div className="grid gap-5 sm:grid-cols-2">
-          {featuredProjects.map((item) => (
-            <Link
-              key={item.slug}
-              href={`/projects/${item.slug}`}
-              className="group rounded-2xl border border-zinc-200 bg-white p-6 transition-all duration-200 hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700 dark:hover:shadow-zinc-900/50"
-            >
-              {/* Tag + Status */}
-              <div className="mb-3 flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
-                  {item.tag}
-                </span>
-                <span
-                  className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${item.statusColor}`}
-                >
-                  {item.status}
-                </span>
-              </div>
-
-              {/* Title */}
-              <h3 className="mb-2 font-mono text-lg font-bold text-zinc-900 dark:text-zinc-50">
-                {item.title}
-              </h3>
-
-              {/* Description */}
-              <p className="mb-4 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
-                {item.description}
-              </p>
-
-              {/* Stack */}
-              <div className="flex flex-wrap gap-1.5">
-                {item.stack.map((s) => (
-                  <span
-                    key={s}
-                    className="rounded px-2 py-0.5 text-xs text-zinc-500 ring-1 ring-zinc-200 dark:text-zinc-500 dark:ring-zinc-700"
-                  >
-                    {s}
-                  </span>
-                ))}
-              </div>
-
-              <div className="mt-4 flex items-center gap-1 text-sm font-medium text-indigo-600 dark:text-indigo-400">
-                Learn more
-                <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
-              </div>
-            </Link>
+          {featuredProjects.map((p) => (
+            <ProjectCard key={p.slug} project={p} />
           ))}
         </div>
       </section>

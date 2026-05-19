@@ -91,6 +91,7 @@ The `/life` page renders a live Strava activity dashboard — YTD distance, all-
 - **Owner-only admin dashboard** (`/admin`) — HMAC-signed session cookie (no third-party auth), 30-day activity bar chart, all-time / 30d / 7d counters, and a sortable submissions table. `/robots.txt` blocks crawlers from both `/admin` and `/api/*`.
 - **First-party visitor analytics** — privacy-conscious page-view counter (`page_views` table in Neon). Visitor identity is SHA-256(IP + UA + daily-salt), rotates at UTC midnight, never stored as PII. Client beacon (`<TrackPageView />`) fires once per pathname change; server route filters bots and skip-listed paths, dedupes via `UNIQUE (path, visitor_hash, view_date)`. Home page renders a 3-card strip under the connect CTA — unique visitors / visitors today / page views — refreshed every 5 min via ISR (`revalidate: 300`). Complements Vercel Analytics: that's the page-view dashboard owned by Vercel; this is the count you publicly display, owned by you.
 - **Code-generated NK favicon** — `app/icon.tsx` + `app/apple-icon.tsx` render PNGs via `next/og` at the edge (no committed binary).
+- **MarketMind project showcase** (`/projects/marketmind`, live at `marketmind.neeleshkakaraparthi.dev`) — 5-day-build stock-prediction app with multi-source signal breakdown, FinBERT + Llama-3 NLP pipeline on GitHub Actions cron, Supabase + RLS, gamification + animated result reveals. Rendered from a typed projects data file (`lib/projects/data.ts`), same pattern as case studies.
 - **Six production case studies** (`/work`) — PRISM (backend + UI) and Tempo (V3 UI, Service, Runtime, V2 UI) — sourced from project biographies, rendered from a single typed data file (`lib/case-studies/data.ts`), with platform grouping, metric chips, problem/architecture/shipped sections, and prev/next nav. Statically generated via `generateStaticParams`.
 - **Dark / light mode** — class-based via `next-themes`, light default, no flash on load.
 - **Mobile-first responsive layout**, full a11y semantics, JSON-LD Person schema for SEO.
@@ -295,25 +296,27 @@ See `.env.example` for the template.
 
 ## Pages
 
-| Page          | Route                  | Status     |
-| ------------- | ---------------------- | ---------- |
-| Home          | `/`                    | ✅ Live    |
-| About         | `/about`               | 🔨 Planned |
-| Case Studies  | `/work`                | ✅ Live    |
-| PRISM Backend | `/work/prism-backend`  | ✅ Live    |
-| Prism V3 UI   | `/work/prism-ui`       | ✅ Live    |
-| Tempo V3 UI   | `/work/tempo-v3-ui`    | ✅ Live    |
-| Tempo Service | `/work/tempo-service`  | ✅ Live    |
-| Tempo Runtime | `/work/tempo-runtime`  | ✅ Live    |
-| Tempo V2 UI   | `/work/tempo-v2-ui`    | ✅ Live    |
-| Projects      | `/projects`            | 🔨 Planned |
-| outbox-kit    | `/projects/outbox-kit` | 🔨 Planned |
-| Writing       | `/writing`             | ✅ Live    |
-| Life          | `/life`                | ✅ Live    |
-| Now           | `/now`                 | 🔨 Planned |
-| Resume        | `/resume`              | 🔨 Planned |
-| Connect       | `/connect`             | ✅ Live    |
-| Admin         | `/admin`               | ✅ Live    |
+| Page          | Route                   | Status      |
+| ------------- | ----------------------- | ----------- |
+| Home          | `/`                     | ✅ Live     |
+| About         | `/about`                | 🔨 Planned  |
+| Case Studies  | `/work`                 | ✅ Live     |
+| PRISM Backend | `/work/prism-backend`   | ✅ Live     |
+| Prism V3 UI   | `/work/prism-ui`        | ✅ Live     |
+| Tempo V3 UI   | `/work/tempo-v3-ui`     | ✅ Live     |
+| Tempo Service | `/work/tempo-service`   | ✅ Live     |
+| Tempo Runtime | `/work/tempo-runtime`   | ✅ Live     |
+| Tempo V2 UI   | `/work/tempo-v2-ui`     | ✅ Live     |
+| Projects      | `/projects`             | ✅ Live     |
+| MarketMind    | `/projects/marketmind`  | ✅ Live     |
+| outbox-kit    | `/projects/outbox-kit`  | 🔨 Building |
+| PR Reviewer   | `/projects/pr-reviewer` | 🔨 Planned  |
+| Writing       | `/writing`              | ✅ Live     |
+| Life          | `/life`                 | ✅ Live     |
+| Now           | `/now`                  | 🔨 Planned  |
+| Resume        | `/resume`               | 🔨 Planned  |
+| Connect       | `/connect`              | ✅ Live     |
+| Admin         | `/admin`                | ✅ Live     |
 
 ---
 
