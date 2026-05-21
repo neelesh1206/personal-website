@@ -160,7 +160,7 @@ export default function HomePage() {
               </div>
 
               <div className="flex flex-wrap gap-1.5">
-                {item.stack.slice(0, 4).map((s) => (
+                {item.stack.map((s) => (
                   <span
                     key={s}
                     className="rounded px-2 py-0.5 text-[11px] text-zinc-500 ring-1 ring-zinc-200 dark:text-zinc-400 dark:ring-zinc-700"

@@ -51,7 +51,7 @@ export function CaseStudyCard({ caseStudy }: { caseStudy: CaseStudy }) {
       </div>
 
       <div className="mt-auto flex flex-wrap gap-1.5">
-        {caseStudy.stack.slice(0, 5).map((s) => (
+        {caseStudy.stack.map((s) => (
           <span
             key={s}
             className="rounded-full bg-zinc-100/80 px-2 py-0.5 text-[11px] font-medium text-zinc-700 dark:bg-zinc-800/80 dark:text-zinc-300"
@@ -59,11 +59,6 @@ export function CaseStudyCard({ caseStudy }: { caseStudy: CaseStudy }) {
             {s}
           </span>
         ))}
-        {caseStudy.stack.length > 5 ? (
-          <span className="text-[11px] text-zinc-500 dark:text-zinc-400">
-            +{caseStudy.stack.length - 5}
-          </span>
-        ) : null}
       </div>
 
       <div className="flex items-center gap-1.5 text-sm font-medium text-zinc-900 transition-transform group-hover:translate-x-1 dark:text-zinc-50">

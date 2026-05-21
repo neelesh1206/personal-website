@@ -52,7 +52,7 @@ export function ProjectCard({ project }: { project: Project }) {
       ) : null}
 
       <div className="flex flex-wrap gap-1.5">
-        {project.stack.slice(0, 7).map((s) => (
+        {project.stack.map((s) => (
           <span
             key={s}
             className="rounded px-2 py-0.5 text-[11px] text-zinc-500 ring-1 ring-zinc-200 dark:text-zinc-400 dark:ring-zinc-700"
@@ -60,11 +60,6 @@ export function ProjectCard({ project }: { project: Project }) {
             {s}
           </span>
         ))}
-        {project.stack.length > 7 ? (
-          <span className="rounded px-2 py-0.5 text-[11px] text-zinc-400 dark:text-zinc-500">
-            +{project.stack.length - 7} more
-          </span>
-        ) : null}
       </div>
 
       <div className="mt-auto flex items-center justify-between text-sm font-medium">
