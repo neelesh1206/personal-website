@@ -24,67 +24,91 @@ export default function HomePage() {
     <div className="mx-auto max-w-5xl px-4 sm:px-6">
       <HomePageJsonLd />
       {/* ── Hero ─────────────────────────────────────────────────── */}
-      <section className="flex min-h-[calc(100vh-4rem)] flex-col justify-center py-20">
-        {/* Availability badge */}
-        <div className="mb-8 inline-flex w-fit items-center gap-2 rounded-full border border-green-200 bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700 dark:border-green-800/50 dark:bg-green-950/30 dark:text-green-400">
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
-          </span>
-          Open to Senior Software Engineer roles · Seattle &amp; Bay Area
+      <section className="grid min-h-[calc(100vh-4rem)] gap-12 py-20 lg:grid-cols-[3fr_2fr] lg:items-center lg:gap-16">
+        {/* Left column — pitch */}
+        <div>
+          {/* Availability badge */}
+          <div className="mb-8 inline-flex w-fit items-center gap-2 rounded-full border border-green-200 bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700 dark:border-green-800/50 dark:bg-green-950/30 dark:text-green-400">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
+            </span>
+            Open to Senior Software Engineer roles · Seattle &amp; Bay Area
+          </div>
+
+          {/* Name */}
+          <h1 className="text-5xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-6xl lg:text-7xl">
+            Neelesh
+            <br />
+            <span className="text-indigo-600 dark:text-indigo-400">Kakaraparthi.</span>
+          </h1>
+
+          {/* Title */}
+          <p className="mt-4 text-xl font-medium text-zinc-500 dark:text-zinc-400 sm:text-2xl">
+            Senior Full-Stack Software Engineer
+          </p>
+
+          {/* Description */}
+          <p className="mt-6 max-w-2xl text-lg leading-relaxed text-zinc-600 dark:text-zinc-300">
+            8+ years at Walmart Global Tech building full-stack systems at scale. Led the platform
+            that grew Walmart homepages from{' '}
+            <span className="font-semibold text-zinc-900 dark:text-zinc-50">20 → 3,500+</span> and
+            modernised the authoring tool used by merchants across{' '}
+            <span className="font-semibold text-zinc-900 dark:text-zinc-50">38 storefronts</span>{' '}
+            daily.
+          </p>
+
+          {/* CTAs */}
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <Link
+              href="/work"
+              className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white transition-all hover:bg-indigo-500 hover:shadow-lg hover:shadow-indigo-500/25"
+            >
+              View My Work
+              <ArrowRight size={16} />
+            </Link>
+            <Link
+              href="/connect"
+              className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-5 py-3 text-sm font-semibold text-zinc-900 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:hover:bg-zinc-800"
+            >
+              Get Resume
+            </Link>
+          </div>
+
+          {/* Location */}
+          <div className="mt-6 flex items-center gap-1.5 text-sm text-zinc-400 dark:text-zinc-500">
+            <MapPin size={14} />
+            <span>Redmond, WA</span>
+          </div>
         </div>
 
-        {/* Name */}
-        <h1 className="text-5xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-6xl lg:text-7xl">
-          Neelesh
-          <br />
-          <span className="text-indigo-600 dark:text-indigo-400">Kakaraparthi.</span>
-        </h1>
+        {/* Right column — engineering substance + scannable stack */}
+        <aside className="lg:border-l lg:border-zinc-200 lg:pl-10 dark:lg:border-zinc-800">
+          {/* Top: highlight stats */}
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { value: '150×', label: 'Homepage scale' },
+              { value: '38', label: 'Storefronts' },
+              { value: '8+ yrs', label: 'At Walmart' },
+            ].map((s) => (
+              <div
+                key={s.label}
+                className="rounded-xl border border-zinc-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-950"
+              >
+                <div className="text-xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">
+                  {s.value}
+                </div>
+                <div className="mt-0.5 text-[11px] font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  {s.label}
+                </div>
+              </div>
+            ))}
+          </div>
 
-        {/* Title */}
-        <p className="mt-4 text-xl font-medium text-zinc-500 dark:text-zinc-400 sm:text-2xl">
-          Senior Full-Stack Software Engineer
-        </p>
-
-        {/* Description */}
-        <p className="mt-6 max-w-2xl text-lg leading-relaxed text-zinc-600 dark:text-zinc-300">
-          8+ years at Walmart Global Tech building full-stack systems at scale. Led the platform
-          that grew Walmart homepages from{' '}
-          <span className="font-semibold text-zinc-900 dark:text-zinc-50">20 → 3,500+</span> and
-          modernised the authoring tool used by merchants across{' '}
-          <span className="font-semibold text-zinc-900 dark:text-zinc-50">38 storefronts</span>{' '}
-          daily.
-        </p>
-
-        {/* CTAs */}
-        <div className="mt-8 flex flex-wrap items-center gap-3">
-          <Link
-            href="/work"
-            className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white transition-all hover:bg-indigo-500 hover:shadow-lg hover:shadow-indigo-500/25"
-          >
-            View My Work
-            <ArrowRight size={16} />
-          </Link>
-          <Link
-            href="/connect"
-            className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-5 py-3 text-sm font-semibold text-zinc-900 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:hover:bg-zinc-800"
-          >
-            Get Resume
-          </Link>
-        </div>
-
-        {/* Location */}
-        <div className="mt-6 flex items-center gap-1.5 text-sm text-zinc-400 dark:text-zinc-500">
-          <MapPin size={14} />
-          <span>Redmond, WA</span>
-        </div>
-
-        {/* What I do — engineering substance + scannable stack */}
-        <div className="mt-10 max-w-3xl">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+          <p className="mt-8 text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
             Engineering I&apos;m known for
           </p>
-          <p className="text-base leading-relaxed text-zinc-600 dark:text-zinc-300">
+          <p className="mt-3 text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">
             That&apos;s the kind of scale where a partition-key choice, a missing outbox pattern, or
             a dual-write bug becomes a production incident for millions of shoppers. I make those
             calls — designing{' '}
@@ -129,7 +153,7 @@ export default function HomePage() {
               </span>
             ))}
           </div>
-        </div>
+        </aside>
       </section>
 
       {/* ── Currently ──────────────────────────────────────────────── */}
