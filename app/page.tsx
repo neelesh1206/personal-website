@@ -91,10 +91,10 @@ export default function HomePage() {
             <span>
               Building{' '}
               <Link
-                href="/projects/marketmind"
+                href="/projects/gear-nest"
                 className="font-medium text-zinc-900 underline-offset-4 hover:underline dark:text-zinc-50"
               >
-                MarketMind
+                GearNest
               </Link>
             </span>
           </div>
