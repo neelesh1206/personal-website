@@ -24,7 +24,7 @@ export default function HomePage() {
     <div className="mx-auto max-w-5xl px-4 sm:px-6">
       <HomePageJsonLd />
       {/* ── Hero ─────────────────────────────────────────────────── */}
-      <section className="grid min-h-[calc(100vh-4rem)] gap-12 py-20 lg:grid-cols-[3fr_2fr] lg:items-center lg:gap-16">
+      <section className="grid gap-12 py-16 sm:py-20 lg:grid-cols-[3fr_2fr] lg:items-start lg:gap-16 lg:py-24">
         {/* Left column — pitch */}
         <div>
           {/* Availability badge */}
