@@ -309,7 +309,7 @@ See `.env.example` for the template.
 | Tempo V2 UI   | `/work/tempo-v2-ui`     | ✅ Live     |
 | Projects      | `/projects`             | ✅ Live     |
 | MarketMind    | `/projects/marketmind`  | ✅ Live     |
-| outbox-kit    | `/projects/outbox-kit`  | 🔨 Building |
+| GearNest      | `/projects/gear-nest`   | 🔨 Building |
 | PR Reviewer   | `/projects/pr-reviewer` | 🔨 Planned  |
 | Writing       | `/writing`              | ✅ Live     |
 | Life          | `/life`                 | ✅ Live     |

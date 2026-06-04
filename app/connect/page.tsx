@@ -22,7 +22,7 @@ function LinkedInIcon() {
 export const metadata = createMetadata({
   title: 'Connect',
   description:
-    'Leave your email and I will send you my resume directly. Open to Staff SWE roles in Seattle and the Bay Area.',
+    'Leave your email and I will send you my resume directly. Open to Senior Software Engineer roles in Seattle and the Bay Area.',
 })
 
 export default async function ConnectPage() {

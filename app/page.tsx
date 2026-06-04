@@ -12,7 +12,7 @@ export const revalidate = 300 // home rebuilds every 5 min for fresh visitor cou
 
 export const metadata = defaultMetadata
 
-const FEATURED_SLUGS = ['prism-backend', 'tempo-v3-ui', 'tempo-runtime']
+const FEATURED_SLUGS = ['tempo-v3-ui', 'prism-backend', 'tempo-service']
 const featuredWork = FEATURED_SLUGS.map((slug) => caseStudies.find((c) => c.slug === slug)!).filter(
   Boolean
 )
@@ -31,7 +31,7 @@ export default function HomePage() {
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
           </span>
-          Open to Staff SWE roles · Seattle &amp; Bay Area
+          Open to Senior Software Engineer roles · Seattle &amp; Bay Area
         </div>
 
         {/* Name */}
@@ -106,7 +106,7 @@ export default function HomePage() {
           <div className="hidden h-1 w-1 rounded-full bg-zinc-300 dark:bg-zinc-600 sm:block" />
           <div className="flex items-center gap-2 text-zinc-700 dark:text-zinc-300">
             <Compass size={14} className="text-indigo-500" />
-            <span>Exploring Staff SWE opportunities</span>
+            <span>Exploring Senior Software Engineer opportunities</span>
           </div>
         </div>
       </section>

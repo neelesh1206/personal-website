@@ -20,7 +20,7 @@ export const defaultMetadata: Metadata = {
     'Neelesh',
     'Kakaraparthi',
     'Senior Full-Stack Software Engineer',
-    'Staff SWE',
+    'Senior Software Engineer',
     'Walmart Global Tech',
     'PRISM',
     'Tempo',

@@ -147,15 +147,100 @@ export const projects: Project[] = [
     ],
   },
   {
-    slug: 'outbox-kit',
-    title: 'outbox-kit',
-    tagline: 'TypeScript + Java library implementing the transactional outbox pattern',
-    tag: 'Open Source',
+    slug: 'gear-nest',
+    title: 'GearNest',
+    tagline:
+      'Semantic outdoor + fitness gear aggregator — 50k products, AI chat, price comparison across 8 stores',
+    tag: 'Product',
     status: 'Building',
     period: '2026 – present',
+    liveUrl: 'https://github.com/neelesh1206/gear-nest',
     summary:
-      'The same reliability primitive that runs Walmart homepages at 150× scale, extracted into a small library you can drop into a Spring Boot or Node.js service. Atomic DB → Kafka delivery without distributed transactions.',
-    stack: ['TypeScript', 'Java', 'Kafka', 'PostgreSQL', 'Drizzle ORM', 'Spring Boot'],
+      'A semantic discovery and price-comparison platform for outdoor, hiking, running, camping, and fitness gear. Aggregates 50,000+ products across 8 retailers (Amazon, REI, Backcountry, Cabela’s, Moosejaw, Steep & Cheap, CampSaver, Garage Grown Gear) with a unified catalog, a best-value price ranking (price × store rating), and product-scoped RAG chat grounded in real specs and community reviews. Polyglot monorepo — Rust ingestion pipeline, Java 21 + Spring Boot RAG orchestrator, Next.js 16 frontend, PostgreSQL 16 + pgvector + Redis backing it.',
+    metrics: [
+      { value: '50k+', label: 'Products', context: '8 stores aggregated into one catalog' },
+      { value: '~3M', label: 'Review chunks', context: 'indexed in pgvector for grounded chat' },
+      { value: '3', label: 'Services / languages', context: 'Rust + Java + TypeScript monorepo' },
+      {
+        value: '$30/mo',
+        label: 'GCP budget cap',
+        context: 'Cloud Run + Cloud SQL + Pub/Sub auto-disable',
+      },
+      {
+        value: '20+',
+        label: 'ADRs',
+        context: 'entity resolution, HNSW anti-pattern, stratified retrieval',
+      },
+      {
+        value: '8M+',
+        label: 'Vector chunks',
+        context: 'specs + chunked reviews, exact KNN per product',
+      },
+    ],
+    stack: [
+      'Rust (Tokio + sqlx + reqwest)',
+      'Java 21 + Spring Boot 3',
+      'Spring AI (HuggingFace)',
+      'Next.js 16 (App Router)',
+      'TypeScript strict',
+      'PostgreSQL 16 + pgvector',
+      'Redis (Upstash)',
+      'BAAI/bge-small-en-v1.5 (384d embeddings)',
+      'Mistral-7B-Instruct (HF Pro)',
+      'GCP Cloud Run + Cloud SQL',
+      'Tailwind v4 + shadcn/ui',
+      'TanStack Query + SSE',
+      'Framer Motion',
+      'Docker + GitHub Actions',
+      'Vercel',
+      'Zod',
+    ],
+    problem:
+      'Outdoor enthusiasts shop across 8+ specialised retailers — comparing prices manually, reading scattered reviews on each site, and using keyword search that fails for nuanced queries like "which sleeping bag works below -20°F and packs under 2 lbs?" Built this because I hike, trail run, and CrossFit — and a unified, semantic gear search genuinely should exist.',
+    sections: [
+      {
+        heading: 'Rust for the ingestion pipeline — not Python',
+        paragraphs: [
+          'Scraping 8 stores concurrently, normalising 50k products, chunking 3M review texts, and generating vector embeddings for all of them is CPU and I/O bound. Rust’s async model (Tokio) runs all 8 store scrapers concurrently with zero data races guaranteed at compile time. Rayon handles CPU-bound normalisation in parallel. The memory footprint is roughly 10× lower than a JVM equivalent, which matters on constrained Cloud Run batch-job machines.',
+          'The pipeline is built around a StoreCrawler trait — each store’s implementation is transport-agnostic (clean HTTP, proxy rotation, or headless browser via chromiumoxide). Upgrading one store’s anti-bot approach is a one-file change that doesn’t touch the normaliser, chunker, or embedder.',
+        ],
+      },
+      {
+        heading: 'Entity resolution — the hardest correctness problem in e-commerce aggregation',
+        paragraphs: [
+          '"MSR PocketRocket 2" and "Mountain Safety Research Pocket Rocket II Stove" are the same product. Naive string similarity breaks immediately on real retailer title data. GearNest uses a three-tier resolution system: structural identifiers (GTIN/ASIN, O(1) lookup from affiliate APIs), structured attribute extraction (a ~40-brand alias table + model-number regex), and embedding similarity on canonical attribute strings as a fallback.',
+          'Each match gets a confidence tier (EXACT / HIGH / MEDIUM / CANDIDATE). CANDIDATE rows are written to the DB but filtered from the user-facing price comparison table — they sit in a review queue rather than silently corrupting the canonical product graph. Documented as ADR-007, the single most important invariant in the ingestion pipeline.',
+        ],
+      },
+      {
+        heading: 'Java RAG orchestrator — product-scoped chat via stratified retrieval',
+        paragraphs: [
+          'The chat is always product-scoped. Users ask about a specific product ("Is this good for below-freezing conditions?") and the system retrieves context from that product’s indexed chunks only. Because the filter is so selective (~75 rows per product), an HNSW vector index would degrade to a sequential scan — exact KNN over 75 embeddings is microseconds and 100% accurate. The pgvector indexes are btree on product_id, not HNSW.',
+          'Retrieval is stratified to prevent sentiment bias: semantic top-5 (with MMR for diversity) + top-3 negative review chunks (guaranteed failure modes regardless of query direction) + top-2 spec chunks. A pure top-10 cosine query on "Is this good for rain?" would cluster around rain chunks and miss the snow failure. Stratification makes answers trustworthy.',
+          'Session budget (5 questions per 2-hour session) uses a Redis WATCH/MULTI reserve-then-commit pattern — budget rolls back if HuggingFace never responds, preventing wasted questions on timeouts.',
+        ],
+      },
+      {
+        heading: 'GCP hybrid deployment with a hard $30/mo cap',
+        paragraphs: [
+          'Cloud Run for the API (scale-to-zero, paid only on request) + Cloud SQL for Postgres (because Cloud Run can’t host pgvector) + Upstash Redis (serverless) + Vercel for the frontend. A Cloud Billing budget at $30 fires a Pub/Sub notification that triggers a Cloud Function — which suspends Cloud Run, downsizes Cloud SQL, and stops the pipeline scheduler. So the upper bound is enforced infrastructurally, not by trust.',
+        ],
+      },
+      {
+        heading: 'Three parallel Claude Code sessions, one shared schema',
+        paragraphs: [
+          'The monorepo is deliberately split into three services (pipeline / api / web) each with its own CLAUDE.md scoping the agent to that service. Session 0 owns the contract — Postgres schema, OpenAPI spec, ADRs, infra. Sessions A/B/C each implement one service against the contract, never editing each other’s code. This makes parallel CLI work possible without merge conflicts and forces every cross-service question to surface as an OpenAPI or schema change.',
+        ],
+      },
+    ],
+    shipped: [
+      'Monorepo scaffold (3 services), Postgres schema with monthly range-partitioned price_history, OpenAPI 3.0 spec, 20 ADRs.',
+      'Rust ingestion pipeline: Amazon PA-API + scraper traits, 3-tier entity resolution, sentence-aware spec chunker, fixed-overlap review chunker, HuggingFace embedding batching, pgvector bulk insert, Redis stale-while-revalidate price cache.',
+      'Java RAG orchestrator: hybrid search (cosine 0.6 + FTS 0.4), best-value scorer, session budget service with reserve-then-commit, SSE chat streaming on Java 21 virtual threads.',
+      'Next.js 16 frontend: server-rendered catalog with facets, product detail with price table + tiered reviews, debounced server-action search suggestions, client chat panel consuming SSE.',
+      'GitHub Actions Claude code-review workflow with model-gated quotas, scope-boundary enforcement, OpenAPI contract conformance.',
+    ],
+    links: [{ label: 'GitHub', href: 'https://github.com/neelesh1206/gear-nest', primary: true }],
   },
   {
     slug: 'pr-reviewer',

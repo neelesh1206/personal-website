@@ -15,7 +15,7 @@ export function visitorEmail({ name, resumeUrl }: VisitorEmail) {
 Thanks for getting in touch via neeleshkakaraparthi.dev.
 
 ${resumeLine}
-Happy to chat about Staff SWE roles, full-stack systems work, or anything you read about on the site.
+Happy to chat about Senior Software Engineer roles, full-stack systems work, or anything you read about on the site.
 
 Cheers,
 ${SIGNATURE}`
@@ -26,7 +26,7 @@ ${
     ? `<p>You can download my latest resume here: <a href="${resumeUrl}">${resumeUrl}</a>.</p>`
     : `<p>My resume is on its way — I'll follow up directly within 24 hours.</p>`
 }
-<p>Happy to chat about Staff SWE roles, full-stack systems work, or anything you read about on the site.</p>
+<p>Happy to chat about Senior Software Engineer roles, full-stack systems work, or anything you read about on the site.</p>
 <p>Cheers,<br/>Neelesh Kakaraparthi<br/><a href="https://neeleshkakaraparthi.dev">neeleshkakaraparthi.dev</a></p>`
   return { subject, text, html }
 }

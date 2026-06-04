@@ -3,34 +3,34 @@
 **Owner:** Neelesh Kakaraparthi  
 **Repo:** [github.com/neelesh1206/personal-website](https://github.com/neelesh1206/personal-website)  
 **Live:** [neeleshkakaraparthi.dev](https://neeleshkakaraparthi.dev)  
-**Goal:** Showcase enterprise-grade full-stack skills to recruiters and hiring managers targeting Staff SWE roles.
+**Goal:** Showcase enterprise-grade full-stack skills to recruiters and hiring managers targeting Senior Software Engineer roles.
 
 ---
 
 ## Decisions Log
 
-| Decision           | Choice                                             | Rationale                                                   |
-| ------------------ | -------------------------------------------------- | ----------------------------------------------------------- |
-| Framework          | Next.js 16 (App Router) from scratch               | Template fight not worth it; own every decision             |
-| Language           | TypeScript strict mode                             | Non-negotiable enterprise signal                            |
-| Styling            | Tailwind CSS v4 + next-themes                      | Industry standard; class-based dark mode for SSR safety     |
-| Dark mode          | Light default, user-toggleable                     | Accessibility + preference                                  |
-| Content            | MDX files in `/content`                            | Git-based, no CMS needed, typed with Zod later              |
-| Fonts              | Inter (body) + JetBrains Mono (code) via next/font | Zero layout shift, self-hosted                              |
-| Database           | Neon (serverless Postgres) + Drizzle ORM           | TypeScript-native ORM, serverless fits Vercel edge          |
-| Email              | Resend                                             | Modern API, great Next.js DX, free tier sufficient          |
-| Analytics          | Vercel Analytics + Speed Insights                  | Free, privacy-friendly, no cookie banner                    |
-| Forms              | React Hook Form + Zod                              | Type-safe, enterprise-standard validation                   |
-| Deployment Phase 1 | Vercel                                             | Zero config, PR previews, auto-deploy on push               |
-| Deployment Phase 2 | Terraform AWS S3 + CloudFront + OIDC               | IaC in repo as Staff-level signal; activate after v1 stable |
-| CI/CD              | GitHub Actions                                     | Lint + typecheck + test + build on every PR                 |
-| Git hooks          | Husky + lint-staged                                | Enforces quality on every commit                            |
-| Testing            | Vitest (unit) + Playwright (E2E)                   | Treats own project with production rigor                    |
-| Icons              | lucide-react                                       | Tree-shakeable, consistent                                  |
-| Animations         | framer-motion (selective)                          | Subtle entrance animations, no gimmicks                     |
-| Domain             | neeleshkakaraparthi.dev (Cloudflare Registrar)     | Exact name match = strongest Google ranking signal          |
-| Node version       | 24 LTS (pinned via .nvmrc)                         | Latest LTS, consistent across local + CI                    |
-| Strava data        | Server Component + ISR revalidate:3600             | Tokens stay server-side; hourly refresh avoids rate limits  |
+| Decision           | Choice                                             | Rationale                                                  |
+| ------------------ | -------------------------------------------------- | ---------------------------------------------------------- |
+| Framework          | Next.js 16 (App Router) from scratch               | Template fight not worth it; own every decision            |
+| Language           | TypeScript strict mode                             | Non-negotiable enterprise signal                           |
+| Styling            | Tailwind CSS v4 + next-themes                      | Industry standard; class-based dark mode for SSR safety    |
+| Dark mode          | Light default, user-toggleable                     | Accessibility + preference                                 |
+| Content            | MDX files in `/content`                            | Git-based, no CMS needed, typed with Zod later             |
+| Fonts              | Inter (body) + JetBrains Mono (code) via next/font | Zero layout shift, self-hosted                             |
+| Database           | Neon (serverless Postgres) + Drizzle ORM           | TypeScript-native ORM, serverless fits Vercel edge         |
+| Email              | Resend                                             | Modern API, great Next.js DX, free tier sufficient         |
+| Analytics          | Vercel Analytics + Speed Insights                  | Free, privacy-friendly, no cookie banner                   |
+| Forms              | React Hook Form + Zod                              | Type-safe, enterprise-standard validation                  |
+| Deployment Phase 1 | Vercel                                             | Zero config, PR previews, auto-deploy on push              |
+| Deployment Phase 2 | Terraform AWS S3 + CloudFront + OIDC               | IaC in repo as seniority signal; activate after v1 stable  |
+| CI/CD              | GitHub Actions                                     | Lint + typecheck + test + build on every PR                |
+| Git hooks          | Husky + lint-staged                                | Enforces quality on every commit                           |
+| Testing            | Vitest (unit) + Playwright (E2E)                   | Treats own project with production rigor                   |
+| Icons              | lucide-react                                       | Tree-shakeable, consistent                                 |
+| Animations         | framer-motion (selective)                          | Subtle entrance animations, no gimmicks                    |
+| Domain             | neeleshkakaraparthi.dev (Cloudflare Registrar)     | Exact name match = strongest Google ranking signal         |
+| Node version       | 24 LTS (pinned via .nvmrc)                         | Latest LTS, consistent across local + CI                   |
+| Strava data        | Server Component + ISR revalidate:3600             | Tokens stay server-side; hourly refresh avoids rate limits |
 
 ---
 
