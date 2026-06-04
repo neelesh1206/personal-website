@@ -78,6 +78,58 @@ export default function HomePage() {
           <MapPin size={14} />
           <span>Redmond, WA</span>
         </div>
+
+        {/* What I do — engineering substance + scannable stack */}
+        <div className="mt-10 max-w-3xl">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+            Engineering I&apos;m known for
+          </p>
+          <p className="text-base leading-relaxed text-zinc-600 dark:text-zinc-300">
+            That&apos;s the kind of scale where a partition-key choice, a missing outbox pattern, or
+            a dual-write bug becomes a production incident for millions of shoppers. I make those
+            calls — designing{' '}
+            <span className="font-medium text-zinc-900 dark:text-zinc-50">
+              partitioned Postgres schemas
+            </span>
+            ,{' '}
+            <span className="font-medium text-zinc-900 dark:text-zinc-50">
+              transactional outboxes
+            </span>
+            ,{' '}
+            <span className="font-medium text-zinc-900 dark:text-zinc-50">
+              multi-tenant data isolation
+            </span>
+            ,{' '}
+            <span className="font-medium text-zinc-900 dark:text-zinc-50">
+              distributed tracing across 15 services
+            </span>{' '}
+            — and write the runbooks too.
+          </p>
+
+          <div className="mt-5 flex flex-wrap gap-1.5">
+            {[
+              'Java 21',
+              'Spring Boot 3',
+              'Kafka',
+              'PostgreSQL',
+              'Cassandra',
+              'Next.js 16',
+              'React 19',
+              'TypeScript 5',
+              'Fastify',
+              'Kubernetes',
+              'GCP / Azure',
+              'OpenTelemetry',
+            ].map((s) => (
+              <span
+                key={s}
+                className="rounded-md bg-zinc-100/80 px-2 py-0.5 text-xs font-medium text-zinc-700 dark:bg-zinc-800/80 dark:text-zinc-300"
+              >
+                {s}
+              </span>
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* ── Currently ──────────────────────────────────────────────── */}
