@@ -11,6 +11,7 @@ import {
 import { refreshBadges } from '@/lib/admin/prep/refresh-badges'
 import { computeBadgeContext, BADGE_INDEX } from '@/lib/admin/prep/badges'
 import { generatePrepSummary, type DaySummaryOutput } from '@/lib/hf'
+import { gradeDay, buildCompletionLines, type CompletionLine } from '@/lib/admin/prep/day-grade'
 import planContent from '@/content/coding-prep-plan.json'
 
 export const runtime = 'nodejs'
@@ -78,19 +79,36 @@ async function runDailySummary() {
   tomorrow.setUTCDate(tomorrow.getUTCDate() + 1)
   const tomorrowFocus = nextDayFocus(settings.plan_start_date, tomorrow)
 
-  const completions: string[] = []
-  if (log.morningAnchorRead) completions.push('Morning anchor')
-  if (log.problemsSolved > 0) completions.push(`Coding (${log.problemsSolved} solved)`)
-  if (log.trainedToday) completions.push('CrossFit')
-  if (log.readAloud) completions.push('English / read aloud')
-  if (log.applicationsCount > 0) completions.push(`${log.applicationsCount} applications`)
-  if (log.rewardEarned) completions.push('Reward earned')
-
   const newlyUnlocked = badges
     .filter((b) => b.unlockedAt.toISOString().slice(0, 10) === today)
     .map((b) => BADGE_INDEX[b.badgeId]?.name ?? b.badgeId)
 
-  const subject = `Prep: ${today} — streak ${ctx.studyStreak}, ${log.problemsSolved} solved, ${log.applicationsCount} apps`
+  const grade = gradeDay({
+    rewardEarned: log.rewardEarned,
+    studyStreak: ctx.studyStreak,
+    problemsSolved: log.problemsSolved,
+    applicationsCount: log.applicationsCount,
+    morningAnchorRead: log.morningAnchorRead,
+    trainedToday: log.trainedToday,
+    readAloud: log.readAloud,
+    newlyUnlockedCount: newlyUnlocked.length,
+  })
+
+  const completionLines: CompletionLine[] = buildCompletionLines({
+    morningAnchorRead: log.morningAnchorRead,
+    problemsSolved: log.problemsSolved,
+    trainedToday: log.trainedToday,
+    readAloud: log.readAloud,
+    applicationsCount: log.applicationsCount,
+    rewardEarned: log.rewardEarned,
+    newlyUnlocked,
+  })
+  // Legacy plain-text list kept for the templated email body + JSON
+  // response — the new emoji-tagged list flows into Slack + the
+  // styled email block.
+  const completions: string[] = completionLines.map((l) => `${l.emoji} ${l.label}`)
+
+  const subject = `${grade.subjectPrefix} — ${today} · ${log.problemsSolved} solved · ${log.applicationsCount} apps`
 
   // AI summary — best-effort. Falls back to the templated rollup if the
   // model call fails or HUGGINGFACE_API_KEY is unset.
@@ -132,6 +150,8 @@ async function runDailySummary() {
       newlyUnlocked,
       tomorrowFocus,
       ai,
+      headerEmoji: grade.headerEmoji,
+      openingLine: grade.openingLine,
     })
     try {
       await getResend().emails.send({
@@ -150,7 +170,8 @@ async function runDailySummary() {
     await postSlack({
       text: subject,
       blocks: [
-        header(`Daily prep — ${today}`),
+        header(`${grade.headerEmoji} Daily prep — ${today}`),
+        section(`_${grade.openingLine}_`),
         ...(ai?.narrative ? [section(`> ${ai.narrative}`)] : []),
         section(
           `*Streak:* ${ctx.studyStreak} day${ctx.studyStreak === 1 ? '' : 's'}   ` +
@@ -227,6 +248,8 @@ function renderEmail(p: {
   newlyUnlocked: string[]
   tomorrowFocus: string
   ai: DaySummaryOutput | null
+  headerEmoji: string
+  openingLine: string
 }) {
   const { log, ctx, ai } = p
   const li = (s: string) => `<li style="margin:4px 0">${s}</li>`
@@ -247,7 +270,8 @@ function renderEmail(p: {
     : ''
 
   return `<!doctype html><html><body style="font-family:-apple-system,Segoe UI,Inter,sans-serif;color:#09090b;max-width:560px;margin:0 auto;padding:24px">
-    <h2 style="margin:0 0 8px">Daily prep — ${p.date}</h2>
+    <h2 style="margin:0 0 4px">${p.headerEmoji} Daily prep — ${p.date}</h2>
+    <p style="margin:0 0 14px;color:#4f46e5;font-style:italic">${escape(p.openingLine)}</p>
     <p style="color:#52525b;margin:0 0 16px">Streak: <strong>${ctx.studyStreak}d</strong> · Gym: <strong>${ctx.trainStreak}d</strong> · Mood: <strong>${log.mood ?? '—'}/5</strong></p>
     ${coachBlock}
     <h3>Done today</h3>
