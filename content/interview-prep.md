@@ -327,11 +327,113 @@ You should be able to fire any of these in under 3 seconds with no thinking. The
 
 ---
 
-# 4. Databases
+# 4. SQL Fundamentals
+
+> Anchor: Used daily on **PRISM Postgres** + **Tempo Service Postgres**. These are the SQL building blocks interviewers actually test, before you ever talk schema design.
+
+### Q4.1 — JOIN types — INNER vs LEFT vs RIGHT vs FULL OUTER. What's the difference?
+
+**Answer**: **INNER** returns only rows where the join key matches in both tables — non-matches drop out. **LEFT** keeps every row from the left table and fills nulls where the right has no match — use when "I want all parents whether they have children or not". **RIGHT** is the mirror, rarely used because you can just flip the FROM order. **FULL OUTER** keeps unmatched rows from both sides. Rule: if your result has nulls in columns that aren't supposed to be nullable, you've got the wrong join type.
+
+**How I used it**: PRISM editor list page joins message → asset → asset_config. `message LEFT JOIN asset` because some messages don't yet have assets (they're being authored). `asset INNER JOIN asset_config` — every asset must have at least one locale config, so a missing one is a bug.
+
+**Remember**: _"LEFT keeps parents without children. INNER drops them. FULL keeps both orphans."_
+
+### Q4.2 — GROUP BY and HAVING — when is HAVING different from WHERE?
+
+**Answer**: **WHERE filters rows before grouping. HAVING filters groups after grouping.** You can't put an aggregate (`COUNT`, `SUM`, `AVG`) in WHERE because the aggregate doesn't exist until after grouping — it has to go in HAVING. Rule: filter by row-level columns in WHERE, by aggregates in HAVING. Both is fine — WHERE narrows what gets grouped, HAVING narrows the resulting buckets.
+
+**How I used it**: PRISM's tenant-activity dashboard: `SELECT tenant_id, COUNT(*) FROM assets WHERE updated_at > now() - interval '7 days' GROUP BY tenant_id HAVING COUNT(*) >= 10`. WHERE prunes to the last 7 days (cheap, uses the `updated_at` index); HAVING keeps only tenants with real activity.
+
+**Remember**: _"WHERE filters rows. HAVING filters groups."_
+
+### Q4.3 — Window functions — what are they and when do you reach for them?
+
+**Answer**: A window function computes a value across a set of rows related to the current row, **without collapsing the rows like GROUP BY does**. You write `OVER (PARTITION BY x ORDER BY y)`. Common ones: `ROW_NUMBER()` gives a unique sequential number per partition; `RANK()` and `DENSE_RANK()` handle ties differently; `LAG`/`LEAD` reach into adjacent rows; running sums via `SUM() OVER`. The killer use case is **"most recent N per group"** — partition by group, ORDER BY date DESC, ROW_NUMBER() <= N.
+
+**How I used it**: PRISM's editor view: "show me the latest 3 asset versions per message" is one window query — `ROW_NUMBER() OVER (PARTITION BY message_id ORDER BY created_at DESC) <= 3`. Without window functions you'd need a correlated subquery per message — orders of magnitude slower at 12k messages.
+
+**Remember**: _"Window = compute across a set without collapsing rows. Top-N-per-group is the killer use case."_
+
+### Q4.4 — CTE vs subquery — when do you pick which?
+
+**Answer**: A **CTE** (`WITH foo AS (...)`) names a query result so you can reference it like a table. Wins: readability for multi-step queries, recursion (`WITH RECURSIVE`), and reusing the same intermediate result twice without writing the subquery twice. Subqueries are fine for one-off filters. The rule: if naming the intermediate result makes the query clearer, use a CTE; if it's just one expression in WHERE, inline a subquery. Modern Postgres inlines simple CTEs by default so the perf gap is closed.
+
+**How I used it**: PRISM's bulk asset state transition: `WITH targets AS (SELECT id FROM asset WHERE status = 'ACTIVE' AND updated_at < ...) UPDATE asset SET status = 'ARCHIVED' WHERE id IN (SELECT id FROM targets)`. The CTE is also reused in the RETURNING clause for logging.
+
+**Remember**: _"CTE = named intermediate. Subquery = inline filter."_
+
+### Q4.5 — Transactions and isolation levels — what are READ COMMITTED, REPEATABLE READ, SERIALIZABLE actually doing?
+
+**Answer**: All three guarantee your own transaction sees a consistent view; they differ on what other concurrent transactions can do to your view. **READ COMMITTED** (Postgres default): each statement sees the latest committed data — non-repeatable reads possible (run the same SELECT twice, get different rows). **REPEATABLE READ**: snapshot taken at first read; you see that snapshot for the whole transaction — but phantom reads can still happen with predicates. **SERIALIZABLE**: behaves as if transactions ran one at a time — Postgres detects conflicts and aborts losers with `serialization_failure`. Cost goes up the higher you climb.
+
+**How I used it**: PRISM writes that need to read + check + write (e.g. publish a message + assert it's still in DRAFT) use SERIALIZABLE. Most reads stay on READ COMMITTED. The bulk drainer for the Forklift outbox table uses `SELECT FOR UPDATE SKIP LOCKED` — same isolation, finer-grained locking.
+
+**Remember**: _"Read Committed = latest per statement. Repeatable Read = snapshot per txn. Serializable = as-if-serial, expensive."_
+
+### Q4.6 — Reading EXPLAIN / EXPLAIN ANALYZE — what do you look for?
+
+**Answer**: `EXPLAIN` shows the planner's chosen plan; `EXPLAIN ANALYZE` runs it and shows real timing + row counts. Three things to inspect: (1) the **access method** on each table — `Seq Scan` on a big table is usually wrong, `Index Scan` or `Index Only Scan` is what you want; (2) **row estimates vs actual** — if planner estimates 10 and gets 1M, your statistics are stale (`ANALYZE` the table); (3) **the costliest node** — Sort, Hash, or Nested Loop high up the plan tree is your bottleneck. Read the plan **bottom-up** — leaves execute first.
+
+**How I used it**: PRISM's editor list query went from 800ms to 12ms when I noticed EXPLAIN was doing a Seq Scan on `asset` because the WHERE predicate referenced `asset_config.locale`. Added a covering composite index on `asset_config (asset_id, locale)`, plan switched to Index Scan.
+
+**Remember**: _"Seq Scan bad on big tables. Estimate vs actual reveals stale stats. Read bottom-up."_
+
+### Q4.7 — UNION vs UNION ALL — what's the difference and why does it matter?
+
+**Answer**: **UNION** removes duplicates between the two result sets. **UNION ALL** doesn't. Removing duplicates costs a sort or hash — orders of magnitude more expensive than just concatenating. Rule: use **UNION ALL by default**; use UNION only when you actually need the dedup. If you know the sets are already disjoint (e.g. drafts table + published table), UNION ALL is correct AND cheaper.
+
+**How I used it**: PRISM's editor "all my work" view unions drafts + published modules. UNION ALL because a draft and a published are different rows by definition — no dedup needed. Saved ~200ms on the page render.
+
+**Remember**: _"UNION ALL by default. UNION only when you really need dedup."_
+
+### Q4.8 — NULL semantics — what's the trap most people hit?
+
+**Answer**: SQL has **three-valued logic**: TRUE, FALSE, UNKNOWN (NULL). Anything compared to NULL with `=` or `!=` returns NULL, not true/false — so `WHERE x = NULL` never matches anything. Use `IS NULL` / `IS NOT NULL`. The classic trap: `WHERE id NOT IN (SELECT id FROM filter_table)` returns **ZERO ROWS** if `filter_table` contains a NULL — because `id NOT IN (1, 2, NULL)` resolves to NULL, which fails the WHERE. Fix with `NOT EXISTS` or filtering NULL out of the subquery.
+
+**How I used it**: Hit this exact `NOT IN` trap on PRISM's "show me messages without an audience override" query — the override table had one row with a NULL message_id, and my query returned an empty list for two days before I noticed. Switched to `NOT EXISTS`.
+
+**Remember**: _"Anything = NULL is NULL, not false. NOT IN explodes when the subquery has NULLs."_
+
+### Q4.9 — UPSERT — what is `INSERT ... ON CONFLICT` and when do you use it?
+
+**Answer**: Postgres's `INSERT ... ON CONFLICT (target) DO UPDATE / DO NOTHING` is an **atomic 'insert if not exists, else update'** in one statement. The target is a unique constraint or unique index. `ON CONFLICT DO NOTHING` is the idempotent-write pattern: same row twice = same outcome. `ON CONFLICT DO UPDATE` lets you merge — `EXCLUDED.column` refers to the values from the failed INSERT. Atomic, no race; replaces the read-then-write race condition you'd otherwise have to wrap in a transaction.
+
+**How I used it**: The `page_views` table on this portfolio site uses `ON CONFLICT (path, visitor_hash, view_date) DO NOTHING` — same visitor on the same page on the same UTC date deduplicates naturally. No app-side check needed.
+
+**Remember**: _"UPSERT = atomic insert-or-update. DO NOTHING = idempotency for free."_
+
+### Q4.10 — Normalisation — when do you stop normalising and start denormalising?
+
+**Answer**: Normalisation (1NF → 2NF → 3NF → BCNF) eliminates redundancy: each fact lives in exactly one place. The wins are **write correctness** (update once, no inconsistency) and storage. The costs are **JOINs and lookup latency** on hot reads. Rule: **normalise the write side** (where consistency matters), **denormalise the read side** (where latency matters). The CMS authoring backend is fully normalised; the delivery view is a flattened denormalised projection.
+
+**How I used it**: Exactly the PRISM ↔ Tempo Runtime split. PRISM Postgres is 3NF — `message`, `asset`, `asset_config` separate. Tempo Runtime Cassandra is denormalised — one row per `(tenant, channel, pageType)` holds the entire payload so a customer read is one disk seek.
+
+**Remember**: _"Normalise the write side, denormalise the read side."_
+
+### Q4.11 — The N+1 query problem — what is it and how do you fix it?
+
+**Answer**: You run **one query to fetch N parent rows, then one query per parent to fetch its children** — N+1 queries total. Looks fine at N=10, dies at N=1,000. The fix depends on your tool: ORMs offer eager fetching (Hibernate's `@EntityGraph` or fetch-join), or batch fetching that issues one IN-list query for all child IDs. Raw SQL: do a single JOIN and group the result in application code. Detection: log query counts per request in dev; spikes proportional to result size are the smell.
+
+**How I used it**: Bit me on PRISM's bulk-export endpoint. Iterating over 500 messages triggered 500 lazy loads of their assets — 501 queries, 8 seconds. Fixed with a QueryDSL fetch-join: 1 query, 80ms.
+
+**Remember**: _"Loop over parents = N+1 queries waiting to happen. Fetch-join or batch."_
+
+### Q4.12 — ORM vs raw SQL — when do you drop down?
+
+**Answer**: ORMs (Hibernate, Drizzle) are great for 80% of queries: CRUD, simple filters, type-safe entity mapping. Drop to raw SQL or a query builder when you need: **window functions, recursive CTEs, complex aggregations, dialect-specific features** (partial indexes, JSON operators), or specific performance shape the ORM won't produce (e.g. a covering index-only scan). The discipline: keep raw SQL in one DAO file per concern, not sprinkled across the codebase, so it's easy to find and review.
+
+**How I used it**: PRISM uses JPA + QueryDSL for 90% of queries. The remaining 10% — the bulk state transition CTEs, the windowed "latest N versions" view, the partitioned partial-index lookup — live in clearly-named native query methods on the DAO so they're easy to grep.
+
+**Remember**: _"ORM for CRUD. Drop to SQL for window functions, recursive CTEs, hand-tuned plans."_
+
+---
+
+# 5. Databases (project-specific Postgres patterns)
 
 > Anchor: **PRISM Postgres** — list-partitioned assets, composite PK (asset_id, status), deferred-cascade FK, Liquibase, partial unique indexes.
 
-### Q4.1 — What is list partitioning and when do you reach for it?
+### Q5.1 — What is list partitioning and when do you reach for it?
 
 **Answer**: **Postgres partitioning** physically splits a logical table into several child tables, and Postgres automatically routes reads/writes to the right one based on a partition key. **List partitioning** keys by a discrete value (status, type, region). The win: hot data lives in one small table that fits in cache; archived data sits in a larger table that the planner can skip. Operationally you can also drop a whole partition in one DDL instead of a million-row DELETE.
 
@@ -339,7 +441,7 @@ You should be able to fire any of these in under 3 seconds with no thinking. The
 
 **Remember**: _"Split by a status-shaped key. Hot stays hot."_
 
-### Q4.2 — Composite primary key — why `(asset_id, status)` not just `asset_id`?
+### Q5.2 — Composite primary key — why `(asset_id, status)` not just `asset_id`?
 
 **Answer**: With list partitioning, **every partition has its own PK B-tree**. If the PK is just `asset_id`, an asset's row in `assets_active` and `assets_inactive` would collide on the same key when you try to row-move it. Making the PK `(asset_id, status)` lets the same `asset_id` exist (temporarily, during a transition) in both partitions without violating uniqueness. It also makes `status` a free index — query planner uses it.
 
@@ -347,7 +449,7 @@ You should be able to fire any of these in under 3 seconds with no thinking. The
 
 **Remember**: _"Partition + composite PK = no key collision during row-move."_
 
-### Q4.3 — Deferred-cascade FK — what does it solve?
+### Q5.3 — Deferred-cascade FK — what does it solve?
 
 **Answer**: A normal `ON UPDATE CASCADE` FK fires immediately when the parent row changes. During a partition row-move, the parent is briefly absent then reappears — an immediate cascade can see "parent missing" and cascade a delete or just fail. **Deferred** means the constraint is checked at commit time, not statement time, so the FK sees the final consistent state and the row-move succeeds.
 
@@ -355,7 +457,7 @@ You should be able to fire any of these in under 3 seconds with no thinking. The
 
 **Remember**: _"Deferred = constraint checks at commit, not statement."_
 
-### Q4.4 — Partial unique index — what's a real use case?
+### Q5.4 — Partial unique index — what's a real use case?
 
 **Answer**: A unique index that only applies to rows matching a `WHERE` predicate. Why useful: enforce uniqueness for a state, not the whole table. Classic case: "only one in-progress ingestion per `(tenant, metadata_key)`" — you can't put a plain unique constraint on `(tenant, metadata_key)` because completed ingestions can repeat. `CREATE UNIQUE INDEX ... ON ingestions(tenant, metadata_key) WHERE status = 'START'` does it.
 
@@ -363,7 +465,7 @@ You should be able to fire any of these in under 3 seconds with no thinking. The
 
 **Remember**: _"Unique only when the WHERE matches. Cheap single-flight."_
 
-### Q4.5 — Cursor vs offset pagination — when does each break?
+### Q5.5 — Cursor vs offset pagination — when does each break?
 
 **Answer**: **Offset** (`LIMIT 20 OFFSET 1000`) is simple and supports jumping to page N, but Postgres has to scan + discard 1,000 rows; performance degrades linearly with offset. Worse, items shift between pages if data is inserted while paging. **Cursor** uses a stable key — usually `(created_at, id)` — and you fetch `WHERE (created_at, id) < (last_seen)`. Constant time, stable under inserts, but you can't jump to page N; only "next" and "previous."
 
@@ -371,7 +473,7 @@ You should be able to fire any of these in under 3 seconds with no thinking. The
 
 **Remember**: _"Offset for small lists. Cursor for big ones."_
 
-### Q4.6 — SQL vs NoSQL — what's the real distinction?
+### Q5.6 — SQL vs NoSQL — what's the real distinction?
 
 **Answer**: Not "structured vs unstructured." The real question is **access pattern**. SQL gives you ad-hoc query flexibility, JOINs, transactional consistency across rows — pick it when you don't know all your queries up front and you need ACID. NoSQL (Cassandra, DynamoDB) gives you predictable single-key reads at massive scale; you design the schema around the queries you'll run. Pick it when you have one or two access patterns and you need horizontal scale beyond what a single-leader SQL DB can give.
 
@@ -379,7 +481,7 @@ You should be able to fire any of these in under 3 seconds with no thinking. The
 
 **Remember**: _"SQL = flexible queries. NoSQL = known access patterns at scale."_
 
-### Q4.7 — Cassandra consistency — `LOCAL_QUORUM` vs `LOCAL_ONE`?
+### Q5.7 — Cassandra consistency — `LOCAL_QUORUM` vs `LOCAL_ONE`?
 
 **Answer**: Cassandra replicates writes across N nodes; the consistency level is **how many must acknowledge before the operation returns**. `LOCAL_QUORUM` = majority of replicas in the local DC must ACK — survives one node failure, strong enough for most apps. `LOCAL_ONE` = first replica wins — fastest, but you might read stale data immediately after a write. Convention: **write with QUORUM, read with ONE** when stale-by-seconds is OK; write+read QUORUM when it's not.
 
@@ -387,7 +489,7 @@ You should be able to fire any of these in under 3 seconds with no thinking. The
 
 **Remember**: _"Quorum writes, fast reads, freshness from invalidation."_
 
-### Q4.8 — Liquibase / migrations — what discipline do you keep?
+### Q5.8 — Liquibase / migrations — what discipline do you keep?
 
 **Answer**: Every schema change is **a versioned, ordered changelog file** in the repo. Never edit an applied changeset; always write a new one. Migrations apply at deploy time or via a CI job — never by hand on prod. Drizzle / Liquibase keep a tracker table so re-running is idempotent. Reversibility is nice-to-have; in practice we forward-fix rather than down-migrate destructive changes.
 
@@ -395,7 +497,7 @@ You should be able to fire any of these in under 3 seconds with no thinking. The
 
 **Remember**: _"Versioned. Append-only. Tracked. Never hand-applied."_
 
-### Q4.9 — Indexes — what kinds and when?
+### Q5.9 — Indexes — what kinds and when?
 
 **Answer**: **B-tree** is the default — equality and range queries on a column. **Partial** indexes apply to a `WHERE` subset (saves space + write cost). **Composite** indexes on `(a, b, c)` accelerate queries that filter by `a`, `a+b`, or `a+b+c` (left-prefix rule) — not by `b` alone. **GIN** is for full-text and JSONB containment. **Don't over-index**: every index adds write cost. Profile with `EXPLAIN ANALYZE` before adding.
 
@@ -405,11 +507,11 @@ You should be able to fire any of these in under 3 seconds with no thinking. The
 
 ---
 
-# 5. GCP, Kubernetes & Cloud
+# 6. GCP, Kubernetes & Cloud
 
 > Anchor: **WCNP** (Walmart's K8s) on **GKE**, **Istio mTLS**, multi-region active-active across `useast4`, `uscentral`, `uswest`, Akeyless for secrets.
 
-### Q5.1 — How honestly do you frame your GCP experience?
+### Q6.1 — How honestly do you frame your GCP experience?
 
 **Answer**: I've run production workloads on **GKE for ~3 years through Walmart's WCNP wrapper**. That means I'm strong on **Kubernetes** — deployments, services, ingress, autoscaling, secrets, mTLS via Istio, observability stack. I've **not driven raw GCP primitives** like Cloud Run, Cloud SQL, IAM bindings, VPC Service Controls hands-on — the platform team handled those. My ramp on those is short because the concepts map cleanly: Cloud SQL is managed Postgres, IAM is RBAC-shaped, Cloud Run is a managed `kubectl run`. **No bluffing**: I've used GKE in prod for years; I'll ramp on raw GCP in days, not months.
 
@@ -417,7 +519,7 @@ You should be able to fire any of these in under 3 seconds with no thinking. The
 
 **Remember**: _"GKE deep, raw GCP ramp. Don't bluff, frame the gap."_
 
-### Q5.2 — Kubernetes — what's actually in a deployment?
+### Q6.2 — Kubernetes — what's actually in a deployment?
 
 **Answer**: A **Pod** is one or more containers scheduled together on the same node, sharing network + storage. A **Deployment** manages a replicated set of pods — declares "I want N replicas of this image" and the controller maintains it. A **Service** gives you a stable virtual IP + DNS for that set of pods so callers don't talk to ephemeral pod IPs. An **Ingress** routes external traffic to services. **HorizontalPodAutoscaler** scales replicas on CPU/memory/custom metrics. Everything is declarative YAML.
 
@@ -425,7 +527,7 @@ You should be able to fire any of these in under 3 seconds with no thinking. The
 
 **Remember**: _"Pod ⊂ Deployment ⊂ Service ⊂ Ingress. Everything declared."_
 
-### Q5.3 — Istio service mesh — what does it actually solve?
+### Q6.3 — Istio service mesh — what does it actually solve?
 
 **Answer**: Three things, in order of impact. (1) **mTLS automatically** between every pod — every internal call is mutually authenticated and encrypted, without each service implementing TLS. (2) **Traffic policy** (timeouts, retries, circuit breakers, canary splits) as YAML — change them without redeploying code. (3) **Observability** — every request gets a trace span automatically, every metric is labelled by service. The cost: an extra sidecar container per pod, some latency, operational complexity.
 
@@ -433,7 +535,7 @@ You should be able to fire any of these in under 3 seconds with no thinking. The
 
 **Remember**: _"mTLS, traffic shaping, observability — all without code changes."_
 
-### Q5.4 — Multi-region active-active — what does it cost you?
+### Q6.4 — Multi-region active-active — what does it cost you?
 
 **Answer**: Two regions both serve traffic, both read+write the same logical data. The hard part is the data layer. Three patterns. (1) **Active-active stateless services + single-leader DB** — easy for the service, the DB is the single point of failure. (2) **Multi-master DB** (CockroachDB, Spanner) — true active-active but heavy. (3) **Per-region partition** — each region owns a slice of tenants. The cost is conflict resolution and consistency tradeoffs; the win is regional failure tolerance + latency for users near the region.
 
@@ -441,7 +543,7 @@ You should be able to fire any of these in under 3 seconds with no thinking. The
 
 **Remember**: _"Stateless = easy, stateful = pick your conflict model."_
 
-### Q5.5 — Secrets management — what's the discipline?
+### Q6.5 — Secrets management — what's the discipline?
 
 **Answer**: Three rules. (1) **Never in env files on disk** in prod — always fetched at startup from a secrets store. (2) **Rotated regularly** — short-lived credentials > long-lived where possible. (3) **Scope-bound** — each service has only the credentials it needs. The toolchain matters less than the discipline: Akeyless, Vault, AWS Secrets Manager, GCP Secret Manager all do this.
 
@@ -449,7 +551,7 @@ You should be able to fire any of these in under 3 seconds with no thinking. The
 
 **Remember**: _"Fetched, scoped, rotated. Never in YAML."_
 
-### Q5.6 — High availability — what's actually load-bearing?
+### Q6.6 — High availability — what's actually load-bearing?
 
 **Answer**: HA is a stack of decisions. (1) **No single instance of anything** — ≥ 2 replicas of every service. (2) **Health checks** that actually verify the service can serve, not just that the process is alive. (3) **Graceful shutdown** — drain on SIGTERM so K8s rolling updates don't drop in-flight requests. (4) **Stateless services** so any pod can serve any request. (5) **Multi-AZ scheduling** so a single zone failure doesn't take you down. (6) **Backups + tested restore** for the data layer. Without #6, the other five only buy you minutes.
 
@@ -457,7 +559,7 @@ You should be able to fire any of these in under 3 seconds with no thinking. The
 
 **Remember**: _"Two of everything, drain on shutdown, tested restore."_
 
-### Q5.7 — Cost — where do K8s bills actually come from?
+### Q6.7 — Cost — where do K8s bills actually come from?
 
 **Answer**: Usually three places, ranked. (1) **Right-sizing** — overprovisioned `requests` on every pod adds up across hundreds of pods. (2) **Egress** — cross-region or cross-cloud traffic is expensive; in-region is free. (3) **Managed services** (Cloud SQL, Memcached, Kafka) — easy to ignore until they're 60% of the bill. The fix: monitor cost per service in a dashboard, set a baseline, alert on regressions.
 
@@ -467,11 +569,11 @@ You should be able to fire any of these in under 3 seconds with no thinking. The
 
 ---
 
-# 6. Observability & Logging
+# 7. Observability & Logging
 
 > Anchor: **PRISM + Tempo V3** — OpenTelemetry, OpenObserve logs, Prometheus + Grafana, W3C Trace Context >92% propagation.
 
-### Q6.1 — Metrics vs Logs vs Traces — what's each for?
+### Q7.1 — Metrics vs Logs vs Traces — what's each for?
 
 **Answer**: **Metrics** are numeric time-series (`http_requests_total`, `cpu_seconds`). Cheap, aggregable, alertable. Tell you "something is wrong, here's the shape." **Logs** are timestamped lines, structured ideally. Tell you "what specifically happened, with full context." Expensive to store at scale. **Traces** stitch a single request across services with timing. Tell you "where did the time go." Sampled, not stored 100%. The discipline: metrics for alerting, traces for root cause, logs for the specific user incident.
 
@@ -479,7 +581,7 @@ You should be able to fire any of these in under 3 seconds with no thinking. The
 
 **Remember**: _"Metrics for alarms. Traces for shape. Logs for specifics."_
 
-### Q6.2 — Prometheus + Grafana — what's the model?
+### Q7.2 — Prometheus + Grafana — what's the model?
 
 **Answer**: Prometheus **scrapes** your services on a `/metrics` endpoint at a regular interval, stores time-series locally. PromQL is the query language — `rate(http_requests_total{status="500"}[5m])` gives you 500s per second over the last 5 min. Grafana renders PromQL on dashboards. Alerts run as PromQL expressions on a schedule. The model: services expose numbers; Prometheus polls; Grafana draws; Alertmanager pages.
 
@@ -487,7 +589,7 @@ You should be able to fire any of these in under 3 seconds with no thinking. The
 
 **Remember**: _"Scrape numbers. Query with PromQL. Draw with Grafana."_
 
-### Q6.3 — OpenTelemetry — what does it standardise?
+### Q7.3 — OpenTelemetry — what does it standardise?
 
 **Answer**: One SDK, one wire format, three signals (traces, metrics, logs). Before OTel: every vendor had their own SDK and wire format. After: instrument once with OTel, export to any backend (Jaeger, Tempo, Datadog, Honeycomb). The OTel SDK auto-instruments common libraries (HTTP client, JDBC, Kafka) so you don't write boilerplate. Manual spans cover business operations.
 
@@ -495,7 +597,7 @@ You should be able to fire any of these in under 3 seconds with no thinking. The
 
 **Remember**: _"One SDK, one wire format, swap the backend anytime."_
 
-### Q6.4 — W3C Trace Context — what is the spec and why does it matter?
+### Q7.4 — W3C Trace Context — what is the spec and why does it matter?
 
 **Answer**: A single HTTP header — `traceparent` — that carries the **trace ID + parent span ID + flags** in a standard format every modern library understands. Before: every vendor had its own header (`X-B3-TraceId`, `X-Datadog-Trace-Id`), so trace context died at the boundary between two teams using different libraries. With W3C: any compliant SDK reads/writes the same header, so the trace stitches all the way through.
 
@@ -503,7 +605,7 @@ You should be able to fire any of these in under 3 seconds with no thinking. The
 
 **Remember**: _"One header, every SDK, traces stitch across teams."_
 
-### Q6.5 — How do you actually debug a prod issue from logs?
+### Q7.5 — How do you actually debug a prod issue from logs?
 
 **Answer**: Five-step discipline. (1) **Get the trace ID** from the user's error or the alert. (2) **Filter logs by that trace ID** — pulls every line across every service for that one request. (3) **Read by stack-frame source, not error string** — two different bugs can throw the same message; the stack frame tells you which one. (4) **Look for the first error**, not the loudest — downstream errors are usually a consequence of an earlier one. (5) **Reproduce locally** with the trace context as a seed.
 
@@ -511,7 +613,7 @@ You should be able to fire any of these in under 3 seconds with no thinking. The
 
 **Remember**: _"Trace ID → stack frame → first error. In that order."_
 
-### Q6.6 — SLOs vs SLAs vs SLIs — what's the difference?
+### Q7.6 — SLOs vs SLAs vs SLIs — what's the difference?
 
 **Answer**: **SLI** = Service Level Indicator — the actual measurement (e.g. "fraction of requests that succeeded in <500ms"). **SLO** = Service Level Objective — the internal target on that SLI (e.g. "99.5% of requests in <500ms over a 30-day window"). **SLA** = Service Level Agreement — the contractual promise to a customer, usually weaker than the SLO (e.g. "99% uptime"). The discipline: pick SLIs that reflect user pain, set SLOs you can actually hit, communicate SLAs you can comfortably exceed.
 
@@ -519,7 +621,7 @@ You should be able to fire any of these in under 3 seconds with no thinking. The
 
 **Remember**: _"SLI = what you measure. SLO = what you target. SLA = what you promise."_
 
-### Q6.7 — Stream-naming gotchas — what did you learn the hard way?
+### Q7.7 — Stream-naming gotchas — what did you learn the hard way?
 
 **Answer**: Naming conventions for log streams **bite you in incidents**. Two real lessons. (1) Nonprod and prod use different conventions — we use hyphens in nonprod (`wcnp_cxt-tempo`) and underscores in prod (`wcnp_cxt_tempo`). Grepping the wrong one in a prod incident wastes 10 minutes. (2) Per-app `_v1` streams are decoys — they often contain only Prometheus/Helm logs, never the app's structured logs. Always grep the canonical stream first.
 
@@ -529,11 +631,11 @@ You should be able to fire any of these in under 3 seconds with no thinking. The
 
 ---
 
-# 7. Exception Handling & Reliability
+# 8. Exception Handling & Reliability
 
 > Anchor: **PRISM** + **Tempo V3 BFF** — Kafka idempotency, SSRF/open-redirect protection, feature-flag rollback, partial-failure isolation.
 
-### Q7.1 — Kafka at-least-once + idempotent consumer — how do you actually wire it?
+### Q8.1 — Kafka at-least-once + idempotent consumer — how do you actually wire it?
 
 **Answer**: Producer publishes with `acks=all` and a deterministic event key (UUID). Consumer uses **auto-commit off** and manual commits after the side effect succeeds. The consumer's side effect must be idempotent — usually a unique constraint on the consumed event ID, or an `INSERT ... ON CONFLICT DO NOTHING`. If the consumer crashes between processing and commit, the message replays; the unique constraint catches the duplicate. Net effect: messages might be delivered twice; effects happen once.
 
@@ -541,7 +643,7 @@ You should be able to fire any of these in under 3 seconds with no thinking. The
 
 **Remember**: _"At-least-once delivery + unique key on the side effect = at-most-once effect."_
 
-### Q7.2 — Retry with exponential backoff — what's the rule?
+### Q8.2 — Retry with exponential backoff — what's the rule?
 
 **Answer**: Don't retry forever, don't retry immediately. Three constants: **base delay** (e.g. 200ms), **multiplier** (usually 2), **max delay** (cap at 30s so you don't wait an hour). Add **jitter** — randomise within ±25% — so a thundering herd of clients doesn't all retry at the same instant. **Total retry budget** matters too: 3-5 attempts is usual; beyond that you're adding latency for the user without a real shot at success. Distinguish **retriable** (timeout, 503) from **non-retriable** (400, 401, 404).
 
@@ -549,7 +651,7 @@ You should be able to fire any of these in under 3 seconds with no thinking. The
 
 **Remember**: _"Cap delay, add jitter, bound attempts, only retry retriables."_
 
-### Q7.3 — Validation at boundaries — where does it actually live?
+### Q8.3 — Validation at boundaries — where does it actually live?
 
 **Answer**: **At every boundary**, with the validator owning the contract. Inbound HTTP: Zod (TS) or `@Valid` + Bean Validation (Java) on the request DTO — reject malformed before it reaches business logic. Outbound to a downstream: still validate, because contracts drift. DB writes: rely on schema constraints (NOT NULL, CHECK, FK) as the last line. The mistake: validating once at the controller and trusting it through the stack — a refactor or a new caller breaks the assumption.
 
@@ -557,7 +659,7 @@ You should be able to fire any of these in under 3 seconds with no thinking. The
 
 **Remember**: _"Validate at every boundary. Don't trust the previous one."_
 
-### Q7.4 — SSRF protection in a BFF — what's the attack and the fix?
+### Q8.4 — SSRF protection in a BFF — what's the attack and the fix?
 
 **Answer**: **SSRF** (Server-Side Request Forgery): an attacker sends a request that makes your server fetch a URL the attacker chose — typically pointing at internal metadata services (`169.254.169.254` on AWS), or internal admin endpoints, or a port scan of your VPC. The fix: **never proxy an attacker-controlled URL**. Maintain a per-downstream allowlist of base URLs; for each outbound call, resolve the target against the allowlist; reject anything else. Don't follow redirects to off-list URLs.
 
@@ -565,7 +667,7 @@ You should be able to fire any of these in under 3 seconds with no thinking. The
 
 **Remember**: _"Allowlist of services. Server-side base URL. Never proxy a URL."_
 
-### Q7.5 — Open-redirect protection — what's the attack?
+### Q8.5 — Open-redirect protection — what's the attack?
 
 **Answer**: Your app has a `?next=` query param that controls where to send the user after login. An attacker sets `?next=https://evil.com/fake-login`. User logs in, redirected to evil, who phishes the next thing. The fix: **only honour same-origin redirects** — parse the target URL, check `origin === request.origin`, otherwise drop the redirect and go to the default. Don't allowlist domains (drift over time); always reduce to same-origin.
 
@@ -573,7 +675,7 @@ You should be able to fire any of these in under 3 seconds with no thinking. The
 
 **Remember**: _"Same-origin only. Don't allowlist."_
 
-### Q7.6 — Feature flags as a rollback tool — what makes them work?
+### Q8.6 — Feature flags as a rollback tool — what makes them work?
 
 **Answer**: Three properties. (1) **Off by default for new code** — ship dark, flip on intentionally. (2) **Tenant-scoped or user-scoped** — flip for one customer to validate before fleet rollout. (3) **Read at request time, not boot time** — so flipping a flag takes effect immediately, no redeploy. The flag store has to be fast (CCM-style) so the read cost is negligible. The trap: flags accumulate. Set an expiry date on each flag and clean them up when stable.
 
@@ -581,7 +683,7 @@ You should be able to fire any of these in under 3 seconds with no thinking. The
 
 **Remember**: _"Dark by default. Tenant-scoped. Read at request. Expire when stable."_
 
-### Q7.7 — Partial-failure isolation across downstream calls — how?
+### Q8.7 — Partial-failure isolation across downstream calls — how?
 
 **Answer**: When your BFF fans out to N services, **one slow downstream shouldn't stall the whole response**. Three tools. (1) **Per-downstream timeouts** — never inherit the default. (2) **Per-downstream circuit breakers** — open the circuit if errors > threshold; serve a fallback. (3) **Per-downstream thread pools (bulkheads)** — flood of requests to A can't starve threads from serving B. The pattern: every downstream gets its own pool, breaker, and timeout, configured per its real characteristics.
 
@@ -591,7 +693,7 @@ You should be able to fire any of these in under 3 seconds with no thinking. The
 
 ---
 
-# 8. System Design
+# 9. System Design
 
 > Anchor: **Tempo / PRISM IS a content-delivery platform**. If you get a CMS / content-delivery / signal-aggregation prompt, you've already built it.
 
@@ -604,7 +706,7 @@ You should be able to fire any of these in under 3 seconds with no thinking. The
 5. **Deep-dive 1–2 components** — data model, caching strategy, sync strategy. **This is where you lean on PRISM / Tempo.** Show you've made these calls before.
 6. **Bottlenecks & tradeoffs** — where it breaks at 10× scale, consistency vs availability, SPOFs, cost. End on tradeoffs, not certainty.
 
-### Q8.1 — Design a content management + delivery system (your home turf).
+### Q9.1 — Design a content management + delivery system (your home turf).
 
 **Answer**: Same shape as Tempo. (1) **Authoring write-path**: editor → REST API → relational DB (Postgres) for transactional correctness, audit history, ad-hoc editor queries. (2) **Kafka outbox**: every commit publishes an event. (3) **Sync service**: consumes events, writes into a denormalised store optimised for one access pattern. (4) **Delivery read-path**: customer → CDN → BFF → in-process cache → distributed cache → wide-column store (Cassandra). (5) **Multi-tenant** by tenant ID at every layer. (6) **Canary by tenant group** for safe rollout. Trade-off: eventual consistency between write and read paths (seconds), but customer reads are p95 sub-50ms.
 
@@ -612,13 +714,13 @@ You should be able to fire any of these in under 3 seconds with no thinking. The
 
 **Remember**: _"Authoring + delivery split. Kafka in between. Tempo IS this system."_
 
-### Q8.2 — Design a URL shortener (the canonical warmup).
+### Q9.2 — Design a URL shortener (the canonical warmup).
 
 **Answer**: (1) **API**: `POST /shorten {longUrl}` → `{shortCode}`, `GET /:code` → 301 redirect. (2) **ID generation**: pre-generated counter + base62 encoding gives ~62^7 = 3.5T short codes in 7 chars. Avoid hashing the URL (collisions, deterministic = enumerable). (3) **Storage**: KV store keyed by short code (Redis + a durable backing like DynamoDB) — single-key reads, perfect for NoSQL. (4) **Cache**: redirects are the hot path; LRU in-process cache catches the head, the KV store catches the rest. (5) **Analytics**: every redirect emits an event to Kafka, processed offline. (6) **Scale**: 1B URLs → 1B rows × ~100 bytes = ~100GB; trivial.
 
 **Remember**: _"Counter + base62. KV store. Cache the redirects. Async analytics."_
 
-### Q8.3 — Design a rate limiter.
+### Q9.3 — Design a rate limiter.
 
 **Answer**: (1) **Algorithm**: **token bucket** is the standard — N tokens refill at rate R, each request consumes one. Smooth, bursty-friendly. Sliding-window log is more accurate but stores more. Fixed-window counter is cheap but spiky at the boundary. (2) **Storage**: Redis with atomic `INCR` + `EXPIRE`, or a server-side Lua script for token bucket. (3) **Key shape**: `rate:user:{id}` or `rate:ip:{addr}` or `rate:tenant:{id}` depending on the unit you're limiting. (4) **Distributed**: Redis is centralised, so it scales until Redis is the bottleneck; for huge scale you shard by key and accept slight inaccuracy at shard boundaries. (5) **Response**: `429 Too Many Requests` + `Retry-After` header.
 
@@ -626,19 +728,19 @@ You should be able to fire any of these in under 3 seconds with no thinking. The
 
 **Remember**: _"Token bucket. Redis INCR. 429 with Retry-After."_
 
-### Q8.4 — Design a notification system (push/email).
+### Q9.4 — Design a notification system (push/email).
 
 **Answer**: (1) **API**: `POST /notify {userId, type, payload}`. (2) **Fan-out**: dispatcher publishes to Kafka topic per channel (push, email, in-app). (3) **Per-channel workers**: consume the topic, call provider (APNs/FCM, SES, in-app store). Idempotent on event ID. (4) **User preferences**: read at dispatch time — opt-outs, quiet hours. (5) **Retry**: failed sends go to a delay queue (exponential backoff). After N attempts, dead-letter. (6) **Storage**: persisted in `notifications` table for in-app history + analytics. (7) **Scale concerns**: provider rate limits (APNs's 9K/sec/connection), bulk send batching, fan-out amplification.
 
 **Remember**: _"Dispatcher → per-channel topic → idempotent worker → provider."_
 
-### Q8.5 — Design a chat / real-time system.
+### Q9.5 — Design a chat / real-time system.
 
 **Answer**: (1) **Transport**: **WebSocket** for full-duplex; SSE for server→client only. (2) **Gateway**: stateless WS gateway accepts connections, sticky-routes by user ID to a per-user channel. (3) **Message bus**: incoming messages publish to Kafka or Redis Pub/Sub keyed by conversation ID. (4) **Persistence**: write to Cassandra partitioned by `(conversation_id, message_time)` — bounded partition, time-ordered scan. (5) **Delivery**: gateway subscribes to its conversations, fans out to connected sockets. **Offline** clients: read missed messages on reconnect via timestamp cursor. (6) **Presence**: heartbeat to Redis TTL; "last seen" = TTL expiry.
 
 **Remember**: _"WS gateway → Kafka/Redis → Cassandra by conv_id. Presence in Redis TTL."_
 
-### Q8.6 — Caching strategy — when do you pick which?
+### Q9.6 — Caching strategy — when do you pick which?
 
 **Answer**: Three patterns. (1) **Cache-aside**: app reads cache; on miss, read DB and populate cache. Simple, app owns staleness. (2) **Write-through**: app writes both cache and DB synchronously. Strong consistency, latency cost. (3) **Write-behind**: app writes cache; async flush to DB. Fast writes, risk of data loss on cache crash. Most systems use cache-aside with a TTL. **Cache invalidation strategy** matters more than the pattern: TTL is honest, explicit invalidation on write is precise but harder to get right.
 
@@ -646,13 +748,13 @@ You should be able to fire any of these in under 3 seconds with no thinking. The
 
 **Remember**: _"Cache-aside default. TTL is honest. Invalidate when you can afford to."_
 
-### Q8.7 — Estimating QPS and storage — what's the rough math?
+### Q9.7 — Estimating QPS and storage — what's the rough math?
 
 **Answer**: Have a recipe. (1) **Active users** × **actions per user per day** = total daily actions. (2) Divide by **86,400** seconds in a day for average QPS. (3) Multiply by **3** for peak QPS. (4) Multiply by **bytes per action** for total daily bytes; **× 365** for yearly storage. Worked example: 10M DAU × 10 actions = 100M/day; avg = 1,160 QPS; peak ~3,500 QPS. At 1KB each = 100GB/day = 36TB/year — sharded relational or wide-column.
 
 **Remember**: _"DAU × actions/day. /86,400 = avg. ×3 = peak. ×bytes = storage."_
 
-### Q8.8 — Bottlenecks and tradeoffs — how do you close strong?
+### Q9.8 — Bottlenecks and tradeoffs — how do you close strong?
 
 **Answer**: Always end on tradeoffs — it signals seniority. Three classes. (1) **CAP under partition**: you pick C or A, can't have both. Most systems pick A and document the staleness window. (2) **Single points of failure**: any one-of resource is a SPOF — DB primary, ID generator, config service. Mitigate with replicas, fallback IDs, cached config. (3) **Cost vs. latency**: every cache layer reduces latency and adds operational complexity; every replica reduces failure risk and adds cost. **Say the tradeoff out loud** — the interviewer wants to know you've thought past the happy path.
 

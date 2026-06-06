@@ -285,6 +285,97 @@
       ]
     },
     {
+      "id": "sql",
+      "name": "SQL Fundamentals",
+      "anchor": "Used daily on PRISM Postgres + Tempo Service Postgres. These are the SQL building blocks interviewers actually test, before you ever talk schema design.",
+      "items": [
+        {
+          "id": "sql-joins",
+          "question": "JOIN types — INNER vs LEFT vs RIGHT vs FULL OUTER. What's the difference?",
+          "answer": "INNER returns only rows where the join key matches in both tables — non-matches drop out. LEFT keeps every row from the left table and fills nulls where the right has no match — use when 'I want all parents whether they have children or not'. RIGHT is the mirror, rarely used because you can just flip the FROM order. FULL OUTER keeps unmatched rows from both sides. Rule: if your result has nulls in columns that aren't supposed to be nullable, you've got the wrong join type.",
+          "projectUsage": "PRISM editor list page joins message → asset → asset_config. message LEFT JOIN asset because some messages don't yet have assets (they're being authored). asset INNER JOIN asset_config — every asset must have at least one locale config, so a missing one is a bug.",
+          "remember": "LEFT keeps parents without children. INNER drops them. FULL keeps both orphans."
+        },
+        {
+          "id": "sql-group-by-having",
+          "question": "GROUP BY and HAVING — when is HAVING different from WHERE?",
+          "answer": "WHERE filters rows before grouping. HAVING filters groups after grouping. You can't put an aggregate (COUNT, SUM, AVG) in WHERE because the aggregate doesn't exist until after grouping — it has to go in HAVING. Rule: filter by row-level columns in WHERE, by aggregates in HAVING. Both is fine — WHERE narrows what gets grouped, HAVING narrows the resulting buckets.",
+          "projectUsage": "PRISM's tenant-activity dashboard: SELECT tenant_id, COUNT(*) FROM assets WHERE updated_at > now() - interval '7 days' GROUP BY tenant_id HAVING COUNT(*) >= 10. WHERE prunes to the last 7 days (cheap, uses the updated_at index); HAVING keeps only tenants with real activity.",
+          "remember": "WHERE filters rows. HAVING filters groups."
+        },
+        {
+          "id": "sql-window-functions",
+          "question": "Window functions — what are they and when do you reach for them?",
+          "answer": "A window function computes a value across a set of rows related to the current row, without collapsing the rows like GROUP BY does. You write OVER (PARTITION BY x ORDER BY y). Common ones: ROW_NUMBER() gives a unique sequential number per partition; RANK() and DENSE_RANK() handle ties differently; LAG/LEAD reach into adjacent rows; running sums via SUM() OVER. The killer use case is 'most recent N per group' — partition by group, ORDER BY date DESC, ROW_NUMBER() <= N.",
+          "projectUsage": "PRISM's editor view: 'show me the latest 3 asset versions per message' is one window query — ROW_NUMBER() OVER (PARTITION BY message_id ORDER BY created_at DESC) <= 3. Without window functions you'd need a correlated subquery per message — orders of magnitude slower at 12k messages.",
+          "remember": "Window = compute across a set without collapsing rows. Top-N-per-group is the killer use case."
+        },
+        {
+          "id": "sql-cte",
+          "question": "CTE vs subquery — when do you pick which?",
+          "answer": "A CTE (WITH foo AS (...)) names a query result so you can reference it like a table. Wins: readability for multi-step queries, recursion (WITH RECURSIVE), and reusing the same intermediate result twice without writing the subquery twice. Subqueries are fine for one-off filters. The rule: if naming the intermediate result makes the query clearer, use a CTE; if it's just one expression in WHERE, inline a subquery. Modern Postgres inlines simple CTEs by default so the perf gap is closed.",
+          "projectUsage": "PRISM's bulk asset state transition: WITH targets AS (SELECT id FROM asset WHERE status = 'ACTIVE' AND updated_at < ...) UPDATE asset SET status = 'ARCHIVED' WHERE id IN (SELECT id FROM targets). The CTE is also reused in the RETURNING clause for logging.",
+          "remember": "CTE = named intermediate. Subquery = inline filter."
+        },
+        {
+          "id": "sql-transactions",
+          "question": "Transactions and isolation levels — what are READ COMMITTED, REPEATABLE READ, SERIALIZABLE actually doing?",
+          "answer": "All three guarantee your own transaction sees a consistent view; they differ on what other concurrent transactions can do to your view. READ COMMITTED (Postgres default): each statement sees the latest committed data — non-repeatable reads possible (run the same SELECT twice, get different rows). REPEATABLE READ: snapshot taken at first read; you see that snapshot for the whole transaction — but phantom reads can still happen with predicates. SERIALIZABLE: behaves as if transactions ran one at a time — Postgres detects conflicts and aborts losers with serialization_failure. Cost goes up the higher you climb.",
+          "projectUsage": "PRISM writes that need to read + check + write (e.g. publish a message + assert it's still in DRAFT) use SERIALIZABLE. Most reads stay on READ COMMITTED. The bulk drainer for the Forklift outbox table uses SELECT FOR UPDATE SKIP LOCKED — same isolation, finer-grained locking.",
+          "remember": "Read Committed = latest per statement. Repeatable Read = snapshot per txn. Serializable = as-if-serial, expensive."
+        },
+        {
+          "id": "sql-explain-analyze",
+          "question": "Reading EXPLAIN / EXPLAIN ANALYZE — what do you look for?",
+          "answer": "EXPLAIN shows the planner's chosen plan; EXPLAIN ANALYZE runs it and shows real timing + row counts. Three things to inspect: (1) the access method on each table — Seq Scan on a big table is usually wrong, Index Scan or Index Only Scan is what you want; (2) row estimates vs actual — if planner estimates 10 and gets 1M, your statistics are stale (ANALYZE the table); (3) the costliest node — Sort, Hash, or Nested Loop high up the plan tree is your bottleneck. Read the plan bottom-up — leaves execute first.",
+          "projectUsage": "PRISM's editor list query went from 800ms to 12ms when I noticed EXPLAIN was doing a Seq Scan on asset because the WHERE predicate referenced asset_config.locale. Added a covering composite index on asset_config (asset_id, locale), and the plan switched to Index Scan.",
+          "remember": "Seq Scan bad on big tables. Estimate vs actual reveals stale stats. Read bottom-up."
+        },
+        {
+          "id": "sql-union-vs-all",
+          "question": "UNION vs UNION ALL — what's the difference and why does it matter?",
+          "answer": "UNION removes duplicates between the two result sets. UNION ALL doesn't. Removing duplicates costs a sort or hash — orders of magnitude more expensive than just concatenating. Rule: use UNION ALL by default; use UNION only when you actually need the dedup. If you know the sets are already disjoint (e.g. drafts table + published table), UNION ALL is correct AND cheaper.",
+          "projectUsage": "PRISM's editor 'all my work' view unions drafts + published modules. UNION ALL because a draft and a published are different rows by definition — no dedup needed. Saved ~200ms on the page render.",
+          "remember": "UNION ALL by default. UNION only when you really need dedup."
+        },
+        {
+          "id": "sql-nulls",
+          "question": "NULL semantics — what's the trap most people hit?",
+          "answer": "SQL has three-valued logic: TRUE, FALSE, UNKNOWN (NULL). Anything compared to NULL with = or != returns NULL, not true/false — so WHERE x = NULL never matches anything. Use IS NULL / IS NOT NULL. The classic trap: WHERE id NOT IN (SELECT id FROM filter_table) returns ZERO ROWS if filter_table contains a NULL — because 'id NOT IN (1, 2, NULL)' resolves to NULL, which fails the WHERE. Fix with NOT EXISTS or filtering NULL out of the subquery.",
+          "projectUsage": "Hit this exact NOT IN trap on PRISM's 'show me messages without an audience override' query — the override table had one row with a NULL message_id, and my query returned an empty list for two days before I noticed. Switched to NOT EXISTS.",
+          "remember": "Anything = NULL is NULL, not false. NOT IN explodes when the subquery has NULLs."
+        },
+        {
+          "id": "sql-upsert",
+          "question": "UPSERT — what is INSERT ... ON CONFLICT and when do you use it?",
+          "answer": "Postgres's INSERT ... ON CONFLICT (target) DO UPDATE / DO NOTHING is an atomic 'insert if not exists, else update' in one statement. The target is a unique constraint or unique index. ON CONFLICT DO NOTHING is the idempotent-write pattern: same row twice = same outcome. ON CONFLICT DO UPDATE lets you merge — EXCLUDED.column refers to the values from the failed INSERT. Atomic, no race; replaces the read-then-write race condition you'd otherwise have to wrap in a transaction.",
+          "projectUsage": "The page_views table on this portfolio site uses ON CONFLICT (path, visitor_hash, view_date) DO NOTHING — same visitor on the same page on the same UTC date deduplicates naturally. No app-side check needed.",
+          "remember": "UPSERT = atomic insert-or-update. DO NOTHING = idempotency for free."
+        },
+        {
+          "id": "sql-normalisation",
+          "question": "Normalisation — when do you stop normalising and start denormalising?",
+          "answer": "Normalisation (1NF → 2NF → 3NF → BCNF) eliminates redundancy: each fact lives in exactly one place. The wins are write correctness (update once, no inconsistency) and storage. The costs are JOINs and lookup latency on hot reads. Rule: normalise the write side (where consistency matters), denormalise the read side (where latency matters). The CMS authoring backend is fully normalised; the delivery view is a flattened denormalised projection.",
+          "projectUsage": "Exactly the PRISM ↔ Tempo Runtime split. PRISM Postgres is 3NF — message, asset, asset_config separate. Tempo Runtime Cassandra is denormalised — one row per (tenant, channel, pageType) holds the entire payload so a customer read is one disk seek.",
+          "remember": "Normalise the write side, denormalise the read side."
+        },
+        {
+          "id": "sql-n-plus-one",
+          "question": "The N+1 query problem — what is it and how do you fix it?",
+          "answer": "You run one query to fetch N parent rows, then one query per parent to fetch its children — N+1 queries total. Looks fine at N=10, dies at N=1,000. The fix depends on your tool: ORMs offer eager fetching (Hibernate's @EntityGraph or fetch-join), or batch fetching that issues one IN-list query for all child IDs. Raw SQL: do a single JOIN and group the result in application code. Detection: log query counts per request in dev; spikes proportional to result size are the smell.",
+          "projectUsage": "Bit me on PRISM's bulk-export endpoint. Iterating over 500 messages triggered 500 lazy loads of their assets — 501 queries, 8 seconds. Fixed with a QueryDSL fetch-join: 1 query, 80ms.",
+          "remember": "Loop over parents = N+1 queries waiting to happen. Fetch-join or batch."
+        },
+        {
+          "id": "sql-orm-vs-raw",
+          "question": "ORM vs raw SQL — when do you drop down?",
+          "answer": "ORMs (Hibernate, Drizzle) are great for 80% of queries: CRUD, simple filters, type-safe entity mapping. Drop to raw SQL or a query builder when you need: window functions, recursive CTEs, complex aggregations, dialect-specific features (partial indexes, JSON operators), or specific performance shape the ORM won't produce (e.g. a covering index-only scan). The discipline: keep raw SQL in one DAO file per concern, not sprinkled across the codebase, so it's easy to find and review.",
+          "projectUsage": "PRISM uses JPA + QueryDSL for 90% of queries. The remaining 10% — the bulk state transition CTEs, the windowed 'latest N versions' view, the partitioned partial-index lookup — live in clearly-named native query methods on the DAO so they're easy to grep.",
+          "remember": "ORM for CRUD. Drop to SQL for window functions, recursive CTEs, hand-tuned plans."
+        }
+      ]
+    },
+    {
       "id": "databases",
       "name": "Databases",
       "anchor": "PRISM Postgres — list-partitioned assets, composite PK (asset_id, status), deferred-cascade FK, Liquibase, partial unique indexes.",
