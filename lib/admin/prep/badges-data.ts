@@ -4,6 +4,9 @@ export type Badge = {
   tagline: string
   description: string
   tier?: 'bronze' | 'silver' | 'gold' | 'iron'
+  // Lucide icon name. Looked up at render time in BadgeWall — defaults to
+  // Trophy if the name doesn't resolve.
+  icon: string
 }
 
 export const BADGES: Badge[] = [
@@ -13,6 +16,7 @@ export const BADGES: Badge[] = [
     tagline: 'Solved your first problem.',
     description: 'You started. The reps are the only thing that matter from here.',
     tier: 'bronze',
+    icon: 'Target',
   },
   {
     id: 'streak-x3',
@@ -20,6 +24,7 @@ export const BADGES: Badge[] = [
     tagline: '3 consecutive study days.',
     description: 'You’ve shown up three days in a row. The chain is alive.',
     tier: 'bronze',
+    icon: 'Flame',
   },
   {
     id: 'streak-x7',
@@ -27,6 +32,7 @@ export const BADGES: Badge[] = [
     tagline: '7 consecutive study days.',
     description: 'A full week. This is when most people quit.',
     tier: 'silver',
+    icon: 'Zap',
   },
   {
     id: 'streak-x14',
@@ -34,6 +40,7 @@ export const BADGES: Badge[] = [
     tagline: '14 consecutive study days.',
     description: 'Two weeks. The habit is set.',
     tier: 'gold',
+    icon: 'Crown',
   },
   {
     id: 'iron-discipline',
@@ -41,6 +48,7 @@ export const BADGES: Badge[] = [
     tagline: 'Study + CrossFit, same day, 5×.',
     description: 'Brain and body on the same day, five times. You’re running the program.',
     tier: 'iron',
+    icon: 'Dumbbell',
   },
   {
     id: 'cold-turkey',
@@ -48,6 +56,7 @@ export const BADGES: Badge[] = [
     tagline: 'A full day, zero deviation.',
     description: 'You showed up, finished the routine, and ticked "no deviation". Rare.',
     tier: 'silver',
+    icon: 'Shield',
   },
   {
     id: 'application-machine-10',
@@ -55,6 +64,7 @@ export const BADGES: Badge[] = [
     tagline: '10 applications sent.',
     description: 'The funnel is open.',
     tier: 'bronze',
+    icon: 'Send',
   },
   {
     id: 'application-machine-25',
@@ -62,6 +72,7 @@ export const BADGES: Badge[] = [
     tagline: '25 applications sent.',
     description: 'The wider you cast, the more replies come back.',
     tier: 'silver',
+    icon: 'Inbox',
   },
   {
     id: 'application-machine-50',
@@ -69,6 +80,7 @@ export const BADGES: Badge[] = [
     tagline: '50 applications sent.',
     description: 'Half a hundred. Each one is a reroll.',
     tier: 'gold',
+    icon: 'Rocket',
   },
   {
     id: 'pattern-master',
@@ -76,6 +88,7 @@ export const BADGES: Badge[] = [
     tagline: 'Finished all coding tasks for a plan day, 5×.',
     description: 'You closed 5 full coding-day boxes. Pattern recall is back.',
     tier: 'gold',
+    icon: 'Brain',
   },
   {
     id: 'the-resolver',
@@ -84,6 +97,7 @@ export const BADGES: Badge[] = [
     description:
       'You went back to the failures and beat them. This is the rep that actually builds recall.',
     tier: 'gold',
+    icon: 'RotateCcw',
   },
   {
     id: 'showed-up',
@@ -91,6 +105,7 @@ export const BADGES: Badge[] = [
     tagline: 'Morning anchor read 7 days running.',
     description: 'You started the day with the evidence line, seven days in a row.',
     tier: 'silver',
+    icon: 'Sunrise',
   },
   {
     id: 'finisher',
@@ -98,6 +113,7 @@ export const BADGES: Badge[] = [
     tagline: 'Completed all 10 plan days.',
     description: 'The full program. Hard part now: keep the structure going.',
     tier: 'gold',
+    icon: 'Flag',
   },
 ]
 
