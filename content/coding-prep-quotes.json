@@ -1,0 +1,486 @@
+{
+  "meta": {
+    "title": "Daily Anchor Quotes",
+    "note": "Curated. Real quotes, real attributions. The deterministic picker maps date → index so the same date always shows the same quote."
+  },
+  "quotes": [
+    {
+      "id": "kobe-perseverance",
+      "text": "Great things come from hard work and perseverance. No excuses.",
+      "author": "Kobe Bryant",
+      "role": "NBA, 5× champion",
+      "category": "athlete",
+      "tags": ["discipline", "consistency"]
+    },
+    {
+      "id": "jordan-failure",
+      "text": "I've missed more than 9,000 shots in my career. I've lost almost 300 games. 26 times I've been trusted to take the game-winning shot and missed. I've failed over and over and over again in my life. And that is why I succeed.",
+      "author": "Michael Jordan",
+      "role": "NBA, 6× champion",
+      "category": "athlete",
+      "tags": ["failure-recovery", "consistency"]
+    },
+    {
+      "id": "kipchoge-limited",
+      "text": "No human is limited.",
+      "author": "Eliud Kipchoge",
+      "role": "Marathon world-record holder",
+      "category": "athlete",
+      "tags": ["focus", "depth"]
+    },
+    {
+      "id": "serena-recover",
+      "text": "A champion is defined not by their wins, but by how they recover when they fall.",
+      "author": "Serena Williams",
+      "role": "23× Grand Slam champion",
+      "category": "athlete",
+      "tags": ["failure-recovery"]
+    },
+    {
+      "id": "federer-master",
+      "text": "When you do something best in life, you don't really want to give that up — and for me it's playing in front of you.",
+      "author": "Roger Federer",
+      "role": "20× Grand Slam champion",
+      "category": "athlete",
+      "tags": ["focus"]
+    },
+    {
+      "id": "ali-count",
+      "text": "Don't count the days. Make the days count.",
+      "author": "Muhammad Ali",
+      "role": "Heavyweight world champion",
+      "category": "athlete",
+      "tags": ["consistency", "discipline"]
+    },
+    {
+      "id": "tendulkar-dream",
+      "text": "Chase your dreams, but always know the road that will lead you home again.",
+      "author": "Sachin Tendulkar",
+      "role": "Cricket, 100 international centuries",
+      "category": "athlete",
+      "tags": ["focus"]
+    },
+    {
+      "id": "kohli-belief",
+      "text": "Self-belief and hard work will always earn you success.",
+      "author": "Virat Kohli",
+      "role": "Cricket, India captain",
+      "category": "athlete",
+      "tags": ["consistency"]
+    },
+    {
+      "id": "brady-now",
+      "text": "What's the most important play in football? The next one.",
+      "author": "Tom Brady",
+      "role": "NFL, 7× Super Bowl champion",
+      "category": "athlete",
+      "tags": ["focus", "recovery"]
+    },
+    {
+      "id": "phelps-dream",
+      "text": "If you want to be the best, you have to do things that other people aren't willing to do.",
+      "author": "Michael Phelps",
+      "role": "23× Olympic gold medalist",
+      "category": "athlete",
+      "tags": ["discipline"]
+    },
+    {
+      "id": "messi-work",
+      "text": "I start early and I stay late, day after day, year after year. It took me 17 years and 114 days to become an overnight success.",
+      "author": "Lionel Messi",
+      "role": "Football, 8× Ballon d'Or",
+      "category": "athlete",
+      "tags": ["consistency"]
+    },
+    {
+      "id": "lebron-process",
+      "text": "I treat every game like it's my last. I'm playing for the love of the game and respect for the game.",
+      "author": "LeBron James",
+      "role": "NBA, 4× champion",
+      "category": "athlete",
+      "tags": ["focus"]
+    },
+
+    {
+      "id": "marcus-mind",
+      "text": "You have power over your mind — not outside events. Realize this, and you will find strength.",
+      "author": "Marcus Aurelius",
+      "role": "Roman emperor, Stoic",
+      "category": "philosopher",
+      "tags": ["focus", "discipline"]
+    },
+    {
+      "id": "marcus-now",
+      "text": "Confine yourself to the present.",
+      "author": "Marcus Aurelius",
+      "role": "Roman emperor, Stoic",
+      "category": "philosopher",
+      "tags": ["focus"]
+    },
+    {
+      "id": "seneca-dare",
+      "text": "It is not because things are difficult that we do not dare; it is because we do not dare that they are difficult.",
+      "author": "Seneca",
+      "role": "Roman Stoic",
+      "category": "philosopher",
+      "tags": ["failure-recovery"]
+    },
+    {
+      "id": "seneca-luck",
+      "text": "Luck is what happens when preparation meets opportunity.",
+      "author": "Seneca",
+      "role": "Roman Stoic",
+      "category": "philosopher",
+      "tags": ["discipline"]
+    },
+    {
+      "id": "epictetus-be",
+      "text": "First say to yourself what you would be; and then do what you have to do.",
+      "author": "Epictetus",
+      "role": "Roman Stoic",
+      "category": "philosopher",
+      "tags": ["focus"]
+    },
+    {
+      "id": "confucius-slow",
+      "text": "It does not matter how slowly you go as long as you do not stop.",
+      "author": "Confucius",
+      "role": "Chinese philosopher",
+      "category": "philosopher",
+      "tags": ["consistency"]
+    },
+    {
+      "id": "nietzsche-why",
+      "text": "He who has a why to live for can bear almost any how.",
+      "author": "Friedrich Nietzsche",
+      "role": "Philosopher",
+      "category": "philosopher",
+      "tags": ["depth", "consistency"]
+    },
+    {
+      "id": "aristotle-habit",
+      "text": "We are what we repeatedly do. Excellence, then, is not an act, but a habit.",
+      "author": "Aristotle",
+      "role": "Greek philosopher",
+      "category": "philosopher",
+      "tags": ["consistency", "discipline"]
+    },
+    {
+      "id": "lao-step",
+      "text": "A journey of a thousand miles begins with a single step.",
+      "author": "Lao Tzu",
+      "role": "Chinese philosopher",
+      "category": "philosopher",
+      "tags": ["consistency"]
+    },
+    {
+      "id": "epictetus-control",
+      "text": "It's not what happens to you, but how you react to it that matters.",
+      "author": "Epictetus",
+      "role": "Roman Stoic",
+      "category": "philosopher",
+      "tags": ["failure-recovery"]
+    },
+
+    {
+      "id": "einstein-stay",
+      "text": "It's not that I'm so smart, it's just that I stay with problems longer.",
+      "author": "Albert Einstein",
+      "role": "Physicist",
+      "category": "scientist",
+      "tags": ["depth", "focus"]
+    },
+    {
+      "id": "feynman-fool",
+      "text": "The first principle is that you must not fool yourself — and you are the easiest person to fool.",
+      "author": "Richard Feynman",
+      "role": "Physicist, Nobel laureate",
+      "category": "scientist",
+      "tags": ["depth"]
+    },
+    {
+      "id": "feynman-name",
+      "text": "I learned very early the difference between knowing the name of something and knowing something.",
+      "author": "Richard Feynman",
+      "role": "Physicist, Nobel laureate",
+      "category": "scientist",
+      "tags": ["depth"]
+    },
+    {
+      "id": "linus-code",
+      "text": "Talk is cheap. Show me the code.",
+      "author": "Linus Torvalds",
+      "role": "Creator of Linux & Git",
+      "category": "scientist",
+      "tags": ["focus", "discipline"]
+    },
+    {
+      "id": "hamming-want",
+      "text": "If you don't work on important problems, it's not likely that you'll do important work.",
+      "author": "Richard Hamming",
+      "role": "Mathematician (Bell Labs)",
+      "category": "scientist",
+      "tags": ["focus", "depth"]
+    },
+    {
+      "id": "knuth-premature",
+      "text": "Premature optimization is the root of all evil.",
+      "author": "Donald Knuth",
+      "role": "Computer scientist (Stanford)",
+      "category": "scientist",
+      "tags": ["focus"]
+    },
+    {
+      "id": "curie-understand",
+      "text": "Nothing in life is to be feared, it is only to be understood. Now is the time to understand more, so that we may fear less.",
+      "author": "Marie Curie",
+      "role": "Physicist & chemist, 2× Nobel laureate",
+      "category": "scientist",
+      "tags": ["depth"]
+    },
+    {
+      "id": "darwin-adapt",
+      "text": "It is not the strongest of the species that survives, but the one most responsive to change.",
+      "author": "Charles Darwin",
+      "role": "Naturalist",
+      "category": "scientist",
+      "tags": ["failure-recovery"]
+    },
+    {
+      "id": "edison-1pct",
+      "text": "Genius is one percent inspiration, ninety-nine percent perspiration.",
+      "author": "Thomas Edison",
+      "role": "Inventor",
+      "category": "scientist",
+      "tags": ["consistency", "discipline"]
+    },
+    {
+      "id": "carmack-focus",
+      "text": "Focus is a matter of deciding what things you're not going to do.",
+      "author": "John Carmack",
+      "role": "Programmer, id Software founder",
+      "category": "scientist",
+      "tags": ["focus"]
+    },
+    {
+      "id": "dijkstra-simple",
+      "text": "Simplicity is prerequisite for reliability.",
+      "author": "Edsger Dijkstra",
+      "role": "Computer scientist",
+      "category": "scientist",
+      "tags": ["depth"]
+    },
+    {
+      "id": "kay-future",
+      "text": "The best way to predict the future is to invent it.",
+      "author": "Alan Kay",
+      "role": "Computer scientist",
+      "category": "scientist",
+      "tags": ["depth"]
+    },
+
+    {
+      "id": "jobs-believe",
+      "text": "Your work is going to fill a large part of your life, and the only way to be truly satisfied is to do what you believe is great work.",
+      "author": "Steve Jobs",
+      "role": "Apple co-founder",
+      "category": "builder",
+      "tags": ["depth"]
+    },
+    {
+      "id": "jobs-connect",
+      "text": "You can't connect the dots looking forward; you can only connect them looking backwards.",
+      "author": "Steve Jobs",
+      "role": "Apple co-founder",
+      "category": "builder",
+      "tags": ["focus"]
+    },
+    {
+      "id": "bezos-day1",
+      "text": "It's always Day 1.",
+      "author": "Jeff Bezos",
+      "role": "Amazon founder",
+      "category": "builder",
+      "tags": ["consistency"]
+    },
+    {
+      "id": "naval-leverage",
+      "text": "Specific knowledge is found much more by pursuing your innate talents, your genuine curiosity, and your passion.",
+      "author": "Naval Ravikant",
+      "role": "Investor, AngelList founder",
+      "category": "builder",
+      "tags": ["depth"]
+    },
+    {
+      "id": "naval-read",
+      "text": "Read what you love until you love to read.",
+      "author": "Naval Ravikant",
+      "role": "Investor, AngelList founder",
+      "category": "builder",
+      "tags": ["consistency"]
+    },
+    {
+      "id": "pg-startup",
+      "text": "The way to get startup ideas is not to try to think of startup ideas. It is to look for problems, preferably problems you have yourself.",
+      "author": "Paul Graham",
+      "role": "Y Combinator co-founder",
+      "category": "builder",
+      "tags": ["depth"]
+    },
+    {
+      "id": "gates-overestimate",
+      "text": "Most people overestimate what they can do in one year and underestimate what they can do in ten years.",
+      "author": "Bill Gates",
+      "role": "Microsoft co-founder",
+      "category": "builder",
+      "tags": ["consistency"]
+    },
+    {
+      "id": "musk-wrong",
+      "text": "When something is important enough, you do it even if the odds are not in your favor.",
+      "author": "Elon Musk",
+      "role": "Engineer, founder",
+      "category": "builder",
+      "tags": ["focus", "failure-recovery"]
+    },
+    {
+      "id": "horowitz-struggle",
+      "text": "Every time I read a management or self-help book, I find myself saying: that's fine, but that wasn't really the hard thing about the situation.",
+      "author": "Ben Horowitz",
+      "role": "VC, a16z co-founder",
+      "category": "builder",
+      "tags": ["failure-recovery"]
+    },
+    {
+      "id": "buffett-circle",
+      "text": "What's important is the size of your circle of competence — not how big it is, but how well you know its boundaries.",
+      "author": "Warren Buffett",
+      "role": "Investor",
+      "category": "builder",
+      "tags": ["depth"]
+    },
+
+    {
+      "id": "hemingway-write",
+      "text": "Write hard and clear about what hurts.",
+      "author": "Ernest Hemingway",
+      "role": "Novelist, Nobel laureate",
+      "category": "writer",
+      "tags": ["depth"]
+    },
+    {
+      "id": "newport-clarity",
+      "text": "Clarity about what matters provides clarity about what does not.",
+      "author": "Cal Newport",
+      "role": "Author of Deep Work",
+      "category": "writer",
+      "tags": ["focus"]
+    },
+    {
+      "id": "frankl-meaning",
+      "text": "When we are no longer able to change a situation, we are challenged to change ourselves.",
+      "author": "Viktor Frankl",
+      "role": "Neurologist, Holocaust survivor",
+      "category": "writer",
+      "tags": ["failure-recovery"]
+    },
+    {
+      "id": "thoreau-deliberate",
+      "text": "I went to the woods because I wished to live deliberately.",
+      "author": "Henry David Thoreau",
+      "role": "Writer & philosopher",
+      "category": "writer",
+      "tags": ["focus"]
+    },
+    {
+      "id": "duhigg-keystone",
+      "text": "Champions don't do extraordinary things. They do ordinary things, but they do them without thinking.",
+      "author": "Charles Duhigg",
+      "role": "Journalist, author of The Power of Habit",
+      "category": "writer",
+      "tags": ["consistency", "discipline"]
+    },
+    {
+      "id": "holiday-obstacle",
+      "text": "The obstacle in the path becomes the path. Never forget, within every obstacle is an opportunity to improve our condition.",
+      "author": "Ryan Holiday",
+      "role": "Author, modern Stoic",
+      "category": "writer",
+      "tags": ["failure-recovery"]
+    },
+    {
+      "id": "rohn-discipline",
+      "text": "Discipline is the bridge between goals and accomplishment.",
+      "author": "Jim Rohn",
+      "role": "Entrepreneur & author",
+      "category": "writer",
+      "tags": ["discipline"]
+    },
+    {
+      "id": "covey-important",
+      "text": "The key is not to prioritize what's on your schedule, but to schedule your priorities.",
+      "author": "Stephen Covey",
+      "role": "Author of 7 Habits",
+      "category": "writer",
+      "tags": ["focus"]
+    },
+
+    {
+      "id": "patton-decision",
+      "text": "A good plan violently executed now is better than a perfect plan executed next week.",
+      "author": "George S. Patton",
+      "role": "U.S. Army general",
+      "category": "leader",
+      "tags": ["focus"]
+    },
+    {
+      "id": "lincoln-axe",
+      "text": "Give me six hours to chop down a tree and I will spend the first four sharpening the axe.",
+      "author": "Abraham Lincoln",
+      "role": "U.S. President",
+      "category": "leader",
+      "tags": ["depth"]
+    },
+    {
+      "id": "churchill-going",
+      "text": "If you're going through hell, keep going.",
+      "author": "Winston Churchill",
+      "role": "UK Prime Minister",
+      "category": "leader",
+      "tags": ["failure-recovery"]
+    },
+    {
+      "id": "mandela-impossible",
+      "text": "It always seems impossible until it's done.",
+      "author": "Nelson Mandela",
+      "role": "Statesman, anti-apartheid leader",
+      "category": "leader",
+      "tags": ["consistency"]
+    },
+    {
+      "id": "roosevelt-arena",
+      "text": "The credit belongs to the man who is actually in the arena, whose face is marred by dust and sweat and blood.",
+      "author": "Theodore Roosevelt",
+      "role": "U.S. President",
+      "category": "leader",
+      "tags": ["failure-recovery", "discipline"]
+    },
+
+    {
+      "id": "rumi-wound",
+      "text": "The wound is the place where the Light enters you.",
+      "author": "Rumi",
+      "role": "Persian poet",
+      "category": "writer",
+      "tags": ["failure-recovery"]
+    },
+    {
+      "id": "tagore-bridge",
+      "text": "You can't cross the sea merely by standing and staring at the water.",
+      "author": "Rabindranath Tagore",
+      "role": "Poet, Nobel laureate",
+      "category": "writer",
+      "tags": ["focus", "discipline"]
+    }
+  ]
+}

@@ -13,6 +13,7 @@ import {
 } from '@/lib/admin/prep/queries'
 import { computeBadgeContext } from '@/lib/admin/prep/badges'
 import { refreshBadges } from '@/lib/admin/prep/refresh-badges'
+import { getDailyQuote } from '@/lib/admin/prep/daily-quote'
 import type { BadgeRecord, DailyLog, Library, Plan, Routine } from '@/lib/admin/prep/types'
 import planJson from '@/content/coding-prep-plan.json'
 import libraryJson from '@/content/coding-prep-library.json'
@@ -68,6 +69,23 @@ export default async function CodingPrepPage() {
   )
   const ctx = await computeBadgeContext(planTotalTasks)
 
+  // Daily quote — theme-matched to today's plan day when known
+  const dayNumForQuote = settings.plan_start_date
+    ? Math.floor(
+        (Date.UTC(
+          Number.parseInt(today.slice(0, 4), 10),
+          Number.parseInt(today.slice(5, 7), 10) - 1,
+          Number.parseInt(today.slice(8, 10), 10)
+        ) -
+          new Date(settings.plan_start_date).setUTCHours(0, 0, 0, 0)) /
+          (24 * 3600 * 1000)
+      ) + 1
+    : null
+  const planDayForQuote = dayNumForQuote
+    ? (plan.days.find((d) => d.day === dayNumForQuote) ?? null)
+    : null
+  const dailyQuote = getDailyQuote(today, planDayForQuote?.title)
+
   const serialBadges: BadgeRecord[] = badges.map((b) => ({
     badgeId: b.badgeId,
     unlockedAt: b.unlockedAt.toISOString(),
@@ -79,11 +97,16 @@ export default async function CodingPrepPage() {
   return (
     <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
       <header className="mb-8">
-        <p className="text-sm font-medium text-indigo-600 dark:text-indigo-400">Admin</p>
-        <h1 className="mt-1 text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-          Coding & System Design Prep
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-indigo-600 dark:text-indigo-400">
+          Admin · Daily driver
+        </p>
+        <h1
+          style={{ fontFamily: 'var(--font-display), Georgia, serif' }}
+          className="mt-2 text-4xl leading-tight text-zinc-900 sm:text-5xl dark:text-zinc-50"
+        >
+          Coding &amp; System Design Prep
         </h1>
-        <p className="mt-1 max-w-2xl text-sm text-zinc-500 dark:text-zinc-400">
+        <p className="mt-2 max-w-2xl text-sm text-zinc-500 dark:text-zinc-400">
           {plan.meta.subtitle}
         </p>
       </header>
@@ -92,6 +115,7 @@ export default async function CodingPrepPage() {
         plan={plan}
         library={library}
         routine={routine}
+        quote={dailyQuote}
         initialCompleted={Array.from(completed)}
         initialNotes={notesByDay}
         todayKey={today}

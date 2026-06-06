@@ -15,6 +15,7 @@ import type {
   Routine,
   SettingsMap,
 } from '@/lib/admin/prep/types'
+import type { Quote } from '@/lib/admin/prep/daily-quote'
 import { cn } from '@/lib/utils'
 
 type Tab = 'today' | 'plan' | 'library' | 'dashboard'
@@ -32,6 +33,7 @@ export function CodingPrepClient({
   plan,
   library,
   routine,
+  quote,
   initialCompleted,
   initialNotes,
   todayKey,
@@ -45,6 +47,7 @@ export function CodingPrepClient({
   plan: Plan
   library: Library
   routine: Routine
+  quote: Quote
   initialCompleted: string[]
   initialNotes: Record<string, string>
   todayKey: string
@@ -174,29 +177,36 @@ export function CodingPrepClient({
 
   return (
     <>
-      <section className="mb-6 rounded-2xl border border-zinc-200 bg-zinc-50/50 p-5 dark:border-zinc-800 dark:bg-zinc-900/30">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-              10-day plan progress
-            </p>
-            <p className="mt-1 text-2xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">
-              {completedCount}{' '}
-              <span className="text-base font-normal text-zinc-500 dark:text-zinc-400">
-                / {totalTasks} tasks
-              </span>
-            </p>
+      {tab !== 'today' ? (
+        <section className="mb-6 rounded-2xl border border-zinc-200 bg-zinc-50/50 p-5 dark:border-zinc-800 dark:bg-zinc-900/30">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                10-day plan progress
+              </p>
+              <p className="mt-1 text-2xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">
+                {completedCount}{' '}
+                <span className="text-base font-normal text-zinc-500 dark:text-zinc-400">
+                  / {totalTasks} tasks
+                </span>
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setResetOpen(true)}
+              className="rounded-md border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-600 transition-colors hover:border-rose-300 hover:text-rose-700 dark:border-zinc-800 dark:text-zinc-300 dark:hover:border-rose-700 dark:hover:text-rose-400"
+            >
+              Reset all
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={() => setResetOpen(true)}
-            className="rounded-md border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-600 transition-colors hover:border-rose-300 hover:text-rose-700 dark:border-zinc-800 dark:text-zinc-300 dark:hover:border-rose-700 dark:hover:text-rose-400"
-          >
-            Reset all
-          </button>
-        </div>
-        <ProgressBar completed={completedCount} total={totalTasks} className="mt-3" tone="indigo" />
-      </section>
+          <ProgressBar
+            completed={completedCount}
+            total={totalTasks}
+            className="mt-3"
+            tone="indigo"
+          />
+        </section>
+      ) : null}
 
       <div
         className="mb-6 flex gap-1 overflow-x-auto border-b border-zinc-200 dark:border-zinc-800"
@@ -221,9 +231,12 @@ export function CodingPrepClient({
           routine={routine}
           plan={plan}
           todayKey={todayKey}
+          quote={quote}
           initialLog={log}
           initialTodayTaskIds={initialTodayTaskIds}
           initialSettings={settings}
+          initialStudyStreak={initialStats.studyStreak}
+          initialTrainStreak={initialStats.trainStreak}
           onPatchLog={patchDailyLog}
           onToggleRoutineTask={async (id, c) => {
             const fresh = await toggleRoutineTask(id, c)

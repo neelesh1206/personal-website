@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Play, Pause, RotateCcw, Code2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
 import { cn } from '@/lib/utils'
 
 type Phase = 'focus' | 'break' | 'idle'
@@ -117,33 +116,42 @@ export function PomodoroBlock({
 
   const phaseLabel = phase === 'focus' ? 'Focus sprint' : phase === 'break' ? 'Break' : 'Ready'
 
+  const ringColor =
+    phase === 'break' ? 'stroke-emerald-500' : 'stroke-indigo-500 dark:stroke-indigo-400'
+
   return (
-    <Card className="border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900/50">
+    <Card className="relative overflow-hidden border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900/50">
+      <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500" />
       <CardHeader className="flex flex-row items-start justify-between gap-4">
         <div>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Code2 className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+            <span className="grid h-7 w-7 place-items-center rounded-md bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300">
+              <Code2 className="h-3.5 w-3.5" />
+            </span>
             Coding sprints
           </CardTitle>
           <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{duration}</p>
         </div>
         <div className="text-right">
-          <p className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+          <p className="text-[10px] uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
             Sprints today
           </p>
-          <p className="text-xl font-semibold tabular-nums">{sprintsDone}</p>
+          <p className="text-2xl font-semibold tabular-nums">{sprintsDone}</p>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-5">
         {rule ? (
-          <p className="rounded-md border-l-2 border-indigo-500 bg-indigo-50 px-3 py-2 text-xs text-indigo-900 dark:border-indigo-400 dark:bg-indigo-950/40 dark:text-indigo-200">
+          <p
+            style={{ fontFamily: 'var(--font-display), Georgia, serif' }}
+            className="rounded-md border-l-2 border-indigo-500 bg-indigo-50/70 px-3 py-2 text-sm italic text-indigo-900 dark:border-indigo-400 dark:bg-indigo-950/40 dark:text-indigo-200"
+          >
             {rule}
           </p>
         ) : null}
-        <div className="flex flex-col items-center gap-3 py-2">
+        <div className="flex flex-col items-center gap-4 py-3">
           <p
             className={cn(
-              'text-xs font-semibold uppercase tracking-widest',
+              'text-[10px] font-semibold uppercase tracking-[0.22em]',
               phase === 'focus' && 'text-indigo-600 dark:text-indigo-400',
               phase === 'break' && 'text-emerald-600 dark:text-emerald-400',
               phase === 'idle' && 'text-zinc-500 dark:text-zinc-400'
@@ -151,10 +159,23 @@ export function PomodoroBlock({
           >
             {phaseLabel}
           </p>
-          <p className="font-mono text-5xl font-semibold tabular-nums tracking-tighter text-zinc-900 dark:text-zinc-50">
-            {mm}:{ss}
-          </p>
-          <Progress value={pct} className="h-1.5 w-full max-w-xs" />
+
+          <ProgressRing
+            size={196}
+            stroke={6}
+            percent={pct}
+            colorClass={phase === 'idle' ? 'stroke-zinc-300 dark:stroke-zinc-700' : ringColor}
+          >
+            <div className="flex flex-col items-center">
+              <p className="font-mono text-5xl font-semibold tabular-nums tracking-tighter text-zinc-900 dark:text-zinc-50">
+                {mm}:{ss}
+              </p>
+              <p className="mt-1 text-[10px] uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
+                {phase === 'break' ? '5-min reset' : '25-min focus'}
+              </p>
+            </div>
+          </ProgressRing>
+
           <div className="flex gap-2">
             {!running ? (
               <Button size="sm" onClick={handleStart}>
@@ -173,5 +194,49 @@ export function PomodoroBlock({
         </div>
       </CardContent>
     </Card>
+  )
+}
+
+function ProgressRing({
+  size,
+  stroke,
+  percent,
+  colorClass,
+  children,
+}: {
+  size: number
+  stroke: number
+  percent: number
+  colorClass: string
+  children: React.ReactNode
+}) {
+  const r = (size - stroke) / 2
+  const c = 2 * Math.PI * r
+  const offset = c - (percent / 100) * c
+  return (
+    <div className="relative" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          strokeWidth={stroke}
+          className="stroke-zinc-100 dark:stroke-zinc-800"
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          strokeDasharray={c}
+          strokeDashoffset={offset}
+          className={cn(colorClass, 'transition-[stroke-dashoffset] duration-500')}
+        />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">{children}</div>
+    </div>
   )
 }

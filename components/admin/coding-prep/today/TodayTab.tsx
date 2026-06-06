@@ -12,6 +12,7 @@ import {
   CheckCircle2,
   Sparkles,
   Plus,
+  Code2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -19,10 +20,12 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import type { DailyLog, Plan, Routine, RoutineBlock, SettingsMap } from '@/lib/admin/prep/types'
+import type { Quote } from '@/lib/admin/prep/daily-quote'
 import { cn } from '@/lib/utils'
 import { PomodoroBlock } from './PomodoroBlock'
 import { JournalCard } from './JournalCard'
-import { SettingsDialog } from './SettingsDialog'
+import { DailyQuoteCard } from './DailyQuoteCard'
+import { HeroHeader } from './HeroHeader'
 
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   Sun,
@@ -31,7 +34,58 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   Dumbbell,
   BookOpen,
   Trophy,
-  Code2: Sparkles,
+  Code2,
+  Sparkles,
+}
+
+// Per-block accent colors — top stripe + icon background. Picked from
+// Tailwind's saturated mid-range so they show clearly in both modes.
+const BLOCK_ACCENT: Record<string, { stripe: string; iconBg: string; iconText: string }> = {
+  anchor: {
+    stripe: 'from-amber-400 via-orange-400 to-rose-400',
+    iconBg: 'bg-amber-100 dark:bg-amber-950/60',
+    iconText: 'text-amber-700 dark:text-amber-300',
+  },
+  applications: {
+    stripe: 'from-sky-500 via-blue-500 to-indigo-500',
+    iconBg: 'bg-sky-100 dark:bg-sky-950/60',
+    iconText: 'text-sky-700 dark:text-sky-300',
+  },
+  coding: {
+    stripe: 'from-indigo-500 via-violet-500 to-fuchsia-500',
+    iconBg: 'bg-indigo-100 dark:bg-indigo-950/60',
+    iconText: 'text-indigo-700 dark:text-indigo-300',
+  },
+  'system-design': {
+    stripe: 'from-violet-500 via-purple-500 to-fuchsia-500',
+    iconBg: 'bg-violet-100 dark:bg-violet-950/60',
+    iconText: 'text-violet-700 dark:text-violet-300',
+  },
+  crossfit: {
+    stripe: 'from-rose-500 via-red-500 to-orange-500',
+    iconBg: 'bg-rose-100 dark:bg-rose-950/60',
+    iconText: 'text-rose-700 dark:text-rose-300',
+  },
+  english: {
+    stripe: 'from-teal-500 via-emerald-500 to-green-500',
+    iconBg: 'bg-teal-100 dark:bg-teal-950/60',
+    iconText: 'text-teal-700 dark:text-teal-300',
+  },
+  reward: {
+    stripe: 'from-amber-400 via-yellow-400 to-amber-500',
+    iconBg: 'bg-amber-100 dark:bg-amber-950/60',
+    iconText: 'text-amber-700 dark:text-amber-300',
+  },
+}
+
+function blockAccent(id: string) {
+  return (
+    BLOCK_ACCENT[id] ?? {
+      stripe: 'from-zinc-400 to-zinc-500',
+      iconBg: 'bg-zinc-100 dark:bg-zinc-900',
+      iconText: 'text-zinc-700 dark:text-zinc-300',
+    }
+  )
 }
 
 function getCurrentPlanDayNum(planStartDate?: string, today = new Date()): number | null {
@@ -43,13 +97,28 @@ function getCurrentPlanDayNum(planStartDate?: string, today = new Date()): numbe
   return diffDays + 1
 }
 
+function prettyDate(key: string): string {
+  // YYYY-MM-DD → "Friday, June 5"
+  const [y, m, d] = key.split('-').map((n) => Number.parseInt(n, 10))
+  const dt = new Date(Date.UTC(y!, (m ?? 1) - 1, d ?? 1))
+  return new Intl.DateTimeFormat('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    timeZone: 'UTC',
+  }).format(dt)
+}
+
 export function TodayTab({
   routine,
   plan,
   todayKey,
+  quote,
   initialLog,
   initialTodayTaskIds,
   initialSettings,
+  initialStudyStreak,
+  initialTrainStreak,
   onPatchLog,
   onToggleRoutineTask,
   onAddApplication,
@@ -58,9 +127,12 @@ export function TodayTab({
   routine: Routine
   plan: Plan
   todayKey: string
+  quote: Quote
   initialLog: DailyLog
   initialTodayTaskIds: string[]
   initialSettings: SettingsMap
+  initialStudyStreak: number
+  initialTrainStreak: number
   onPatchLog: (patch: Partial<DailyLog>) => Promise<void>
   onToggleRoutineTask: (taskId: string, completed: boolean) => Promise<string[]>
   onAddApplication: (company: string, role: string) => Promise<string[]>
@@ -126,7 +198,7 @@ export function TodayTab({
   const rewardUnlocked = codingCompleted && applicationsCompleted
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <AnimatePresence>
         {unlockedToast.length > 0 && (
           <motion.div
@@ -140,25 +212,22 @@ export function TodayTab({
         )}
       </AnimatePresence>
 
-      <Card className="border-zinc-200 bg-gradient-to-br from-indigo-50 to-white dark:border-zinc-800 dark:from-indigo-950/40 dark:to-zinc-900/40">
-        <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-indigo-700 dark:text-indigo-300">
-              {dayNum ? `Day ${dayNum}` : 'Today'} · {todayKey}
-            </p>
-            <p className="mt-0.5 text-sm text-zinc-600 dark:text-zinc-300">
-              {planDay ? planDay.title : routine.meta.tagline}
-            </p>
-          </div>
-          <SettingsDialog
-            initialSettings={settings}
-            onSaved={(s) => {
-              setSettings(s)
-              onSettingsSaved(s)
-            }}
-          />
-        </CardContent>
-      </Card>
+      <HeroHeader
+        dateLabel={prettyDate(todayKey)}
+        dayNum={dayNum}
+        totalDays={plan.days.length}
+        planTheme={planDay?.title}
+        studyStreak={initialStudyStreak}
+        trainStreak={initialTrainStreak}
+        evidenceLine={settings.evidence_line}
+        settings={settings}
+        onSettingsSaved={(s) => {
+          setSettings(s)
+          onSettingsSaved(s)
+        }}
+      />
+
+      <DailyQuoteCard quote={quote} />
 
       {routine.blocks.map((block) => (
         <BlockRenderer
@@ -170,7 +239,6 @@ export function TodayTab({
           planDay={planDay}
           rewardUnlocked={rewardUnlocked}
           rewardMinutes={settings.reward_minutes ?? 30}
-          evidenceLine={settings.evidence_line}
           appCompany={appCompany}
           appRole={appRole}
           setAppCompany={setAppCompany}
@@ -195,7 +263,6 @@ function BlockRenderer(props: {
   planDay: Plan['days'][number] | null
   rewardUnlocked: boolean
   rewardMinutes: number
-  evidenceLine?: string
   appCompany: string
   appRole: string
   setAppCompany: (v: string) => void
@@ -212,7 +279,6 @@ function BlockRenderer(props: {
     planDay,
     rewardUnlocked,
     rewardMinutes,
-    evidenceLine,
     appCompany,
     appRole,
     setAppCompany,
@@ -222,6 +288,7 @@ function BlockRenderer(props: {
     onToggleTask,
   } = props
   const Icon = ICONS[block.icon] ?? Sparkles
+  const accent = blockAccent(block.id)
 
   if (block.kind === 'pomodoro') {
     return (
@@ -237,13 +304,22 @@ function BlockRenderer(props: {
     return (
       <Card
         className={cn(
-          'border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900/50',
+          'relative overflow-hidden border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900/50',
           rewardUnlocked && 'border-amber-300 dark:border-amber-700'
         )}
       >
+        <div className={cn('absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r', accent.stripe)} />
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Trophy className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+            <span
+              className={cn(
+                'grid h-7 w-7 place-items-center rounded-md',
+                accent.iconBg,
+                accent.iconText
+              )}
+            >
+              <Trophy className="h-3.5 w-3.5" />
+            </span>
             {block.title}
             <span className="text-xs font-normal text-zinc-500">({rewardMinutes} min)</span>
           </CardTitle>
@@ -251,7 +327,10 @@ function BlockRenderer(props: {
         <CardContent>
           {rewardUnlocked ? (
             <div className="flex items-center justify-between gap-3">
-              <p className="text-sm text-zinc-700 dark:text-zinc-300">
+              <p
+                style={{ fontFamily: 'var(--font-display), Georgia, serif' }}
+                className="text-base italic text-amber-900 dark:text-amber-200"
+              >
                 Earned. Time-boxed: {rewardMinutes} min.
               </p>
               <div className="flex items-center gap-2">
@@ -279,33 +358,35 @@ function BlockRenderer(props: {
   }
 
   return (
-    <Card className="border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900/50">
+    <Card className="relative overflow-hidden border-zinc-200 bg-white transition-colors hover:border-zinc-300 dark:border-zinc-800 dark:bg-zinc-900/50 dark:hover:border-zinc-700">
+      <div className={cn('absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r', accent.stripe)} />
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
-          <Icon className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+          <span
+            className={cn(
+              'grid h-7 w-7 place-items-center rounded-md',
+              accent.iconBg,
+              accent.iconText
+            )}
+          >
+            <Icon className="h-3.5 w-3.5" />
+          </span>
           {block.title}
-          <span className="text-xs font-normal text-zinc-500">{block.duration}</span>
+          <span className="ml-auto text-xs font-normal text-zinc-500">{block.duration}</span>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         {block.rule ? (
-          <p className="rounded-md border-l-2 border-indigo-500 bg-indigo-50 px-3 py-2 text-xs text-indigo-900 dark:border-indigo-400 dark:bg-indigo-950/40 dark:text-indigo-200">
+          <p
+            style={{ fontFamily: 'var(--font-display), Georgia, serif' }}
+            className="rounded-md border-l-2 border-indigo-500 bg-indigo-50/70 px-3 py-2 text-sm italic text-indigo-900 dark:border-indigo-400 dark:bg-indigo-950/40 dark:text-indigo-200"
+          >
             {block.rule}
           </p>
         ) : null}
 
         {block.id === 'anchor' ? (
           <div className="space-y-2">
-            {evidenceLine ? (
-              <blockquote className="border-l-2 border-amber-400 pl-3 text-sm italic text-zinc-700 dark:text-zinc-300">
-                {evidenceLine}
-              </blockquote>
-            ) : (
-              <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                Add your evidence line in Settings — one sentence reminding you of a hard thing
-                you’ve already done.
-              </p>
-            )}
             <div className="flex items-center gap-2">
               <Checkbox
                 id="anchor-read"
@@ -313,9 +394,10 @@ function BlockRenderer(props: {
                 onCheckedChange={(v) => onPatchLog({ morningAnchorRead: v === true })}
               />
               <label htmlFor="anchor-read" className="text-sm">
-                Read it
+                Read it. Start.
               </label>
             </div>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">{block.body}</p>
           </div>
         ) : null}
 
@@ -331,7 +413,10 @@ function BlockRenderer(props: {
                     checked={checked}
                     onCheckedChange={(v) => onToggleTask(id, v === true)}
                   />
-                  <label htmlFor={id} className="text-sm">
+                  <label
+                    htmlFor={id}
+                    className={cn('text-sm', checked && 'line-through opacity-60')}
+                  >
                     {t.label}
                   </label>
                 </li>
@@ -341,22 +426,25 @@ function BlockRenderer(props: {
         ) : null}
 
         {block.id === 'applications' ? (
-          <div className="space-y-2 rounded-md border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900/30">
+          <div className="space-y-2 rounded-md border border-zinc-200 bg-zinc-50/70 p-3 dark:border-zinc-800 dark:bg-zinc-900/40">
             <p className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
-              Log an application ({log.applicationsCount} today)
+              Log an application ·{' '}
+              <span className="font-semibold text-zinc-900 dark:text-zinc-200">
+                {log.applicationsCount} today
+              </span>
             </p>
             <div className="flex flex-wrap gap-2">
               <Input
                 value={appCompany}
                 onChange={(e) => setAppCompany(e.target.value)}
                 placeholder="Company"
-                className="h-9 flex-1 min-w-[140px]"
+                className="h-9 min-w-[140px] flex-1"
               />
               <Input
                 value={appRole}
                 onChange={(e) => setAppRole(e.target.value)}
                 placeholder="Role"
-                className="h-9 flex-1 min-w-[140px]"
+                className="h-9 min-w-[140px] flex-1"
               />
               <Button size="sm" onClick={addApp}>
                 <Plus className="mr-1 h-3.5 w-3.5" /> Log
@@ -366,7 +454,7 @@ function BlockRenderer(props: {
         ) : null}
 
         {block.id === 'system-design' ? (
-          <div className="rounded-md border border-zinc-200 bg-zinc-50 p-3 text-sm dark:border-zinc-800 dark:bg-zinc-900/30">
+          <div className="rounded-md border border-zinc-200 bg-zinc-50/70 p-3 text-sm dark:border-zinc-800 dark:bg-zinc-900/40">
             {planDay ? (
               <>
                 <p className="font-medium text-zinc-900 dark:text-zinc-50">

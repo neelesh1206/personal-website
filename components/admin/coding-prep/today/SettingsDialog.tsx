@@ -19,9 +19,11 @@ import type { SettingsMap } from '@/lib/admin/prep/types'
 export function SettingsDialog({
   initialSettings,
   onSaved,
+  trigger,
 }: {
   initialSettings: SettingsMap
   onSaved: (s: SettingsMap) => void
+  trigger?: React.ReactElement
 }) {
   const [open, setOpen] = useState(false)
   const [planStart, setPlanStart] = useState(initialSettings.plan_start_date ?? '')
@@ -57,9 +59,11 @@ export function SettingsDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         render={
-          <Button variant="ghost" size="sm">
-            <Settings className="mr-1.5 h-3.5 w-3.5" /> Settings
-          </Button>
+          trigger ?? (
+            <Button variant="ghost" size="sm">
+              <Settings className="mr-1.5 h-3.5 w-3.5" /> Settings
+            </Button>
+          )
         }
       />
 
