@@ -28,6 +28,8 @@ import { JournalCard } from './JournalCard'
 import { DailyQuoteCard } from './DailyQuoteCard'
 import { HeroHeader } from './HeroHeader'
 import { SettingsDialog } from './SettingsDialog'
+import { StickyTopBar } from './StickyTopBar'
+import { BlockShell } from './BlockShell'
 
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   Sun,
@@ -219,11 +221,78 @@ export function TodayTab({
     return ids.every((t) => taskIds.has(`${todayKey}:applications:${t.id}`))
   }, [routine, taskIds, todayKey])
 
-  const codingCompleted = log.problemsSolved >= 2
+  const codingCompleted = log.problemsSolved >= Math.max(1, loadProfile.sprints)
   const rewardUnlocked = codingCompleted && applicationsCompleted
+
+  // Per-block completion — what counts as "done" so the block can collapse
+  // into a slim done-row. Targets respect today's load profile so a
+  // re-entry day's expectations are realistic, but XP / streaks are
+  // still computed off real counts (untouched).
+  const doneById = useMemo<Record<string, boolean>>(() => {
+    return {
+      anchor: log.morningAnchorRead,
+      applications: applicationsCompleted || log.applicationsCount >= loadProfile.appTarget,
+      coding: codingCompleted,
+      'system-design':
+        loadProfile.systemDesign === 'hidden' ||
+        (loadProfile.systemDesign === 'collapsed' && false), // user expands manually
+      crossfit: log.trainedToday,
+      english: log.readAloud,
+      reward: log.rewardEarned,
+    }
+  }, [
+    log.morningAnchorRead,
+    applicationsCompleted,
+    log.applicationsCount,
+    loadProfile.appTarget,
+    loadProfile.systemDesign,
+    codingCompleted,
+    log.trainedToday,
+    log.readAloud,
+    log.rewardEarned,
+  ])
+
+  // Dominant next-action: first uncompleted block in render order that's
+  // actually required today. Reward is excluded — it's a follow-up to
+  // the core blocks, not a "next action."
+  const dominantId = useMemo(() => {
+    for (const block of routine.blocks) {
+      if (block.id === 'reward') continue
+      if (block.id === 'system-design' && loadProfile.systemDesign === 'collapsed') continue
+      if (!doneById[block.id]) return block.id
+    }
+    return null
+  }, [routine.blocks, doneById, loadProfile.systemDesign])
+
+  // Today percentage — drives the sticky top bar's progress.
+  const percentComplete = useMemo(() => {
+    const required = routine.blocks.filter((b) => b.id !== 'reward')
+    if (required.length === 0) return 0
+    const done = required.filter((b) => doneById[b.id]).length
+    return Math.round((done / required.length) * 100)
+  }, [routine.blocks, doneById])
+
+  // User-controlled "peek" expand for done blocks.
+  const [expandedDone, setExpandedDone] = useState<Set<string>>(new Set())
+  const toggleExpanded = useCallback((id: string) => {
+    setExpandedDone((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }, [])
 
   return (
     <div className="space-y-6">
+      <StickyTopBar
+        dayNum={dayNum}
+        totalDays={plan.days.length}
+        percent={percentComplete}
+        studyStreak={initialStudyStreak}
+        trainStreak={initialTrainStreak}
+        totalXp={totalXp}
+      />
       <AnimatePresence>
         {unlockedToast.length > 0 && (
           <motion.div
@@ -273,6 +342,10 @@ export function TodayTab({
           rewardUnlocked={rewardUnlocked}
           rewardMinutes={settings.reward_minutes ?? 30}
           loadProfile={loadProfile}
+          isDone={doneById[block.id] ?? false}
+          isDominant={dominantId === block.id}
+          isExpanded={expandedDone.has(block.id)}
+          onToggleExpanded={() => toggleExpanded(block.id)}
           settings={settings}
           onSettingsSaved={(s) => {
             setSettings(s)
@@ -346,6 +419,10 @@ function BlockRenderer(props: {
   rewardUnlocked: boolean
   rewardMinutes: number
   loadProfile: LoadProfile
+  isDone: boolean
+  isDominant: boolean
+  isExpanded: boolean
+  onToggleExpanded: () => void
   settings: SettingsMap
   onSettingsSaved: (s: SettingsMap) => void
   appCompany: string
@@ -365,6 +442,10 @@ function BlockRenderer(props: {
     rewardUnlocked,
     rewardMinutes,
     loadProfile,
+    isDone,
+    isDominant,
+    isExpanded,
+    onToggleExpanded,
     settings,
     onSettingsSaved,
     appCompany,
@@ -446,8 +527,18 @@ function BlockRenderer(props: {
   }
 
   return (
-    <Card className="relative overflow-hidden border-zinc-200 bg-white transition-colors hover:border-zinc-300 dark:border-zinc-800 dark:bg-zinc-900/50 dark:hover:border-zinc-700">
-      <div className={cn('absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r', accent.stripe)} />
+    <BlockShell
+      id={block.id}
+      title={block.title}
+      icon={<Icon className="h-3.5 w-3.5" />}
+      isDone={isDone}
+      isDominant={isDominant}
+      expandedOverride={isExpanded}
+      onExpandedToggle={onToggleExpanded}
+      stripeClass={accent.stripe}
+      iconBgClass={accent.iconBg}
+      iconTextClass={accent.iconText}
+    >
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
           <span
@@ -621,6 +712,6 @@ function BlockRenderer(props: {
           </div>
         ) : null}
       </CardContent>
-    </Card>
+    </BlockShell>
   )
 }
