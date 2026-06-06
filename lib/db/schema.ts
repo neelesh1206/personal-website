@@ -215,6 +215,36 @@ export type PrepBadgeRow = typeof prepBadges.$inferSelect
 export type NewPrepBadge = typeof prepBadges.$inferInsert
 
 /**
+ * Reference-library flashcards — SM-2-lite scheduling state, one row
+ * per card id (the natural key from content/coding-prep-library.json's
+ * topics[].items[].id). The library JSON stays the source of truth for
+ * content; this table only stores the *progress* (what the user knows
+ * vs hasn't seen). We never persist the question/answer here.
+ *
+ * Mastered = streak_correct >= 4; the deck drops mastered cards to
+ * occasional review (next_due_at pushed far out).
+ */
+export const prepFlashcards = pgTable(
+  'prep_flashcards',
+  {
+    cardId: varchar('card_id', { length: 64 }).primaryKey(),
+    lastGrade: varchar('last_grade', { length: 16 }),
+    lastSeen: timestamp('last_seen'),
+    timesSeen: integer('times_seen').notNull().default(0),
+    timesMissed: integer('times_missed').notNull().default(0),
+    timesCorrect: integer('times_correct').notNull().default(0),
+    streakCorrect: smallint('streak_correct').notNull().default(0),
+    intervalDays: smallint('interval_days').notNull().default(0),
+    easeFactor: integer('ease_factor_x100').notNull().default(250), // 2.50 stored as int x100 to avoid float drift
+    nextDueAt: timestamp('next_due_at').notNull().defaultNow(),
+  },
+  (table) => [index('idx_prep_flashcards_due').on(table.nextDueAt)]
+)
+
+export type PrepFlashcardRow = typeof prepFlashcards.$inferSelect
+export type NewPrepFlashcard = typeof prepFlashcards.$inferInsert
+
+/**
  * XP ledger — append-only. Every grant is one row; revocations are
  * matching negative-XP rows so SUM(xp) is the canonical total. The
  * UNIQUE (action, source_id) constraint makes grants idempotent —

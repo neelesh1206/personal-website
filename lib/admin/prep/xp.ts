@@ -18,6 +18,7 @@ export type XpAction =
   | 'morning-anchor' // morning anchor checkbox flips to true
   | 'resolve-blank' // POST /resolves — re-solved from blank
   | 'full-day' // every required block done in one calendar day
+  | 'flashcard-grade' // graded a flashcard via active recall
 
 export const XP_RATES: Record<XpAction, number> = {
   'solve-problem': 20,
@@ -29,6 +30,10 @@ export const XP_RATES: Record<XpAction, number> = {
   'morning-anchor': 3,
   'resolve-blank': 25,
   'full-day': 50,
+  // Effort-weighted on purpose — the attempt is what matters, and we
+  // don't want the user to game grades. Per-grade override happens at
+  // the call site via the optional `xp` param on grantXp().
+  'flashcard-grade': 3,
 }
 
 /** Per-day cap for journal fields — 4 prompts × 3 XP = 12. */
@@ -121,4 +126,5 @@ export const SourceId = {
   readAloud: (date: string) => `read:${date}`,
   journalField: (date: string, field: string) => `journal:${date}:${field}`,
   fullDay: (date: string) => `fullday:${date}`,
+  flashcard: (cardId: string, sessionId: string) => `card:${cardId}:${sessionId}`,
 }

@@ -13,6 +13,7 @@ import {
   prepWords,
   prepBadges,
   prepXpEvents,
+  prepFlashcards,
   type PrepDailyLogRow,
   type PrepApplicationRow,
   type PrepPomodoroRow,
@@ -20,6 +21,7 @@ import {
   type PrepResolveRow,
   type PrepBadgeRow,
   type PrepXpEventRow,
+  type PrepFlashcardRow,
 } from '@/lib/db/schema'
 import { XP_RATES, type XpAction } from './xp'
 
@@ -81,6 +83,7 @@ export async function resetAllProgress(): Promise<void> {
   await db.delete(prepWords)
   await db.delete(prepBadges)
   await db.delete(prepXpEvents)
+  await db.delete(prepFlashcards)
 }
 
 /* ---------------------------------------------------------------- *
@@ -377,6 +380,97 @@ export async function getRecentXpEvents(limit = 200): Promise<PrepXpEventRow[]> 
   } catch (err) {
     console.error('getRecentXpEvents failed', err)
     return []
+  }
+}
+
+/* ---------------------------------------------------------------- *
+ * Flashcards — SM-2-lite scheduling state per card id.
+ *
+ * Card ids match the natural keys from
+ * content/coding-prep-library.json (topics[].items[].id). Content
+ * stays in the JSON; this table only stores progress.
+ * ---------------------------------------------------------------- */
+
+export async function getFlashcardState(cardId: string): Promise<PrepFlashcardRow | null> {
+  try {
+    const [row] = await db
+      .select()
+      .from(prepFlashcards)
+      .where(eq(prepFlashcards.cardId, cardId))
+      .limit(1)
+    return row ?? null
+  } catch (err) {
+    console.error('getFlashcardState failed', err)
+    return null
+  }
+}
+
+export async function getAllFlashcardStates(): Promise<PrepFlashcardRow[]> {
+  try {
+    return await db.select().from(prepFlashcards)
+  } catch (err) {
+    console.error('getAllFlashcardStates failed', err)
+    return []
+  }
+}
+
+export async function getDueFlashcardCount(now: Date = new Date()): Promise<number> {
+  try {
+    const [row] = await db
+      .select({ n: sql<number>`COUNT(*)::int` })
+      .from(prepFlashcards)
+      .where(sql`${prepFlashcards.nextDueAt} <= ${now.toISOString()}`)
+    return row?.n ?? 0
+  } catch (err) {
+    console.error('getDueFlashcardCount failed', err)
+    return 0
+  }
+}
+
+export async function upsertFlashcardState(
+  cardId: string,
+  state: {
+    lastGrade: string
+    timesSeen: number
+    timesMissed: number
+    timesCorrect: number
+    streakCorrect: number
+    intervalDays: number
+    easeFactorX100: number
+    nextDueAt: Date
+  }
+): Promise<void> {
+  try {
+    await db
+      .insert(prepFlashcards)
+      .values({
+        cardId,
+        lastGrade: state.lastGrade,
+        lastSeen: sql`now()`,
+        timesSeen: state.timesSeen,
+        timesMissed: state.timesMissed,
+        timesCorrect: state.timesCorrect,
+        streakCorrect: state.streakCorrect,
+        intervalDays: state.intervalDays,
+        easeFactor: state.easeFactorX100,
+        nextDueAt: state.nextDueAt,
+      })
+      .onConflictDoUpdate({
+        target: prepFlashcards.cardId,
+        set: {
+          lastGrade: state.lastGrade,
+          lastSeen: sql`now()`,
+          timesSeen: state.timesSeen,
+          timesMissed: state.timesMissed,
+          timesCorrect: state.timesCorrect,
+          streakCorrect: state.streakCorrect,
+          intervalDays: state.intervalDays,
+          easeFactor: state.easeFactorX100,
+          nextDueAt: state.nextDueAt,
+        },
+      })
+  } catch (err) {
+    console.error('upsertFlashcardState failed', err)
   }
 }
 
