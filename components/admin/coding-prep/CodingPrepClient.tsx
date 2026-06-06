@@ -344,7 +344,7 @@ export function CodingPrepClient({
           onSaveNote={saveNote}
         />
       ) : tab === 'library' ? (
-        <LibraryTab library={library} />
+        <LibraryTab library={library} onXp={(xp, lvl) => pushXp(xp, lvl)} />
       ) : (
         <DashboardTab
           logs={initialLogs}

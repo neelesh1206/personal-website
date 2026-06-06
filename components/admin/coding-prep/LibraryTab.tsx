@@ -1,11 +1,42 @@
 'use client'
 
-import { useMemo, useState } from 'react'
-import { ChevronDown, ChevronRight, Search } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { BookOpen, ChevronDown, ChevronRight, Layers, Search } from 'lucide-react'
 import type { Library, LibraryItem, LibraryTopic } from '@/lib/admin/prep/types'
 import { cn } from '@/lib/utils'
+import { FlashcardsHome } from './flashcards/FlashcardsHome'
 
-export function LibraryTab({ library }: { library: Library }) {
+type LibraryMode = 'read' | 'flashcards'
+
+export function LibraryTab({
+  library,
+  sessionSize = 15,
+  onXp,
+}: {
+  library: Library
+  sessionSize?: number
+  onXp?: (xp: number, levelUp: string | null) => void
+}) {
+  const [mode, setMode] = useState<LibraryMode>('read')
+  const [dueCount, setDueCount] = useState<number | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await fetch('/api/admin/prep/flashcards/due-count')
+        if (!res.ok) return
+        const json = (await res.json()) as { due: number }
+        if (!cancelled) setDueCount(json.due)
+      } catch {
+        // ignored
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [mode])
+
   const [query, setQuery] = useState('')
   const [openItems, setOpenItems] = useState<Set<string>>(new Set())
   const [showRapidFire, setShowRapidFire] = useState(false)
@@ -33,111 +64,188 @@ export function LibraryTab({ library }: { library: Library }) {
 
   return (
     <div className="space-y-4">
-      {/* Delivery rules / Rapid-fire as foldable reference */}
-      <FoldableCard
-        open={showRules}
-        onToggle={() => setShowRules((v) => !v)}
-        title="Delivery rules (read first, every time)"
-        subtitle="Your rambling fix: structure, headline-first, pause before answering."
-      >
-        <ol className="mt-3 space-y-2 text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-          {library.deliveryRules.map((r, i) => (
-            <li key={i} className="flex gap-3">
-              <span className="font-semibold text-zinc-400 dark:text-zinc-500">{i + 1}.</span>
-              <span>{r}</span>
-            </li>
-          ))}
-        </ol>
-      </FoldableCard>
-
-      <FoldableCard
-        open={showRapidFire}
-        onToggle={() => setShowRapidFire((v) => !v)}
-        title="Rapid-fire trivia — know these cold"
-        subtitle="Fire any one in under 3 seconds. These are your sentinels for credibility."
-      >
-        <div className="mt-4 grid gap-6 sm:grid-cols-2">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-              Versions
-            </p>
-            <ul className="mt-2 divide-y divide-zinc-100 text-sm dark:divide-zinc-900">
-              {library.rapidFire.versions.map((v) => (
-                <li
-                  key={`${v.tool}-${v.version}-${v.where}`}
-                  className="grid grid-cols-[120px_80px_1fr] gap-2 py-1.5"
-                >
-                  <span className="font-medium text-zinc-900 dark:text-zinc-50">{v.tool}</span>
-                  <span className="font-mono tabular-nums text-zinc-700 dark:text-zinc-300">
-                    {v.version}
-                  </span>
-                  <span className="text-xs text-zinc-500 dark:text-zinc-400">{v.where}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-              Headline numbers
-            </p>
-            <ul className="mt-2 divide-y divide-zinc-100 text-sm dark:divide-zinc-900">
-              {library.rapidFire.numbers.map((n) => (
-                <li key={n.label} className="grid grid-cols-[1fr_auto] gap-2 py-1.5">
-                  <span className="text-zinc-600 dark:text-zinc-400">{n.label}</span>
-                  <span className="font-mono text-right tabular-nums text-zinc-900 dark:text-zinc-50">
-                    {n.value}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </FoldableCard>
-
-      {/* Search */}
-      <div className="sticky top-[7.5rem] z-30 -mx-4 bg-white px-4 py-2 sm:-mx-6 sm:px-6 dark:bg-zinc-950">
-        <div className="relative">
-          <Search
-            size={14}
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400"
-            aria-hidden="true"
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-zinc-200 bg-white px-2 py-2 dark:border-zinc-800 dark:bg-zinc-900/60">
+        <div className="flex w-full gap-1 sm:w-auto">
+          <ModeTab
+            active={mode === 'read'}
+            onClick={() => setMode('read')}
+            label="Read"
+            icon={<BookOpen className="h-4 w-4" />}
           />
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search the library — question, answer, topic, project…"
-            className="block w-full rounded-lg border border-zinc-200 bg-white pl-9 pr-3 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50 dark:placeholder:text-zinc-500 dark:focus:border-indigo-600 dark:focus:ring-indigo-900/50"
-            aria-label="Search library"
+          <ModeTab
+            active={mode === 'flashcards'}
+            onClick={() => setMode('flashcards')}
+            label="Flashcards"
+            icon={<Layers className="h-4 w-4" />}
+            counter={dueCount}
           />
         </div>
-        {normalized ? (
-          <p className="mt-1 text-[11px] text-zinc-500 dark:text-zinc-400">
-            {filtered.reduce((n, t) => n + t.items.length, 0)} match
-            {filtered.reduce((n, t) => n + t.items.length, 0) === 1 ? '' : 'es'} in{' '}
-            {filtered.length} topic{filtered.length === 1 ? '' : 's'}
-          </p>
-        ) : null}
       </div>
 
-      {/* Topics */}
-      <div className="space-y-3">
-        {filtered.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-zinc-200 bg-white p-12 text-center text-sm text-zinc-500 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400">
-            No matches for &ldquo;{query}&rdquo;.
-          </div>
-        ) : (
-          filtered.map((topic) => (
-            <TopicSection
-              key={topic.id}
-              topic={topic}
-              openItems={effectiveOpen}
-              onToggleItem={toggleItem}
-            />
-          ))
-        )}
-      </div>
+      {mode === 'flashcards' ? (
+        <FlashcardsHome
+          library={library}
+          sessionSize={sessionSize}
+          onXp={(xp, lvl) => onXp?.(xp, lvl)}
+        />
+      ) : (
+        <ReadingMode />
+      )}
     </div>
+  )
+
+  function ReadingMode() {
+    return (
+      <div className="space-y-4">
+        {/* Delivery rules / Rapid-fire as foldable reference */}
+        <FoldableCard
+          open={showRules}
+          onToggle={() => setShowRules((v) => !v)}
+          title="Delivery rules (read first, every time)"
+          subtitle="Your rambling fix: structure, headline-first, pause before answering."
+        >
+          <ol className="mt-3 space-y-2 text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
+            {library.deliveryRules.map((r, i) => (
+              <li key={i} className="flex gap-3">
+                <span className="font-semibold text-zinc-400 dark:text-zinc-500">{i + 1}.</span>
+                <span>{r}</span>
+              </li>
+            ))}
+          </ol>
+        </FoldableCard>
+
+        <FoldableCard
+          open={showRapidFire}
+          onToggle={() => setShowRapidFire((v) => !v)}
+          title="Rapid-fire trivia — know these cold"
+          subtitle="Fire any one in under 3 seconds. These are your sentinels for credibility."
+        >
+          <div className="mt-4 grid gap-6 sm:grid-cols-2">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                Versions
+              </p>
+              <ul className="mt-2 divide-y divide-zinc-100 text-sm dark:divide-zinc-900">
+                {library.rapidFire.versions.map((v) => (
+                  <li
+                    key={`${v.tool}-${v.version}-${v.where}`}
+                    className="grid grid-cols-[120px_80px_1fr] gap-2 py-1.5"
+                  >
+                    <span className="font-medium text-zinc-900 dark:text-zinc-50">{v.tool}</span>
+                    <span className="font-mono tabular-nums text-zinc-700 dark:text-zinc-300">
+                      {v.version}
+                    </span>
+                    <span className="text-xs text-zinc-500 dark:text-zinc-400">{v.where}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                Headline numbers
+              </p>
+              <ul className="mt-2 divide-y divide-zinc-100 text-sm dark:divide-zinc-900">
+                {library.rapidFire.numbers.map((n) => (
+                  <li key={n.label} className="grid grid-cols-[1fr_auto] gap-2 py-1.5">
+                    <span className="text-zinc-600 dark:text-zinc-400">{n.label}</span>
+                    <span className="font-mono text-right tabular-nums text-zinc-900 dark:text-zinc-50">
+                      {n.value}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </FoldableCard>
+
+        {/* Search */}
+        <div className="sticky top-[7.5rem] z-30 -mx-4 bg-white px-4 py-2 sm:-mx-6 sm:px-6 dark:bg-zinc-950">
+          <div className="relative">
+            <Search
+              size={14}
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400"
+              aria-hidden="true"
+            />
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search the library — question, answer, topic, project…"
+              className="block w-full rounded-lg border border-zinc-200 bg-white pl-9 pr-3 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50 dark:placeholder:text-zinc-500 dark:focus:border-indigo-600 dark:focus:ring-indigo-900/50"
+              aria-label="Search library"
+            />
+          </div>
+          {normalized ? (
+            <p className="mt-1 text-[11px] text-zinc-500 dark:text-zinc-400">
+              {filtered.reduce((n, t) => n + t.items.length, 0)} match
+              {filtered.reduce((n, t) => n + t.items.length, 0) === 1 ? '' : 'es'} in{' '}
+              {filtered.length} topic{filtered.length === 1 ? '' : 's'}
+            </p>
+          ) : null}
+        </div>
+
+        {/* Topics */}
+        <div className="space-y-3">
+          {filtered.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-zinc-200 bg-white p-12 text-center text-sm text-zinc-500 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400">
+              No matches for &ldquo;{query}&rdquo;.
+            </div>
+          ) : (
+            filtered.map((topic) => (
+              <TopicSection
+                key={topic.id}
+                topic={topic}
+                openItems={effectiveOpen}
+                onToggleItem={toggleItem}
+              />
+            ))
+          )}
+        </div>
+      </div>
+    )
+  }
+}
+
+function ModeTab({
+  active,
+  onClick,
+  label,
+  icon,
+  counter,
+}: {
+  active: boolean
+  onClick: () => void
+  label: string
+  icon: React.ReactNode
+  counter?: number | null
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-sm font-medium transition-colors sm:flex-initial',
+        active
+          ? 'border-indigo-500 bg-indigo-50 text-indigo-900 shadow-sm dark:border-indigo-400 dark:bg-indigo-950/40 dark:text-indigo-200'
+          : 'border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300'
+      )}
+      aria-pressed={active}
+    >
+      {icon}
+      <span>{label}</span>
+      {typeof counter === 'number' && counter > 0 ? (
+        <span
+          className={cn(
+            'inline-flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[10px] font-bold',
+            active
+              ? 'bg-indigo-600 text-white'
+              : 'bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200'
+          )}
+        >
+          {counter}
+        </span>
+      ) : null}
+    </button>
   )
 }
 
