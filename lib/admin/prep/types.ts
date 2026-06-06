@@ -110,6 +110,9 @@ export type DailyLog = {
   journalWin: string
   journalDeviation: string
   noDeviation: boolean
+  loadMode: 'full' | 'core' | 're-entry' | 'maintenance'
+  adjustedByAi: boolean
+  currentPlanDay: number | null
 }
 
 export type BadgeRecord = {

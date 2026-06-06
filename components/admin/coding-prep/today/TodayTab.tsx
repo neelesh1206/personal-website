@@ -21,6 +21,7 @@ import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import type { DailyLog, Plan, Routine, RoutineBlock, SettingsMap } from '@/lib/admin/prep/types'
 import type { Quote } from '@/lib/admin/prep/daily-quote'
+import type { LoadProfile } from '@/lib/admin/prep/plan-adjust'
 import { cn } from '@/lib/utils'
 import { PomodoroBlock } from './PomodoroBlock'
 import { JournalCard } from './JournalCard'
@@ -122,6 +123,9 @@ export function TodayTab({
   initialStudyStreak,
   initialTrainStreak,
   totalXp,
+  slidePlanDay,
+  isMaintenance,
+  loadProfile,
   onPatchLog,
   onToggleRoutineTask,
   onAddApplication,
@@ -138,6 +142,9 @@ export function TodayTab({
   initialStudyStreak: number
   initialTrainStreak: number
   totalXp: number
+  slidePlanDay: number | null
+  isMaintenance: boolean
+  loadProfile: LoadProfile
   onPatchLog: (patch: Partial<DailyLog>) => Promise<void>
   onToggleRoutineTask: (taskId: string, completed: boolean) => Promise<string[]>
   onAddApplication: (company: string, role: string) => Promise<string[]>
@@ -150,14 +157,27 @@ export function TodayTab({
   const [appCompany, setAppCompany] = useState('')
   const [appRole, setAppRole] = useState('')
 
+  // Prefer the slid plan day from the server (lowest day not fully
+  // completed) so the user sees the curriculum they should be on, not
+  // necessarily the calendar-day count. Fall back to the calendar calc
+  // only when the slide is missing (no plan_start_date set yet).
   const dayNum = useMemo(
-    () => getCurrentPlanDayNum(settings.plan_start_date),
-    [settings.plan_start_date]
+    () => slidePlanDay ?? getCurrentPlanDayNum(settings.plan_start_date),
+    [slidePlanDay, settings.plan_start_date]
   )
   const planDay = useMemo(() => {
     if (!dayNum) return null
     return plan.days.find((d) => d.day === dayNum) ?? null
   }, [dayNum, plan])
+
+  // Carry-forward chip — calendar day is past slide day → we're behind
+  // but the plan is honoring it. Calm, descriptive copy only.
+  const calendarDay = useMemo(
+    () => getCurrentPlanDayNum(settings.plan_start_date),
+    [settings.plan_start_date]
+  )
+  const isCarryingForward =
+    calendarDay !== null && dayNum !== null && calendarDay > dayNum && !isMaintenance
 
   function showBadgeToast(ids: string[]) {
     if (!ids.length) return
@@ -235,6 +255,13 @@ export function TodayTab({
 
       <DailyQuoteCard quote={quote} reflection={quoteReflection} />
 
+      <LoadModeStrip
+        loadProfile={loadProfile}
+        isCarryingForward={isCarryingForward}
+        isMaintenance={isMaintenance}
+        slidePlanDay={dayNum}
+      />
+
       {routine.blocks.map((block) => (
         <BlockRenderer
           key={block.id}
@@ -245,6 +272,7 @@ export function TodayTab({
           planDay={planDay}
           rewardUnlocked={rewardUnlocked}
           rewardMinutes={settings.reward_minutes ?? 30}
+          loadProfile={loadProfile}
           settings={settings}
           onSettingsSaved={(s) => {
             setSettings(s)
@@ -266,6 +294,49 @@ export function TodayTab({
   )
 }
 
+function LoadModeStrip({
+  loadProfile,
+  isCarryingForward,
+  isMaintenance,
+  slidePlanDay,
+}: {
+  loadProfile: LoadProfile
+  isCarryingForward: boolean
+  isMaintenance: boolean
+  slidePlanDay: number | null
+}) {
+  if (loadProfile.mode === 'full' && !isCarryingForward && !isMaintenance) return null
+  const accent = isMaintenance
+    ? 'border-emerald-300/70 bg-emerald-50/60 text-emerald-900 dark:border-emerald-700/60 dark:bg-emerald-950/30 dark:text-emerald-200'
+    : loadProfile.mode === 're-entry'
+      ? 'border-sky-300/70 bg-sky-50/60 text-sky-900 dark:border-sky-700/60 dark:bg-sky-950/30 dark:text-sky-200'
+      : loadProfile.mode === 'core'
+        ? 'border-amber-300/70 bg-amber-50/60 text-amber-900 dark:border-amber-700/60 dark:bg-amber-950/30 dark:text-amber-200'
+        : 'border-zinc-300/70 bg-zinc-50/70 text-zinc-700 dark:border-zinc-700/60 dark:bg-zinc-900/50 dark:text-zinc-200'
+  const label = isMaintenance
+    ? 'Maintenance mode'
+    : loadProfile.mode === 're-entry'
+      ? 'Lighter today'
+      : loadProfile.mode === 'core'
+        ? 'Core today'
+        : 'Today'
+  return (
+    <div className={cn('rounded-lg border px-3.5 py-2.5 text-sm', accent)}>
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.16em]">{label}</p>
+        {isCarryingForward && slidePlanDay !== null ? (
+          <p className="text-[10px] font-medium uppercase tracking-wider opacity-80">
+            Carrying forward Day {slidePlanDay}
+          </p>
+        ) : null}
+      </div>
+      <p className="mt-1 italic" style={{ fontFamily: 'var(--font-display), Georgia, serif' }}>
+        {loadProfile.toneLine}
+      </p>
+    </div>
+  )
+}
+
 function BlockRenderer(props: {
   block: RoutineBlock
   log: DailyLog
@@ -274,6 +345,7 @@ function BlockRenderer(props: {
   planDay: Plan['days'][number] | null
   rewardUnlocked: boolean
   rewardMinutes: number
+  loadProfile: LoadProfile
   settings: SettingsMap
   onSettingsSaved: (s: SettingsMap) => void
   appCompany: string
@@ -292,6 +364,7 @@ function BlockRenderer(props: {
     planDay,
     rewardUnlocked,
     rewardMinutes,
+    loadProfile,
     settings,
     onSettingsSaved,
     appCompany,
@@ -469,35 +542,51 @@ function BlockRenderer(props: {
         ) : null}
 
         {block.id === 'system-design' ? (
-          <div className="rounded-md border border-zinc-200 bg-zinc-50/70 p-3 text-sm dark:border-zinc-800 dark:bg-zinc-900/40">
-            {planDay ? (
-              <>
+          loadProfile.systemDesign === 'collapsed' && planDay ? (
+            <details className="rounded-md border border-zinc-200 bg-zinc-50/70 text-sm open:p-3 dark:border-zinc-800 dark:bg-zinc-900/40">
+              <summary className="cursor-pointer list-none p-3 text-xs font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
+                Stretch when ready — open today&apos;s design topic
+              </summary>
+              <div className="px-3 pb-3">
                 <p className="font-medium text-zinc-900 dark:text-zinc-50">
                   {planDay.systemDesign.topic}
                 </p>
                 <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">
                   {planDay.systemDesign.anchor}
                 </p>
-              </>
-            ) : (
-              <p className="text-xs text-zinc-500">
-                Set plan start date in{' '}
-                <SettingsDialog
-                  initialSettings={settings}
-                  onSaved={onSettingsSaved}
-                  trigger={
-                    <button
-                      type="button"
-                      className="font-medium text-indigo-600 underline decoration-dotted underline-offset-2 transition-colors hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
-                    >
-                      Settings
-                    </button>
-                  }
-                />{' '}
-                to pull today&apos;s topic.
-              </p>
-            )}
-          </div>
+              </div>
+            </details>
+          ) : (
+            <div className="rounded-md border border-zinc-200 bg-zinc-50/70 p-3 text-sm dark:border-zinc-800 dark:bg-zinc-900/40">
+              {planDay ? (
+                <>
+                  <p className="font-medium text-zinc-900 dark:text-zinc-50">
+                    {planDay.systemDesign.topic}
+                  </p>
+                  <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">
+                    {planDay.systemDesign.anchor}
+                  </p>
+                </>
+              ) : (
+                <p className="text-xs text-zinc-500">
+                  Set plan start date in{' '}
+                  <SettingsDialog
+                    initialSettings={settings}
+                    onSaved={onSettingsSaved}
+                    trigger={
+                      <button
+                        type="button"
+                        className="font-medium text-indigo-600 underline decoration-dotted underline-offset-2 transition-colors hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
+                      >
+                        Settings
+                      </button>
+                    }
+                  />{' '}
+                  to pull today&apos;s topic.
+                </p>
+              )}
+            </div>
+          )
         ) : null}
 
         {block.id === 'crossfit' ? (

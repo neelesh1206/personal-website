@@ -17,6 +17,7 @@ import type {
   SettingsMap,
 } from '@/lib/admin/prep/types'
 import type { Quote } from '@/lib/admin/prep/daily-quote'
+import type { LoadProfile } from '@/lib/admin/prep/plan-adjust'
 import { cn } from '@/lib/utils'
 
 type Tab = 'today' | 'plan' | 'library' | 'dashboard'
@@ -46,6 +47,9 @@ export function CodingPrepClient({
   initialBadges,
   initialStats,
   initialTotalXp,
+  slidePlanDay,
+  isMaintenance,
+  loadProfile,
 }: {
   plan: Plan
   library: Library
@@ -62,6 +66,9 @@ export function CodingPrepClient({
   initialBadges: BadgeRecord[]
   initialStats: Stats
   initialTotalXp: number
+  slidePlanDay: number | null
+  isMaintenance: boolean
+  loadProfile: LoadProfile
 }) {
   const [tab, setTab] = useState<Tab>('today')
   const [completed, setCompleted] = useState<Set<string>>(new Set(initialCompleted))
@@ -277,6 +284,9 @@ export function CodingPrepClient({
           initialStudyStreak={initialStats.studyStreak}
           initialTrainStreak={initialStats.trainStreak}
           totalXp={totalXp}
+          slidePlanDay={slidePlanDay}
+          isMaintenance={isMaintenance}
+          loadProfile={loadProfile}
           onPatchLog={patchDailyLog}
           onToggleRoutineTask={async (id, c) => {
             const fresh = await toggleRoutineTask(id, c)

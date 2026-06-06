@@ -15,6 +15,9 @@ import {
 import { computeBadgeContext } from '@/lib/admin/prep/badges'
 import { refreshBadges } from '@/lib/admin/prep/refresh-badges'
 import { resolveDailyQuote } from '@/lib/admin/prep/resolve-daily-quote'
+import { slideCurrentPlanDay, pickLoadMode, buildLoadProfile } from '@/lib/admin/prep/plan-adjust'
+import { completionFromLog, buildCompletedPlanDays } from '@/lib/admin/prep/day-completion'
+import { patchDailyLog } from '@/lib/admin/prep/queries'
 import type { BadgeRecord, DailyLog, Library, Plan, Routine } from '@/lib/admin/prep/types'
 import planJson from '@/content/coding-prep-plan.json'
 import libraryJson from '@/content/coding-prep-library.json'
@@ -38,6 +41,9 @@ function serializeLog(l: Awaited<ReturnType<typeof getOrInitDailyLog>>): DailyLo
     journalWin: l.journalWin,
     journalDeviation: l.journalDeviation,
     noDeviation: l.noDeviation,
+    loadMode: (l.loadMode as DailyLog['loadMode']) ?? 'full',
+    adjustedByAi: l.adjustedByAi ?? false,
+    currentPlanDay: l.currentPlanDay ?? null,
   }
 }
 
@@ -71,23 +77,64 @@ export default async function CodingPrepPage() {
   )
   const ctx = await computeBadgeContext(planTotalTasks)
 
+  // Plan-day slide + load mode.
+  //   slideCurrentPlanDay: the lowest day not fully completed (the day
+  //   "slides" — calendar moves forward, plan content stays anchored to
+  //   the earliest unfinished day).
+  //   pickLoadMode: based on yesterday's completion ONLY, decide if
+  //   today loads at full / core / re-entry. Discipline metrics
+  //   (streaks, XP, badges) are NEVER consulted here.
+  const completedPlanDays = buildCompletedPlanDays({
+    planStartDate: settings.plan_start_date,
+    logs,
+    totalDays: plan.days.length,
+  })
+  const slide = slideCurrentPlanDay({
+    planStartDate: settings.plan_start_date,
+    todayKey: today,
+    completedDays: completedPlanDays,
+    totalDays: plan.days.length,
+  })
+  const yesterdayKey = (() => {
+    const d = new Date(
+      Date.UTC(
+        Number.parseInt(today.slice(0, 4), 10),
+        Number.parseInt(today.slice(5, 7), 10) - 1,
+        Number.parseInt(today.slice(8, 10), 10)
+      )
+    )
+    d.setUTCDate(d.getUTCDate() - 1)
+    return d.toISOString().slice(0, 10)
+  })()
+  const yesterdayLogRow = logs.find((l) => String(l.logDate).slice(0, 10) === yesterdayKey) ?? null
+  const yesterdayCompletion = yesterdayLogRow ? completionFromLog(yesterdayLogRow) : null
+  const loadMode = pickLoadMode({
+    yesterday: yesterdayCompletion,
+    isMaintenance: slide.isMaintenance,
+    manualOverride: undefined,
+  })
+  const loadProfile = buildLoadProfile(loadMode)
+
+  // Persist current_plan_day + load_mode onto today's row so the cron
+  // and the email summary can read them later in the day.
+  if (todayLog.currentPlanDay !== slide.planDay || todayLog.loadMode !== loadMode) {
+    await patchDailyLog(today, {
+      currentPlanDay: slide.planDay,
+      loadMode,
+    })
+    todayLog.currentPlanDay = slide.planDay
+    todayLog.loadMode = loadMode
+  }
+
   // Daily quote — AI-picks from a theme-matched candidate pool when an
   // HF key is configured, otherwise a deterministic date-hash pick.
   // resolveDailyQuote handles cache + fallback + persist; returns the
   // chosen Quote object plus the AI-generated one-sentence connector.
-  const dayNumForQuote = settings.plan_start_date
-    ? Math.floor(
-        (Date.UTC(
-          Number.parseInt(today.slice(0, 4), 10),
-          Number.parseInt(today.slice(5, 7), 10) - 1,
-          Number.parseInt(today.slice(8, 10), 10)
-        ) -
-          new Date(settings.plan_start_date).setUTCHours(0, 0, 0, 0)) /
-          (24 * 3600 * 1000)
-      ) + 1
-    : null
-  const planDayForQuote = dayNumForQuote
-    ? (plan.days.find((d) => d.day === dayNumForQuote) ?? null)
+  // Use the slid plan day for the quote (so a day that's "carrying
+  // forward" still gets a theme-matched quote anchored to the actual
+  // content the user is working on, not the calendar day they're on).
+  const planDayForQuote = slide.planDay
+    ? (plan.days.find((d) => d.day === slide.planDay) ?? null)
     : null
   const resolvedQuote = await resolveDailyQuote({
     todayKey: today,
@@ -138,6 +185,9 @@ export default async function CodingPrepPage() {
         initialLogs={logs.map(serializeLog)}
         initialBadges={serialBadges}
         initialTotalXp={totalXp}
+        slidePlanDay={slide.planDay}
+        isMaintenance={slide.isMaintenance}
+        loadProfile={loadProfile}
         initialStats={{
           studyStreak: ctx.studyStreak,
           trainStreak: ctx.trainStreak,

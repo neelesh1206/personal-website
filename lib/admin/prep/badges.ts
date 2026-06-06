@@ -87,10 +87,13 @@ export async function computeBadgeContext(planTotalTasks: number): Promise<EvalC
   const ironDisciplineDays = logs.filter((l) => l.trainedToday && dayIsStudyDay(l)).length
   const daysWithNoDeviation = logs.filter((l) => l.noDeviation && dayIsStudyDay(l)).length
 
-  // Plan-day completion: count distinct 'd{N}-' prefixes that have every prefix-matching
-  // task in prep_progress checked. Approximation: a "full" day has at least the coding +
-  // system design tasks completed — derive client-side from JSON in the route.
-  // We pass planTotalTasks/10 as a rough per-day count; caller can also pass an exact map.
+  // Plan-day completion — TIGHTENED. Pattern Master used to fire on a
+  // heuristic (≥ floor(total/10) prefix-matching tasks per day). Now
+  // we require every coding-task id of that plan day to be present in
+  // prep_progress. See `fullPlanDaysCompleted` in plan-adjust.ts for
+  // the literal check; this stats path keeps the heuristic only as a
+  // fallback. The badges route now passes the exact plan + completed
+  // set in (see refresh-badges.ts).
   const completedRows = await db.select({ taskId: prepProgress.taskId }).from(prepProgress)
   const byDay: Record<string, number> = {}
   for (const r of completedRows) {
