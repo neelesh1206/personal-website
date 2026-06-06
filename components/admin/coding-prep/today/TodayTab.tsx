@@ -26,6 +26,7 @@ import { PomodoroBlock } from './PomodoroBlock'
 import { JournalCard } from './JournalCard'
 import { DailyQuoteCard } from './DailyQuoteCard'
 import { HeroHeader } from './HeroHeader'
+import { SettingsDialog } from './SettingsDialog'
 
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   Sun,
@@ -239,6 +240,11 @@ export function TodayTab({
           planDay={planDay}
           rewardUnlocked={rewardUnlocked}
           rewardMinutes={settings.reward_minutes ?? 30}
+          settings={settings}
+          onSettingsSaved={(s) => {
+            setSettings(s)
+            onSettingsSaved(s)
+          }}
           appCompany={appCompany}
           appRole={appRole}
           setAppCompany={setAppCompany}
@@ -263,6 +269,8 @@ function BlockRenderer(props: {
   planDay: Plan['days'][number] | null
   rewardUnlocked: boolean
   rewardMinutes: number
+  settings: SettingsMap
+  onSettingsSaved: (s: SettingsMap) => void
   appCompany: string
   appRole: string
   setAppCompany: (v: string) => void
@@ -279,6 +287,8 @@ function BlockRenderer(props: {
     planDay,
     rewardUnlocked,
     rewardMinutes,
+    settings,
+    onSettingsSaved,
     appCompany,
     appRole,
     setAppCompany,
@@ -466,7 +476,20 @@ function BlockRenderer(props: {
               </>
             ) : (
               <p className="text-xs text-zinc-500">
-                Set plan start date in Settings to pull today&apos;s topic.
+                Set plan start date in{' '}
+                <SettingsDialog
+                  initialSettings={settings}
+                  onSaved={onSettingsSaved}
+                  trigger={
+                    <button
+                      type="button"
+                      className="font-medium text-indigo-600 underline decoration-dotted underline-offset-2 transition-colors hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
+                    >
+                      Settings
+                    </button>
+                  }
+                />{' '}
+                to pull today&apos;s topic.
               </p>
             )}
           </div>

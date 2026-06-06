@@ -68,8 +68,20 @@ export function HeroHeader({
             </p>
           ) : (
             <p className="mt-4 max-w-xl text-sm text-zinc-500 dark:text-zinc-500">
-              Add your evidence line in Settings — one sentence reminding you of a hard thing you’ve
-              already done.
+              Add your evidence line in{' '}
+              <SettingsDialog
+                initialSettings={settings}
+                onSaved={onSettingsSaved}
+                trigger={
+                  <button
+                    type="button"
+                    className="font-medium text-indigo-600 underline decoration-dotted underline-offset-2 transition-colors hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
+                  >
+                    Settings
+                  </button>
+                }
+              />{' '}
+              — one sentence reminding you of a hard thing you’ve already done.
             </p>
           )}
         </div>
