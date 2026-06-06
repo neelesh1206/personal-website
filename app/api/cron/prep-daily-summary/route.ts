@@ -183,6 +183,13 @@ async function runDailySummary() {
     newlyUnlocked,
     tomorrowFocus,
     ai,
+    diagnostics: {
+      has_admin_email: !!process.env.ADMIN_EMAIL,
+      has_resend_key: !!process.env.RESEND_API_KEY,
+      has_slack_webhook: !!process.env.SLACK_WEBHOOK_URL,
+      has_hf_key: !!process.env.HUGGINGFACE_API_KEY,
+      hf_model: process.env.HUGGINGFACE_SUMMARY_MODEL ?? 'default',
+    },
   })
 }
 
