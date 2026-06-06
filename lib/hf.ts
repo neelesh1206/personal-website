@@ -13,7 +13,14 @@ import { InferenceClient } from '@huggingface/inference'
  * - Returns null on any failure so the caller falls back to the template
  */
 
-const DEFAULT_MODEL = 'mistralai/Mistral-Nemo-Instruct-2407'
+// HF Inference Provider router catalog moved on from the Mistral
+// instruct models — Mistral-Nemo, Mistral-7B-v0.3, Mistral-Small-24B
+// all now return `model_not_supported` from /v1/chat/completions.
+// Llama-3.1-8B-Instruct is a confirmed-working chat model on the
+// router, fast enough for the morning-quote picker on the page render
+// path, and plenty for our 2–3 sentence structured outputs. Override
+// per-environment with HUGGINGFACE_SUMMARY_MODEL.
+const DEFAULT_MODEL = 'meta-llama/Llama-3.1-8B-Instruct'
 
 export type DaySummaryInput = {
   date: string
