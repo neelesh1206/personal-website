@@ -61,6 +61,69 @@ export type LibraryTopic = {
   items: LibraryItem[]
 }
 
+export type RoutineBlockKind =
+  | 'single'
+  | 'checklist'
+  | 'pomodoro'
+  | 'plan-anchor'
+  | 'english'
+  | 'reward'
+
+export type RoutineTask = { id: string; label: string; count?: number }
+
+export type RoutineBlock = {
+  id: string
+  title: string
+  duration: string
+  icon: string
+  kind: RoutineBlockKind
+  body?: string
+  rule?: string
+  tasks?: RoutineTask[]
+}
+
+export type JournalPrompt = {
+  id: string
+  label: string
+  field: 'journalFinished' | 'journalAvoided' | 'journalWin' | 'journalDeviation'
+}
+
+export type Routine = {
+  meta: { title: string; tagline: string }
+  blocks: RoutineBlock[]
+  journalPrompts: JournalPrompt[]
+  freePracticeDay: { title: string; coding: string; systemDesign: string; rule: string }
+}
+
+export type DailyLog = {
+  logDate: string
+  morningAnchorRead: boolean
+  trainedToday: boolean
+  readAloud: boolean
+  rewardEarned: boolean
+  rewardStartedAt: string | null
+  applicationsCount: number
+  problemsSolved: number
+  mood: number | null
+  journalFinished: string
+  journalAvoided: string
+  journalWin: string
+  journalDeviation: string
+  noDeviation: boolean
+}
+
+export type BadgeRecord = {
+  badgeId: string
+  unlockedAt: string
+}
+
+export type SettingsMap = {
+  plan_start_date?: string
+  email_time?: string
+  evidence_line?: string
+  reward_minutes?: number
+}
+
 export type Library = {
   meta: { title: string; subtitle: string }
   deliveryRules: string[]

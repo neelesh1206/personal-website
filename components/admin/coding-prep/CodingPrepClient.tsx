@@ -5,26 +5,63 @@ import { PlanTab } from './PlanTab'
 import { LibraryTab } from './LibraryTab'
 import { ResetDialog } from './ResetDialog'
 import { ProgressBar } from './ProgressBar'
-import type { Library, Plan } from '@/lib/admin/prep/types'
+import { TodayTab } from './today/TodayTab'
+import { DashboardTab } from './dashboard/DashboardTab'
+import type {
+  BadgeRecord,
+  DailyLog,
+  Library,
+  Plan,
+  Routine,
+  SettingsMap,
+} from '@/lib/admin/prep/types'
 import { cn } from '@/lib/utils'
 
-type Tab = 'plan' | 'library'
+type Tab = 'today' | 'plan' | 'library' | 'dashboard'
+
+type Stats = {
+  studyStreak: number
+  trainStreak: number
+  longestStreak: number
+  totalProblems: number
+  totalResolves: number
+  totalApplications: number
+}
 
 export function CodingPrepClient({
   plan,
   library,
+  routine,
   initialCompleted,
   initialNotes,
+  todayKey,
+  initialLog,
+  initialTodayTaskIds,
+  initialSettings,
+  initialLogs,
+  initialBadges,
+  initialStats,
 }: {
   plan: Plan
   library: Library
+  routine: Routine
   initialCompleted: string[]
   initialNotes: Record<string, string>
+  todayKey: string
+  initialLog: DailyLog
+  initialTodayTaskIds: string[]
+  initialSettings: SettingsMap
+  initialLogs: DailyLog[]
+  initialBadges: BadgeRecord[]
+  initialStats: Stats
 }) {
-  const [tab, setTab] = useState<Tab>('plan')
+  const [tab, setTab] = useState<Tab>('today')
   const [completed, setCompleted] = useState<Set<string>>(new Set(initialCompleted))
   const [notes, setNotes] = useState<Record<string, string>>(initialNotes)
   const [resetOpen, setResetOpen] = useState(false)
+  const [log, setLog] = useState(initialLog)
+  const [badges, setBadges] = useState(initialBadges)
+  const [settings, setSettings] = useState(initialSettings)
 
   const totalTasks = useMemo(() => {
     let n = 0
@@ -37,7 +74,6 @@ export function CodingPrepClient({
   const completedCount = completed.size
 
   async function toggleTask(taskId: string, next: boolean) {
-    // Optimistic
     setCompleted((prev) => {
       const s = new Set(prev)
       if (next) s.add(taskId)
@@ -53,7 +89,6 @@ export function CodingPrepClient({
       if (!res.ok) throw new Error(`progress save failed: ${res.status}`)
     } catch (err) {
       console.error(err)
-      // Rollback
       setCompleted((prev) => {
         const s = new Set(prev)
         if (next) s.delete(taskId)
@@ -85,20 +120,65 @@ export function CodingPrepClient({
       if (!res.ok) throw new Error(`reset failed: ${res.status}`)
       setCompleted(new Set())
       setNotes({})
+      setBadges([])
       setResetOpen(false)
     } catch (err) {
       console.error(err)
     }
   }
 
+  async function patchDailyLog(patch: Partial<DailyLog>) {
+    setLog((l) => ({ ...l, ...patch }))
+    try {
+      await fetch('/api/admin/prep/daily-log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: todayKey, ...patch }),
+      })
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  async function toggleRoutineTask(taskId: string, c: boolean): Promise<string[]> {
+    try {
+      const res = await fetch('/api/admin/prep/today', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ taskId, completed: c }),
+      })
+      if (!res.ok) return []
+      const json = (await res.json()) as { newBadges?: string[] }
+      return json.newBadges ?? []
+    } catch (err) {
+      console.error(err)
+      return []
+    }
+  }
+
+  async function addApplication(company: string, role: string): Promise<string[]> {
+    try {
+      const res = await fetch('/api/admin/prep/applications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ company, role }),
+      })
+      if (!res.ok) return []
+      const json = (await res.json()) as { newBadges?: string[] }
+      return json.newBadges ?? []
+    } catch (err) {
+      console.error(err)
+      return []
+    }
+  }
+
   return (
     <>
-      {/* Top progress summary */}
       <section className="mb-6 rounded-2xl border border-zinc-200 bg-zinc-50/50 p-5 dark:border-zinc-800 dark:bg-zinc-900/30">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-              Overall progress
+              10-day plan progress
             </p>
             <p className="mt-1 text-2xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">
               {completedCount}{' '}
@@ -112,23 +192,62 @@ export function CodingPrepClient({
             onClick={() => setResetOpen(true)}
             className="rounded-md border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-600 transition-colors hover:border-rose-300 hover:text-rose-700 dark:border-zinc-800 dark:text-zinc-300 dark:hover:border-rose-700 dark:hover:text-rose-400"
           >
-            Reset progress
+            Reset all
           </button>
         </div>
         <ProgressBar completed={completedCount} total={totalTasks} className="mt-3" tone="indigo" />
       </section>
 
-      {/* Tabs */}
-      <div className="mb-6 flex gap-1 border-b border-zinc-200 dark:border-zinc-800" role="tablist">
+      <div
+        className="mb-6 flex gap-1 overflow-x-auto border-b border-zinc-200 dark:border-zinc-800"
+        role="tablist"
+      >
+        <TabButton active={tab === 'today'} onClick={() => setTab('today')}>
+          Today
+        </TabButton>
         <TabButton active={tab === 'plan'} onClick={() => setTab('plan')}>
           10-Day Plan
         </TabButton>
         <TabButton active={tab === 'library'} onClick={() => setTab('library')}>
           Reference Library
         </TabButton>
+        <TabButton active={tab === 'dashboard'} onClick={() => setTab('dashboard')}>
+          Dashboard
+        </TabButton>
       </div>
 
-      {tab === 'plan' ? (
+      {tab === 'today' ? (
+        <TodayTab
+          routine={routine}
+          plan={plan}
+          todayKey={todayKey}
+          initialLog={log}
+          initialTodayTaskIds={initialTodayTaskIds}
+          initialSettings={settings}
+          onPatchLog={patchDailyLog}
+          onToggleRoutineTask={async (id, c) => {
+            const fresh = await toggleRoutineTask(id, c)
+            if (fresh.length) {
+              setBadges((b) => [
+                ...fresh.map((bid) => ({ badgeId: bid, unlockedAt: new Date().toISOString() })),
+                ...b,
+              ])
+            }
+            return fresh
+          }}
+          onAddApplication={async (company, role) => {
+            const fresh = await addApplication(company, role)
+            if (fresh.length) {
+              setBadges((b) => [
+                ...fresh.map((bid) => ({ badgeId: bid, unlockedAt: new Date().toISOString() })),
+                ...b,
+              ])
+            }
+            return fresh
+          }}
+          onSettingsSaved={setSettings}
+        />
+      ) : tab === 'plan' ? (
         <PlanTab
           plan={plan}
           completed={completed}
@@ -136,8 +255,10 @@ export function CodingPrepClient({
           onToggleTask={toggleTask}
           onSaveNote={saveNote}
         />
-      ) : (
+      ) : tab === 'library' ? (
         <LibraryTab library={library} />
+      ) : (
+        <DashboardTab logs={initialLogs} badges={badges} stats={initialStats} />
       )}
 
       <ResetDialog open={resetOpen} onCancel={() => setResetOpen(false)} onConfirm={resetAll} />
@@ -161,7 +282,7 @@ function TabButton({
       aria-selected={active}
       onClick={onClick}
       className={cn(
-        '-mb-px border-b-2 px-4 py-2.5 text-sm font-medium transition-colors',
+        '-mb-px whitespace-nowrap border-b-2 px-4 py-2.5 text-sm font-medium transition-colors',
         active
           ? 'border-indigo-600 text-zinc-900 dark:border-indigo-400 dark:text-zinc-50'
           : 'border-transparent text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50'

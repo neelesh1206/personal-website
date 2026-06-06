@@ -89,7 +89,9 @@ The `/life` page renders a live Strava activity dashboard — YTD distance, all-
 - **Live Strava dashboard** (`/life`) — YTD run/ride/swim totals, all-time stats, recent activities. Server-side OAuth refresh-token flow, ISR-cached hourly; credentials never reach the browser. See architecture note above.
 - **Contact form** (`/connect`) — Zod-validated React Hook Form, hidden honeypot, server route saves to Neon then fans out two Resend emails in parallel (visitor copy + owner notification). Success/error states inline; the form clears on success.
 - **Owner-only admin dashboard** (`/admin`) — HMAC-signed session cookie (no third-party auth), 30-day activity bar chart, all-time / 30d / 7d counters, and a sortable submissions table. `/robots.txt` blocks crawlers from both `/admin` and `/api/*`.
-- **Personal interview prep tracker** (`/admin/coding-prep`) — same auth as `/admin`. Two tabs: a 10-day coding + system-design plan (per-task checkboxes + per-day daily notes that autosave with a debounced beacon) and a Reference Library of 75 Q&As with client-side search. Plan + library committed as JSON under `content/`; progress + notes persisted in Neon (`prep_progress`, `prep_notes`). See `content/README.md`.
+- **Personal interview prep tracker** (`/admin/coding-prep`) — same auth as `/admin`. Four tabs: **Today** (fixed daily routine — morning anchor, applications log, 2× Pomodoro coding sprints with inline timer, system-design block anchored to the active plan day, CrossFit checkbox, English / read-aloud, time-boxed reward that unlocks only when coding + applications are done) + autosaved end-of-session journal (finished / avoided / win / deviation / mood); **10-Day Plan** (per-task checkboxes + per-day notes); **Reference Library** (87 Q&As, client-side search); **Dashboard** (study + gym streaks, 16-week activity heatmap, 7-day rollup, 13 earned-via-work badges). Plan + library + routine committed as JSON under `content/`; eight prep tables in Neon (`prep_progress`, `prep_notes`, `prep_daily_log`, `prep_today_tasks`, `prep_pomodoros`, `prep_applications`, `prep_resolves`, `prep_words`, `prep_badges`, `prep_settings`).
+- **Public "/now" page** (`/now`) — streak counters, badge wall, and 16-week activity heatmap rendered server-side from the same prep tables. Recruiter-visible signal that the interview prep is actively running. No PII; all metrics emitted by the work itself, not editable by hand.
+- **Daily prep summary** — Vercel Cron hits `/api/cron/prep-daily-summary` once a day (Bearer-auth via `CRON_SECRET`). Pulls the day's rollup (streak, completions, journal excerpts, newly unlocked badges, tomorrow's plan-day focus) and runs it through HuggingFace Inference (`mistralai/Mistral-Nemo-Instruct-2407` via `chat_completion`, mirroring the MarketMind summarizer) to generate a coach-style narrative + a concrete edge for tomorrow. Posts to `ADMIN_EMAIL` via Resend and to a Slack channel via incoming webhook. AI call falls back to the raw template on failure; email/Slack each no-op gracefully when their env vars are missing.
 - **First-party visitor analytics** — privacy-conscious page-view counter (`page_views` table in Neon). Visitor identity is SHA-256(IP + UA + daily-salt), rotates at UTC midnight, never stored as PII. Client beacon (`<TrackPageView />`) fires once per pathname change; server route filters bots and skip-listed paths, dedupes via `UNIQUE (path, visitor_hash, view_date)`. Home page renders a 3-card strip under the connect CTA — unique visitors / visitors today / page views — refreshed every 5 min via ISR (`revalidate: 300`). Complements Vercel Analytics: that's the page-view dashboard owned by Vercel; this is the count you publicly display, owned by you.
 - **Code-generated NK favicon** — `app/icon.tsx` + `app/apple-icon.tsx` render PNGs via `next/og` at the edge (no committed binary).
 - **MarketMind project showcase** (`/projects/marketmind`, live at `marketmind.neeleshkakaraparthi.dev`) — 5-day-build stock-prediction app with multi-source signal breakdown, FinBERT + Llama-3 NLP pipeline on GitHub Actions cron, Supabase + RLS, gamification + animated result reveals. Rendered from a typed projects data file (`lib/projects/data.ts`), same pattern as case studies.
@@ -218,15 +220,23 @@ Build-time migrations couple every preview deploy to a destructive operation, sl
 
 All routes run on the Node runtime under `app/api/*`.
 
-| Method | Route                      | Auth                      | What it does                                                                                                                                                           |
-| ------ | -------------------------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| POST   | `/api/contact`             | None (Zod + honeypot)     | Validates the visitor contact form, inserts into `contacts` table, fans out two Resend emails in parallel (visitor copy + owner notification). Returns `{ok:true,id}`. |
-| POST   | `/api/track`               | None (UA + path filtered) | Page-view beacon. Computes daily SHA-256 visitor hash, inserts into `page_views` with `ON CONFLICT DO NOTHING`. Skips bots and `/api`, `/admin`, `/_next`, `/sitemap`. |
-| POST   | `/api/admin/login`         | Password (form post)      | Verifies `ADMIN_PASSWORD` with a timing-safe compare. Sets HMAC-signed `admin_session` cookie (7 day TTL) and 303-redirects to `/admin`.                               |
-| POST   | `/api/admin/logout`        | Cookie present            | Clears the `admin_session` cookie and 303-redirects to `/admin/login`.                                                                                                 |
-| POST   | `/api/admin/prep/progress` | Admin cookie              | Toggle a coding-prep task. Body `{ taskId, completed }`. UPSERT or DELETE on `prep_progress`.                                                                          |
-| POST   | `/api/admin/prep/notes`    | Admin cookie              | Save a daily note. Body `{ day: '01'..'10', body: string }`. UPSERT on `prep_notes`.                                                                                   |
-| POST   | `/api/admin/prep/reset`    | Admin cookie              | Wipe all `prep_progress` rows and `prep_notes` rows. No undo.                                                                                                          |
+| Method         | Route                          | Auth                                   | What it does                                                                                                                                                                                                                                             |
+| -------------- | ------------------------------ | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| POST           | `/api/contact`                 | None (Zod + honeypot)                  | Validates the visitor contact form, inserts into `contacts` table, fans out two Resend emails in parallel (visitor copy + owner notification). Returns `{ok:true,id}`.                                                                                   |
+| POST           | `/api/track`                   | None (UA + path filtered)              | Page-view beacon. Computes daily SHA-256 visitor hash, inserts into `page_views` with `ON CONFLICT DO NOTHING`. Skips bots and `/api`, `/admin`, `/_next`, `/sitemap`.                                                                                   |
+| POST           | `/api/admin/login`             | Password (form post)                   | Verifies `ADMIN_PASSWORD` with a timing-safe compare. Sets HMAC-signed `admin_session` cookie (7 day TTL) and 303-redirects to `/admin`.                                                                                                                 |
+| POST           | `/api/admin/logout`            | Cookie present                         | Clears the `admin_session` cookie and 303-redirects to `/admin/login`.                                                                                                                                                                                   |
+| POST           | `/api/admin/prep/progress`     | Admin cookie                           | Toggle a coding-prep task. Body `{ taskId, completed }`. UPSERT or DELETE on `prep_progress`.                                                                                                                                                            |
+| POST           | `/api/admin/prep/notes`        | Admin cookie                           | Save a daily note. Body `{ day: '01'..'10', body: string }`. UPSERT on `prep_notes`.                                                                                                                                                                     |
+| POST           | `/api/admin/prep/reset`        | Admin cookie                           | Wipe all prep tables (`prep_progress`, `prep_notes`, `prep_daily_log`, `prep_today_tasks`, `prep_pomodoros`, `prep_applications`, `prep_resolves`, `prep_words`, `prep_badges`). No undo.                                                                |
+| POST           | `/api/admin/prep/today`        | Admin cookie                           | Toggle a routine task for today. Body `{ taskId, completed }`. Re-evaluates badges; returns `{ newBadges }`.                                                                                                                                             |
+| POST           | `/api/admin/prep/daily-log`    | Admin cookie                           | Patch fields on `prep_daily_log` for a date (defaults to today). Whitelisted bools (`morningAnchorRead`, `trainedToday`, `readAloud`, `rewardEarned`, `noDeviation`), journal text fields, `mood` (1-5).                                                 |
+| GET/POST/PATCH | `/api/admin/prep/applications` | Admin cookie                           | List / add / update status of `prep_applications`. POST bumps today's `applications_count`.                                                                                                                                                              |
+| POST/PATCH     | `/api/admin/prep/pomodoros`    | Admin cookie                           | Start (POST) or complete (PATCH) a pomodoro session row.                                                                                                                                                                                                 |
+| GET/POST       | `/api/admin/prep/resolves`     | Admin cookie                           | Log a problem re-solved-from-blank. Drives The Re-Solver badge.                                                                                                                                                                                          |
+| GET/POST       | `/api/admin/prep/words`        | Admin cookie                           | Log a vocab word + meaning from the read-aloud block.                                                                                                                                                                                                    |
+| GET/POST       | `/api/admin/prep/settings`     | Admin cookie                           | Read or upsert routine settings (`plan_start_date`, `email_time`, `evidence_line`, `reward_minutes`). JSONB key-value.                                                                                                                                   |
+| GET            | `/api/cron/prep-daily-summary` | `Authorization: Bearer ${CRON_SECRET}` | Daily rollup. Refreshes badges, emails the summary to `ADMIN_EMAIL` via Resend, posts a Block Kit message to `SLACK_WEBHOOK_URL`. Both delivery channels no-op gracefully on missing env. Scheduled via `vercel.json` cron (`0 4 * * *` UTC = ~9pm PDT). |
 
 Database access happens through `lib/db/queries.ts` (contacts) and `lib/analytics/queries.ts` (page views) — both use Drizzle, both lazy-initialize the Neon client (see Architecture Decisions).
 
@@ -280,19 +290,26 @@ Database access happens through `lib/db/queries.ts` (contacts) and `lib/analytic
 
 ## Environment Variables
 
-| Variable                     | Description                                              |
-| ---------------------------- | -------------------------------------------------------- |
-| `DATABASE_URL`               | Neon Postgres connection string                          |
-| `RESEND_API_KEY`             | Resend API key                                           |
-| `NEXT_PUBLIC_SITE_URL`       | Full site URL (e.g. `https://neeleshkakaraparthi.dev`)   |
-| `CONTACT_NOTIFICATION_EMAIL` | Email to notify on new contact submissions               |
-| `STRAVA_CLIENT_ID`           | Strava API application Client ID                         |
-| `STRAVA_CLIENT_SECRET`       | Strava API application Client Secret (server-only)       |
-| `STRAVA_REFRESH_TOKEN`       | Long-lived Strava refresh token (one-time OAuth mint)    |
-| `RESEND_FROM_ADDRESS`        | Verified Resend sender (e.g. `Neelesh <hello@your.dev>`) |
-| `PUBLIC_RESUME_URL`          | Public URL to your resume PDF (used in visitor email)    |
-| `ADMIN_PASSWORD`             | Password for `/admin` (12+ chars, set in Vercel)         |
-| `ANALYTICS_SALT`             | Random 32+ char string used in the visitor hash          |
+| Variable                     | Description                                                                                                                                              |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`               | Neon Postgres connection string                                                                                                                          |
+| `RESEND_API_KEY`             | Resend API key                                                                                                                                           |
+| `NEXT_PUBLIC_SITE_URL`       | Full site URL (e.g. `https://neeleshkakaraparthi.dev`)                                                                                                   |
+| `CONTACT_NOTIFICATION_EMAIL` | Email to notify on new contact submissions                                                                                                               |
+| `STRAVA_CLIENT_ID`           | Strava API application Client ID                                                                                                                         |
+| `STRAVA_CLIENT_SECRET`       | Strava API application Client Secret (server-only)                                                                                                       |
+| `STRAVA_REFRESH_TOKEN`       | Long-lived Strava refresh token (one-time OAuth mint)                                                                                                    |
+| `RESEND_FROM_ADDRESS`        | Verified Resend sender (e.g. `Neelesh <hello@your.dev>`)                                                                                                 |
+| `PUBLIC_RESUME_URL`          | Public URL to your resume PDF (used in visitor email)                                                                                                    |
+| `ADMIN_PASSWORD`             | Password for `/admin` (12+ chars, set in Vercel)                                                                                                         |
+| `ANALYTICS_SALT`             | Random 32+ char string used in the visitor hash                                                                                                          |
+| `ADMIN_EMAIL`                | Inbox for the daily prep summary email                                                                                                                   |
+| `RESEND_FROM`                | Optional Resend "from" override for the daily summary                                                                                                    |
+| `SLACK_WEBHOOK_URL`          | Incoming webhook for the Slack copy of the daily summary                                                                                                 |
+| `CRON_SECRET`                | Bearer token Vercel Cron sends to authenticate the cron                                                                                                  |
+| `HUGGINGFACE_API_KEY`        | HF Inference key for the daily summary's AI narrative (Mistral-Nemo via chat_completion, same pattern as MarketMind). Optional — falls back to template. |
+| `HUGGINGFACE_SUMMARY_MODEL`  | Optional override (default `mistralai/Mistral-Nemo-Instruct-2407`)                                                                                       |
+| `HUGGINGFACE_PROVIDER`       | Optional provider routing override (`auto`, `hf-inference`, `together`, `fireworks-ai`, `nebius`)                                                        |
 
 See `.env.example` for the template.
 
@@ -317,7 +334,7 @@ See `.env.example` for the template.
 | PR Reviewer   | `/projects/pr-reviewer` | 🔨 Planned  |
 | Writing       | `/writing`              | ✅ Live     |
 | Life          | `/life`                 | ✅ Live     |
-| Now           | `/now`                  | 🔨 Planned  |
+| Now           | `/now`                  | ✅ Live     |
 | Resume        | `/resume`               | 🔨 Planned  |
 | Connect       | `/connect`              | ✅ Live     |
 | Admin         | `/admin`                | ✅ Live     |

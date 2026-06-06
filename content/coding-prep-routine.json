@@ -1,0 +1,88 @@
+{
+  "meta": {
+    "title": "Daily Routine",
+    "tagline": "Open the site, follow the order, stop deciding."
+  },
+  "blocks": [
+    {
+      "id": "anchor",
+      "title": "Morning anchor",
+      "duration": "5 min",
+      "icon": "Sun",
+      "kind": "single",
+      "body": "Read the evidence line. One click confirms.",
+      "rule": "You've done hard things. Start from that."
+    },
+    {
+      "id": "applications",
+      "title": "Job applications",
+      "duration": "45–60 min",
+      "icon": "Send",
+      "kind": "checklist",
+      "tasks": [
+        { "id": "apply-3", "label": "Apply to 3 roles", "count": 3 },
+        { "id": "referral-1", "label": "Send 1 referral / networking message", "count": 1 },
+        { "id": "follow-up-1", "label": "Follow up on 1 pending application", "count": 1 }
+      ]
+    },
+    {
+      "id": "coding",
+      "title": "Coding sprints",
+      "duration": "2 × 25 min, 5-min breaks",
+      "icon": "Code2",
+      "kind": "pomodoro",
+      "rule": "Start with a problem you CAN do. No AI, no autocomplete. Re-solve from blank."
+    },
+    {
+      "id": "system-design",
+      "title": "System design",
+      "duration": "45 min",
+      "icon": "Network",
+      "kind": "plan-anchor",
+      "body": "Today's design topic from the 10-day plan."
+    },
+    {
+      "id": "crossfit",
+      "title": "CrossFit",
+      "duration": "—",
+      "icon": "Dumbbell",
+      "kind": "single",
+      "body": "Trained today.",
+      "rule": "Counts toward gym streak. Don't break the chain."
+    },
+    {
+      "id": "english",
+      "title": "English / read aloud",
+      "duration": "10 min",
+      "icon": "BookOpen",
+      "kind": "english",
+      "tasks": [{ "id": "read-aloud", "label": "Read aloud 10 min" }],
+      "body": "Optional: log one new word."
+    },
+    {
+      "id": "reward",
+      "title": "Reward",
+      "duration": "30 min (configurable)",
+      "icon": "Trophy",
+      "kind": "reward",
+      "body": "Unlocks when coding + applications are checked.",
+      "rule": "Allowed when earned. Time-boxed."
+    }
+  ],
+  "journalPrompts": [
+    { "id": "finished", "label": "What did I finish today?", "field": "journalFinished" },
+    { "id": "avoided", "label": "What did I avoid or get stuck on?", "field": "journalAvoided" },
+    { "id": "win", "label": "One win, however small.", "field": "journalWin" },
+    {
+      "id": "deviation",
+      "label": "Did I deviate? What pulled me away? (No judgment.)",
+      "field": "journalDeviation"
+    }
+  ],
+  "freePracticeDay": {
+    "title": "Free practice",
+    "coding": "Pick 4–6 problems across patterns — heap, intervals, DP, or any pattern that still feels shaky. Mix easy + medium. Narrate, no AI.",
+    "systemDesign": "Pick a system from the Reference Library you haven't rehearsed — design it out loud, recorded.",
+    "rule": "10-day plan is done. Daily structure stays. Keep showing up."
+  }
+}
