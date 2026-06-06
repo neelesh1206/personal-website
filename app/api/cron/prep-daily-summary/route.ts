@@ -41,7 +41,22 @@ export async function GET(req: NextRequest) {
   if (!process.env.CRON_SECRET || auth !== expected) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+  try {
+    return await runDailySummary()
+  } catch (err) {
+    console.error('prep-daily-summary unhandled', err)
+    return NextResponse.json(
+      {
+        error: 'Unhandled error in daily summary',
+        message: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack?.split('\n').slice(0, 8) : undefined,
+      },
+      { status: 500 }
+    )
+  }
+}
 
+async function runDailySummary() {
   const today = todayKey()
   const log = await getOrInitDailyLog(today)
   await refreshBadges()
