@@ -10,6 +10,7 @@ import {
   getDailyLogs,
   getBadges,
   getTotalXp,
+  getDailyXpTotals,
   todayKey,
 } from '@/lib/admin/prep/queries'
 import { computeBadgeContext } from '@/lib/admin/prep/badges'
@@ -52,17 +53,27 @@ export default async function CodingPrepPage() {
 
   const today = todayKey()
 
-  const [completed, notesByDay, todayLog, todayTaskIds, settings, logs, badgesRaw, totalXp] =
-    await Promise.all([
-      getCompletedTaskIds(),
-      getNotesByDay(),
-      getOrInitDailyLog(today),
-      getTodayCompletedTaskIds(today),
-      getSettings(),
-      getDailyLogs(120),
-      getBadges(),
-      getTotalXp(),
-    ])
+  const [
+    completed,
+    notesByDay,
+    todayLog,
+    todayTaskIds,
+    settings,
+    logs,
+    badgesRaw,
+    totalXp,
+    dailyXp,
+  ] = await Promise.all([
+    getCompletedTaskIds(),
+    getNotesByDay(),
+    getOrInitDailyLog(today),
+    getTodayCompletedTaskIds(today),
+    getSettings(),
+    getDailyLogs(120),
+    getBadges(),
+    getTotalXp(),
+    getDailyXpTotals(120),
+  ])
 
   await refreshBadges()
   const badges = await getBadges()
@@ -188,6 +199,7 @@ export default async function CodingPrepPage() {
         slidePlanDay={slide.planDay}
         isMaintenance={slide.isMaintenance}
         loadProfile={loadProfile}
+        initialDailyXp={dailyXp}
         initialStats={{
           studyStreak: ctx.studyStreak,
           trainStreak: ctx.trainStreak,

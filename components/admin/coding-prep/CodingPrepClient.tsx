@@ -51,6 +51,7 @@ export function CodingPrepClient({
   slidePlanDay,
   isMaintenance,
   loadProfile,
+  initialDailyXp,
 }: {
   plan: Plan
   library: Library
@@ -70,6 +71,7 @@ export function CodingPrepClient({
   slidePlanDay: number | null
   isMaintenance: boolean
   loadProfile: LoadProfile
+  initialDailyXp: Array<{ date: string; xp: number }>
 }) {
   const [tab, setTab] = useState<Tab>('today')
   const [completed, setCompleted] = useState<Set<string>>(new Set(initialCompleted))
@@ -344,7 +346,12 @@ export function CodingPrepClient({
       ) : tab === 'library' ? (
         <LibraryTab library={library} />
       ) : (
-        <DashboardTab logs={initialLogs} badges={badges} stats={initialStats} />
+        <DashboardTab
+          logs={initialLogs}
+          badges={badges}
+          stats={initialStats}
+          dailyXp={initialDailyXp}
+        />
       )}
 
       <ResetDialog open={resetOpen} onCancel={() => setResetOpen(false)} onConfirm={resetAll} />

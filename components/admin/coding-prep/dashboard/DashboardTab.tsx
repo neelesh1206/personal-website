@@ -5,6 +5,7 @@ import { Flame, Dumbbell, Code2, Send, Trophy, Heart } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Heatmap } from './Heatmap'
 import { BadgeWall } from './BadgeWall'
+import { DashboardCharts } from './DashboardCharts'
 import { BADGES, type Badge } from '@/lib/admin/prep/badges-data'
 import type { DailyLog, BadgeRecord } from '@/lib/admin/prep/types'
 
@@ -21,10 +22,12 @@ export function DashboardTab({
   logs,
   badges,
   stats,
+  dailyXp,
 }: {
   logs: DailyLog[]
   badges: BadgeRecord[]
   stats: Stats
+  dailyXp: Array<{ date: string; xp: number }>
 }) {
   const unlockedIds = useMemo(() => new Set(badges.map((b) => b.badgeId)), [badges])
 
@@ -90,6 +93,8 @@ export function DashboardTab({
           </div>
         </CardContent>
       </Card>
+
+      <DashboardCharts logs={logs} dailyXp={dailyXp} />
 
       <Card className="border-zinc-200 dark:border-zinc-800">
         <CardHeader>
