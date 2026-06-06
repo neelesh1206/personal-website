@@ -30,6 +30,8 @@ export function SettingsDialog({
   const [emailTime, setEmailTime] = useState(initialSettings.email_time ?? '21:00')
   const [evidence, setEvidence] = useState(initialSettings.evidence_line ?? '')
   const [reward, setReward] = useState(String(initialSettings.reward_minutes ?? 30))
+  const [soundEnabled, setSoundEnabled] = useState(initialSettings.sound_enabled ?? false)
+  const [myWins, setMyWins] = useState((initialSettings.my_wins ?? []).join('\n'))
   const [saving, setSaving] = useState(false)
 
   async function save() {
@@ -43,6 +45,11 @@ export function SettingsDialog({
           email_time: emailTime || null,
           evidence_line: evidence,
           reward_minutes: Number.parseInt(reward, 10) || 30,
+          sound_enabled: soundEnabled,
+          my_wins: myWins
+            .split('\n')
+            .map((line) => line.trim())
+            .filter(Boolean),
         }),
       })
       if (res.ok) {
@@ -103,6 +110,43 @@ export function SettingsDialog({
               value={reward}
               onChange={(e) => setReward(e.target.value)}
             />
+          </div>
+          <div className="flex items-center justify-between rounded-md border border-zinc-200 px-3 py-2 dark:border-zinc-800">
+            <div>
+              <p className="text-xs font-medium">Sound effects</p>
+              <p className="text-[11px] text-zinc-500">
+                Soft chimes on block + level-up. Off by default.
+              </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={soundEnabled}
+              onClick={() => setSoundEnabled((v) => !v)}
+              className={
+                'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border border-transparent transition-colors ' +
+                (soundEnabled ? 'bg-indigo-500' : 'bg-zinc-300 dark:bg-zinc-700')
+              }
+            >
+              <span
+                className={
+                  'inline-block h-4 w-4 translate-y-px transform rounded-full bg-white shadow transition-transform ' +
+                  (soundEnabled ? 'translate-x-[18px]' : 'translate-x-[2px]')
+                }
+              />
+            </button>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium">My wins (one per line)</label>
+            <Textarea
+              rows={3}
+              value={myWins}
+              onChange={(e) => setMyWins(e.target.value)}
+              placeholder="150x scale at Walmart&#10;38 storefronts shipped&#10;consistent CrossFit"
+            />
+            <p className="mt-1 text-[11px] text-zinc-500">
+              Surfaced in the AI encouragement line when you&apos;ve missed a day.
+            </p>
           </div>
         </div>
         <DialogFooter>

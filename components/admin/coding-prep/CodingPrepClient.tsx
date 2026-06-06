@@ -1,7 +1,8 @@
 'use client'
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { XpToastStack, type XpToastItem } from './today/XpToast'
+import { fireConfetti, playTone } from '@/lib/admin/prep/celebrate'
 import { PlanTab } from './PlanTab'
 import { LibraryTab } from './LibraryTab'
 import { ResetDialog } from './ResetDialog'
@@ -81,17 +82,39 @@ export function CodingPrepClient({
   const [xpToasts, setXpToasts] = useState<XpToastItem[]>([])
 
   /** Push a +XP / level-up notification onto the stack. */
-  const pushXp = useCallback((xp: number, levelUp?: string | null) => {
-    if (!xp || xp <= 0) return
-    setTotalXp((t) => t + xp)
-    setXpToasts((items) => [
-      ...items,
-      { id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, xp, levelUp },
-    ])
-  }, [])
+  const pushXp = useCallback(
+    (xp: number, levelUp?: string | null) => {
+      if (!xp || xp <= 0) return
+      setTotalXp((t) => t + xp)
+      setXpToasts((items) => [
+        ...items,
+        { id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, xp, levelUp },
+      ])
+      const soundOn = !!settings.sound_enabled
+      if (levelUp) {
+        fireConfetti()
+        void playTone('levelup', soundOn)
+      } else {
+        void playTone('tick', soundOn)
+      }
+    },
+    [settings.sound_enabled]
+  )
   const dismissXp = useCallback((id: string) => {
     setXpToasts((items) => items.filter((t) => t.id !== id))
   }, [])
+
+  // Day-complete celebration — when the reward gets earned (= coding +
+  // applications both done). Plays once per page life; refreshing won't
+  // re-celebrate (the log is already saved).
+  const celebratedRef = useRef(false)
+  useEffect(() => {
+    if (celebratedRef.current) return
+    if (!log.rewardEarned) return
+    celebratedRef.current = true
+    fireConfetti()
+    void playTone('block-complete', !!settings.sound_enabled)
+  }, [log.rewardEarned, settings.sound_enabled])
 
   const totalTasks = useMemo(() => {
     let n = 0

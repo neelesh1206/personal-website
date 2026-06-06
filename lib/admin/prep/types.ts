@@ -125,6 +125,8 @@ export type SettingsMap = {
   email_time?: string
   evidence_line?: string
   reward_minutes?: number
+  sound_enabled?: boolean
+  my_wins?: string[]
 }
 
 export type Library = {

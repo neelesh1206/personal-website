@@ -4,7 +4,14 @@ import { getSettings, setSetting } from '@/lib/admin/prep/queries'
 
 export const runtime = 'nodejs'
 
-const ALLOWED_KEYS = new Set(['plan_start_date', 'email_time', 'evidence_line', 'reward_minutes'])
+const ALLOWED_KEYS = new Set([
+  'plan_start_date',
+  'email_time',
+  'evidence_line',
+  'reward_minutes',
+  'sound_enabled',
+  'my_wins',
+])
 
 export async function GET() {
   if (!(await isAdminAuthenticated())) {
