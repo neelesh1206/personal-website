@@ -34,6 +34,7 @@ export function CodingPrepClient({
   library,
   routine,
   quote,
+  quoteReflection,
   initialCompleted,
   initialNotes,
   todayKey,
@@ -48,6 +49,7 @@ export function CodingPrepClient({
   library: Library
   routine: Routine
   quote: Quote
+  quoteReflection: string
   initialCompleted: string[]
   initialNotes: Record<string, string>
   todayKey: string
@@ -232,6 +234,7 @@ export function CodingPrepClient({
           plan={plan}
           todayKey={todayKey}
           quote={quote}
+          quoteReflection={quoteReflection}
           initialLog={log}
           initialTodayTaskIds={initialTodayTaskIds}
           initialSettings={settings}

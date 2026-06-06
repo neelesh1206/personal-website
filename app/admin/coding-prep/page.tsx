@@ -13,7 +13,7 @@ import {
 } from '@/lib/admin/prep/queries'
 import { computeBadgeContext } from '@/lib/admin/prep/badges'
 import { refreshBadges } from '@/lib/admin/prep/refresh-badges'
-import { getDailyQuote } from '@/lib/admin/prep/daily-quote'
+import { resolveDailyQuote } from '@/lib/admin/prep/resolve-daily-quote'
 import type { BadgeRecord, DailyLog, Library, Plan, Routine } from '@/lib/admin/prep/types'
 import planJson from '@/content/coding-prep-plan.json'
 import libraryJson from '@/content/coding-prep-library.json'
@@ -69,7 +69,10 @@ export default async function CodingPrepPage() {
   )
   const ctx = await computeBadgeContext(planTotalTasks)
 
-  // Daily quote — theme-matched to today's plan day when known
+  // Daily quote — AI-picks from a theme-matched candidate pool when an
+  // HF key is configured, otherwise a deterministic date-hash pick.
+  // resolveDailyQuote handles cache + fallback + persist; returns the
+  // chosen Quote object plus the AI-generated one-sentence connector.
   const dayNumForQuote = settings.plan_start_date
     ? Math.floor(
         (Date.UTC(
@@ -84,7 +87,14 @@ export default async function CodingPrepPage() {
   const planDayForQuote = dayNumForQuote
     ? (plan.days.find((d) => d.day === dayNumForQuote) ?? null)
     : null
-  const dailyQuote = getDailyQuote(today, planDayForQuote?.title)
+  const resolvedQuote = await resolveDailyQuote({
+    todayKey: today,
+    todayLog,
+    planDayLabel: planDayForQuote ? `Day ${planDayForQuote.day}: ${planDayForQuote.title}` : null,
+    planDayTheme: planDayForQuote?.title,
+    studyStreak: ctx.studyStreak,
+    gymStreak: ctx.trainStreak,
+  })
 
   const serialBadges: BadgeRecord[] = badges.map((b) => ({
     badgeId: b.badgeId,
@@ -115,7 +125,8 @@ export default async function CodingPrepPage() {
         plan={plan}
         library={library}
         routine={routine}
-        quote={dailyQuote}
+        quote={resolvedQuote.quote}
+        quoteReflection={resolvedQuote.reflection}
         initialCompleted={Array.from(completed)}
         initialNotes={notesByDay}
         todayKey={today}

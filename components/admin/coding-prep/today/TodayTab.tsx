@@ -115,6 +115,7 @@ export function TodayTab({
   plan,
   todayKey,
   quote,
+  quoteReflection,
   initialLog,
   initialTodayTaskIds,
   initialSettings,
@@ -129,6 +130,7 @@ export function TodayTab({
   plan: Plan
   todayKey: string
   quote: Quote
+  quoteReflection: string
   initialLog: DailyLog
   initialTodayTaskIds: string[]
   initialSettings: SettingsMap
@@ -228,7 +230,7 @@ export function TodayTab({
         }}
       />
 
-      <DailyQuoteCard quote={quote} />
+      <DailyQuoteCard quote={quote} reflection={quoteReflection} />
 
       {routine.blocks.map((block) => (
         <BlockRenderer

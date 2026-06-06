@@ -122,6 +122,14 @@ export const prepDailyLog = pgTable('prep_daily_log', {
   journalWin: text('journal_win').notNull().default(''),
   journalDeviation: text('journal_deviation').notNull().default(''),
   noDeviation: boolean('no_deviation').notNull().default(false),
+  // Daily quote — picked once per day. The id references a quote in
+  // content/coding-prep-quotes.json. The reflection is the AI-generated
+  // one-sentence "why this quote, today" connector that ties the chosen
+  // quote to the user's recent journal entries and plan-day focus.
+  // Cached so refreshes don't re-trigger the HF call and the quote stays
+  // anchored to the day in the activity feed.
+  dailyQuoteId: varchar('daily_quote_id', { length: 64 }),
+  dailyQuoteReflection: text('daily_quote_reflection').notNull().default(''),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 })
 

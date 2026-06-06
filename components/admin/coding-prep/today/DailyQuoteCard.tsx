@@ -23,7 +23,7 @@ const LABEL: Record<Quote['category'], string> = {
   leader: 'Leader',
 }
 
-export function DailyQuoteCard({ quote }: { quote: Quote }) {
+export function DailyQuoteCard({ quote, reflection }: { quote: Quote; reflection?: string }) {
   return (
     <motion.figure
       initial={{ opacity: 0, y: 8 }}
@@ -51,10 +51,20 @@ export function DailyQuoteCard({ quote }: { quote: Quote }) {
           {quote.text}
           <span className="text-zinc-400 dark:text-zinc-600">”</span>
         </blockquote>
-        <figcaption className="mt-4 flex items-baseline gap-2 text-sm">
+        <figcaption className="mt-4 flex flex-wrap items-baseline gap-x-2 text-sm">
           <span className="font-medium text-zinc-900 dark:text-zinc-100">— {quote.author}</span>
           <span className="text-zinc-500 dark:text-zinc-400">· {quote.role}</span>
         </figcaption>
+        {reflection ? (
+          <div className="mt-5 rounded-lg border border-white/50 bg-white/40 px-3.5 py-2.5 backdrop-blur-sm dark:border-white/10 dark:bg-white/[0.04]">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-500 dark:text-zinc-400">
+              Why this, today
+            </p>
+            <p className="mt-1 text-sm leading-relaxed text-zinc-700 dark:text-zinc-200">
+              {reflection}
+            </p>
+          </div>
+        ) : null}
       </div>
     </motion.figure>
   )

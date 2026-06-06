@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest'
-import { getDailyQuote, ALL_QUOTES, type Quote } from '@/lib/admin/prep/daily-quote'
+import {
+  getDailyQuote,
+  getCandidateQuotes,
+  getQuoteById,
+  ALL_QUOTES,
+  type Quote,
+} from '@/lib/admin/prep/daily-quote'
 
 describe('getDailyQuote', () => {
   it('returns a quote from the curated library', () => {
@@ -65,5 +71,49 @@ describe('getDailyQuote', () => {
   it('quote ids are unique', () => {
     const ids = ALL_QUOTES.map((q) => q.id)
     expect(new Set(ids).size).toBe(ids.length)
+  })
+})
+
+describe('getCandidateQuotes', () => {
+  it('returns at most the requested limit', () => {
+    const c = getCandidateQuotes('2026-06-05', undefined, 10)
+    expect(c.length).toBeLessThanOrEqual(10)
+    expect(c.length).toBeGreaterThan(0)
+  })
+
+  it('spans multiple categories when possible', () => {
+    const c = getCandidateQuotes('2026-06-05', undefined, 12)
+    const categories = new Set(c.map((q) => q.category))
+    expect(categories.size).toBeGreaterThan(1)
+  })
+
+  it('biases toward theme-matched tags when theme is provided', () => {
+    const c = getCandidateQuotes('2026-06-05', 'Arrays / hashing — warmup', 6)
+    const allowed = new Set(['consistency', 'focus'])
+    const matchCount = c.filter((q) => q.tags.some((t) => allowed.has(t))).length
+    expect(matchCount).toBeGreaterThan(0)
+  })
+
+  it('is deterministic for the same date + theme', () => {
+    const a = getCandidateQuotes('2026-06-05', 'Trees & Graphs', 8)
+    const b = getCandidateQuotes('2026-06-05', 'Trees & Graphs', 8)
+    expect(a.map((q) => q.id)).toEqual(b.map((q) => q.id))
+  })
+
+  it('returns unique ids only', () => {
+    const c = getCandidateQuotes('2026-06-05', undefined, 18)
+    const ids = c.map((q) => q.id)
+    expect(new Set(ids).size).toBe(ids.length)
+  })
+})
+
+describe('getQuoteById', () => {
+  it('returns the matching quote', () => {
+    const q = getQuoteById('marcus-mind')
+    expect(q?.author).toBe('Marcus Aurelius')
+  })
+
+  it('returns null for unknown id', () => {
+    expect(getQuoteById('does-not-exist-zzz')).toBeNull()
   })
 })

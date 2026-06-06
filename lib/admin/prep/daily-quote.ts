@@ -58,3 +58,56 @@ function themeToTags(theme?: string): string[] {
 }
 
 export const ALL_QUOTES = QUOTES
+
+export function getQuoteById(id: string): Quote | null {
+  return QUOTES.find((q) => q.id === id) ?? null
+}
+
+/**
+ * Theme-filtered + spread candidate pool for the AI picker.
+ *
+ * - When a plan-day theme is provided, biases toward matching tags but
+ *   pads with diverse fallbacks if the matching pool is small.
+ * - Result is deterministic per dateKey so re-renders during a single
+ *   day pass the same list to the model.
+ * - Capped at `limit` so the prompt stays compact (~1.5–2k tokens).
+ */
+export function getCandidateQuotes(dateKey: string, planDayTheme?: string, limit = 18): Quote[] {
+  const themeTags = themeToTags(planDayTheme)
+  const matching =
+    themeTags.length > 0 ? QUOTES.filter((q) => q.tags.some((t) => themeTags.includes(t))) : QUOTES
+  // Spread within the matching pool by sorting on a stable per-id hash
+  // seeded by today's date, then take the head. Adding `limit` distinct
+  // categories first guarantees the model sees variety across athlete /
+  // philosopher / scientist / builder / writer / leader even when the
+  // theme-matched pool skews toward one bucket.
+  const seed = hashDate(dateKey)
+  const ordered = [...matching].sort(
+    (a, b) => ((hashStr(a.id) ^ seed) >>> 0) - ((hashStr(b.id) ^ seed) >>> 0)
+  )
+  const picked: Quote[] = []
+  const seenCategories = new Set<string>()
+  // First pass — one per category
+  for (const q of ordered) {
+    if (picked.length >= limit) break
+    if (seenCategories.has(q.category)) continue
+    picked.push(q)
+    seenCategories.add(q.category)
+  }
+  // Second pass — fill remaining slots
+  for (const q of ordered) {
+    if (picked.length >= limit) break
+    if (picked.some((p) => p.id === q.id)) continue
+    picked.push(q)
+  }
+  return picked
+}
+
+function hashStr(s: string): number {
+  let h = 2166136261
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i)
+    h = (h * 16777619) >>> 0
+  }
+  return h
+}
