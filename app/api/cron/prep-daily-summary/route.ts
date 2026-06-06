@@ -94,25 +94,31 @@ async function runDailySummary() {
 
   // AI summary — best-effort. Falls back to the templated rollup if the
   // model call fails or HUGGINGFACE_API_KEY is unset.
-  const ai: DaySummaryOutput | null = await generatePrepSummary({
-    date: today,
-    studyStreak: ctx.studyStreak,
-    trainStreak: ctx.trainStreak,
-    problemsSolved: log.problemsSolved,
-    applicationsCount: log.applicationsCount,
-    trainedToday: log.trainedToday,
-    morningAnchorRead: log.morningAnchorRead,
-    readAloud: log.readAloud,
-    journalFinished: log.journalFinished,
-    journalAvoided: log.journalAvoided,
-    journalWin: log.journalWin,
-    journalDeviation: log.journalDeviation,
-    mood: log.mood ?? null,
-    newlyUnlocked: badges
-      .filter((b) => b.unlockedAt.toISOString().slice(0, 10) === today)
-      .map((b) => BADGE_INDEX[b.badgeId]?.name ?? b.badgeId),
-    tomorrowFocus,
-  })
+  let hfError: string | null = null
+  const ai: DaySummaryOutput | null = await generatePrepSummary(
+    {
+      date: today,
+      studyStreak: ctx.studyStreak,
+      trainStreak: ctx.trainStreak,
+      problemsSolved: log.problemsSolved,
+      applicationsCount: log.applicationsCount,
+      trainedToday: log.trainedToday,
+      morningAnchorRead: log.morningAnchorRead,
+      readAloud: log.readAloud,
+      journalFinished: log.journalFinished,
+      journalAvoided: log.journalAvoided,
+      journalWin: log.journalWin,
+      journalDeviation: log.journalDeviation,
+      mood: log.mood ?? null,
+      newlyUnlocked: badges
+        .filter((b) => b.unlockedAt.toISOString().slice(0, 10) === today)
+        .map((b) => BADGE_INDEX[b.badgeId]?.name ?? b.badgeId),
+      tomorrowFocus,
+    },
+    (msg) => {
+      hfError = msg
+    }
+  )
 
   // Email
   const adminEmail = process.env.ADMIN_EMAIL
@@ -189,6 +195,8 @@ async function runDailySummary() {
       has_slack_webhook: !!process.env.SLACK_WEBHOOK_URL,
       has_hf_key: !!process.env.HUGGINGFACE_API_KEY,
       hf_model: process.env.HUGGINGFACE_SUMMARY_MODEL ?? 'default',
+      hf_provider: process.env.HUGGINGFACE_PROVIDER ?? 'auto',
+      hf_error: hfError,
     },
   })
 }

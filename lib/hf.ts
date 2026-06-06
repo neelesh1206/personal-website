@@ -63,10 +63,14 @@ ${i.newlyUnlocked.length ? `- Badges unlocked today: ${i.newlyUnlocked.join(', '
 const LABEL_RE = /^\s*(NARRATIVE|TOMORROW)\s*:\s*(.+?)\s*$/i
 
 export async function generatePrepSummary(
-  input: DaySummaryInput
+  input: DaySummaryInput,
+  onError?: (msg: string) => void
 ): Promise<DaySummaryOutput | null> {
   const apiKey = process.env.HUGGINGFACE_API_KEY
-  if (!apiKey) return null
+  if (!apiKey) {
+    onError?.('HUGGINGFACE_API_KEY not set')
+    return null
+  }
 
   const model = process.env.HUGGINGFACE_SUMMARY_MODEL ?? DEFAULT_MODEL
   const provider = process.env.HUGGINGFACE_PROVIDER as
@@ -87,9 +91,16 @@ export async function generatePrepSummary(
       temperature: 0.4,
     })
     const raw = res.choices?.[0]?.message?.content ?? ''
-    if (typeof raw !== 'string' || !raw.trim()) return null
-    return parseLabeledOutput(raw)
+    if (typeof raw !== 'string' || !raw.trim()) {
+      onError?.('empty response')
+      return null
+    }
+    const parsed = parseLabeledOutput(raw)
+    if (!parsed) onError?.(`unparseable response: ${raw.slice(0, 200)}`)
+    return parsed
   } catch (err) {
+    const msg = err instanceof Error ? `${err.name}: ${err.message}` : String(err)
+    onError?.(msg)
     console.error('hf generatePrepSummary failed', err)
     return null
   }
