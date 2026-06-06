@@ -1,0 +1,596 @@
+{
+  "meta": {
+    "title": "Reference Library — Interview Q&A",
+    "subtitle": "Tight, memorable answers anchored to PRISM / Tempo / Tempo Runtime."
+  },
+  "deliveryRules": [
+    "Pause 2 seconds before answering. 'Good question — let me think.' That's senior, not weakness.",
+    "Lead with one headline sentence. The interviewer should know your direction in 5 seconds.",
+    "Use a structure every single time. Problem → Approach → Tradeoff. Or What → Why → How I used it.",
+    "End deliberately. 'That's how I'd approach it.' Stop. Silence isn't your enemy.",
+    "Practice out loud, recorded. Phone voice-memo every answer. Listen back. Cut filler.",
+    "Talk in numbers and names. '~27 TPS, p95 2.5s' beats 'it scales well'. 'Tempo Service' beats 'the backend'.",
+    "When you don't know, say so cleanly. 'Haven't done that directly — closest I've done is X. Here's how I'd ramp.' Then stop."
+  ],
+  "rapidFire": {
+    "versions": [
+      { "tool": "Java", "version": "21", "where": "PRISM (msg-asset-service)" },
+      { "tool": "Java", "version": "17", "where": "Tempo Service" },
+      { "tool": "Spring Boot", "version": "3.5.12", "where": "PRISM" },
+      { "tool": "Spring Boot", "version": "3.5.6", "where": "Tempo Service" },
+      { "tool": "Hibernate", "version": "6.6.3", "where": "PRISM + Tempo" },
+      { "tool": "QueryDSL", "version": "5.0", "where": "PRISM + Tempo" },
+      { "tool": "MapStruct", "version": "1.5.3", "where": "PRISM" },
+      { "tool": "Apache CXF (JAX-RS)", "version": "4.0.4", "where": "Tempo Service" },
+      { "tool": "Next.js", "version": "15.5", "where": "Tempo V3 UI" },
+      { "tool": "React", "version": "19.1", "where": "Tempo V3 UI" },
+      { "tool": "TypeScript", "version": "5.8 strict", "where": "Tempo V3 UI" },
+      { "tool": "TanStack Query", "version": "5.76", "where": "Tempo V3 UI" },
+      { "tool": "React Hook Form", "version": "7.56", "where": "Tempo V3 UI" },
+      { "tool": "Zod", "version": "4.1", "where": "Tempo V3 UI" },
+      { "tool": "Fastify (Walmart wml-server)", "version": "5.0.11", "where": "Tempo V3 BFF" },
+      { "tool": "Node", "version": "20.13+", "where": "Tempo V3 + legacy Runtime" },
+      { "tool": "Go", "version": "1.24 (Echo)", "where": "Tempo Runtime rewrite" }
+    ],
+    "numbers": [
+      { "label": "PRISM homepage scale", "value": "150× (20 → 3,500+)" },
+      { "label": "PRISM mWeb ATF CTR", "value": "+6.8%" },
+      { "label": "PRISM editor efficiency", "value": "+16%" },
+      { "label": "PRISM messages / assets in prod", "value": "12k+ / 24k+" },
+      { "label": "PRISM TPS / p95", "value": "~2 TPS / 250ms" },
+      { "label": "PRISM cloud cost", "value": "~$11/day" },
+      { "label": "Tempo tenants", "value": "38" },
+      { "label": "Tempo Service TPS / p95", "value": "~27 TPS / 2.5s (bulk → 15s)" },
+      { "label": "Tempo Service cloud cost", "value": "~$767/day" },
+      { "label": "Tempo BFF downstream services", "value": "15" },
+      { "label": "W3C trace propagation", "value": ">92% (1,284 / 1,387)" },
+      { "label": "V3 cold-start build time", "value": "~60% ↓ vs V1" },
+      { "label": "Tempo Runtime p95 / TPS (Go)", "value": "35–45 ms @ 4K TPS" },
+      { "label": "Tempo Runtime read capacity", "value": "100K reads/sec/region" },
+      {
+        "label": "Go vs Node (memory / cold-start / image)",
+        "value": "82% ↓ / 18× faster / 80% smaller"
+      },
+      { "label": "Cassandra topology", "value": "3 DCs × 3 nodes, QUORUM writes, ONE reads" },
+      { "label": "Tempo Runtime cache tiers", "value": "Ristretto L1 → Meghacache L2 → Cassandra" },
+      {
+        "label": "Tempo Runtime canary groups",
+        "value": "TG1 (WM_GLASS) / TG2 (CA+MX) / TG3 (SAMs+long-tail)"
+      }
+    ]
+  },
+  "topics": [
+    {
+      "id": "frontend",
+      "name": "React & Frontend",
+      "anchor": "Tempo V3 UI — Next.js 15 App Router on React 19, TanStack Query streaming Suspense, React Hook Form + Zod, Fastify BFF fanning out to 15 services.",
+      "items": [
+        {
+          "id": "fe-react-19",
+          "question": "What's actually new in React 19?",
+          "answer": "Three things that show up day-to-day. First, React Server Components as a real primitive — components that run on the server, ship zero JS, and stream their output. Second, the new use() hook and Suspense improvements that let you await async data inline. Third, automatic batching everywhere plus form-action support — <form action={serverAction}> works natively. The reconciler also gets better at prioritising urgent work (typing, scrolling) over deferred work (data fetches).",
+          "projectUsage": "Tempo V3's editor stays responsive while module data hydrates because TanStack Query streams via Suspense — React 19's concurrent scheduling keeps the input field interactive while the module list resolves in the background.",
+          "remember": "Server Components ship HTML, not JavaScript."
+        },
+        {
+          "id": "fe-usestate-reducer",
+          "question": "useState vs useReducer — when do you pick which?",
+          "answer": "useState for one piece of independent state: a boolean, a string, a number. useReducer when you have multiple state values that transition together — like form state, or a fetch state machine (idle/loading/success/error). The deciding question is: do these values change as a group? If yes, reducer. If no, two useStates. Reducer also wins when next state depends on prior state and you want the transition logic centralised — easier to test.",
+          "projectUsage": "Tempo V3's module-editor wizard uses a reducer because step, validation errors, and draft payload all transition together — reading useReducer makes the state machine obvious.",
+          "remember": "State machine → reducer. Atom → useState."
+        },
+        {
+          "id": "fe-useeffect",
+          "question": "useEffect — what's it for and what's the trap?",
+          "answer": "It's for synchronising your component with something outside React — a subscription, a timer, a fetch. The trap is treating it like componentDidMount and dumping all logic into it. Two real rules: every effect should declare every reactive value it reads in the dependency array; and if you're using effects to derive state from props, you're doing it wrong — derive in render. React 19's compiler will eventually make most useMemo/useCallback unnecessary, but the effect rules still apply.",
+          "projectUsage": "On Tempo V3 I removed an effect that closed the mobile menu on pathname change — it's a side effect of the link click, not the URL change. Replaced with an onClick handler.",
+          "remember": "Effects synchronise. They don't derive."
+        },
+        {
+          "id": "fe-memo-callback",
+          "question": "useMemo and useCallback — when actually needed?",
+          "answer": "Mostly when you're handing a value or function down to a memoised child that's expensive to re-render — React.memo won't help if the prop reference changes every render. Also for genuinely expensive computations you don't want to repeat. The wrong reason: 'to make it faster.' useMemo itself has overhead. With React 19's compiler enabled, you write plain code and the compiler memoises what's worth memoising.",
+          "projectUsage": "Tempo V3's targeting builder memoises the parsed-rule tree it passes to a deeply nested <RuleEditor> because the child is React.memo'd and re-parses the rule string on every change otherwise.",
+          "remember": "Memo for memoised children, or genuinely slow work."
+        },
+        {
+          "id": "fe-server-vs-client",
+          "question": "Server Components vs Client Components — when does each go?",
+          "answer": "Server Components are the default in Next 15 App Router — they run on the server, can hit a database directly, never ship their code to the browser. Client Components ('use client') hydrate in the browser; you need them for state, effects, event handlers, browser APIs. The pattern is: keep the tree mostly Server Components, push 'use client' as deep as possible so you ship the least JS.",
+          "projectUsage": "Tempo V3's catalog page is a Server Component that fetches from Tempo Service directly. The drag-and-drop reorder is a small 'use client' island. We ship ~50KB less to the browser than V2.",
+          "remember": "Server by default. Client at the leaves where you need state."
+        },
+        {
+          "id": "fe-vdom",
+          "question": "Virtual DOM — what is it and why does it matter?",
+          "answer": "React keeps an in-memory tree of UI elements. When state changes, it builds a new tree, diffs it against the previous one, and produces the minimum set of DOM operations to bring the real DOM in line. The browser DOM is slow to mutate; a JS object tree is fast. So doing the diff in memory and surgically patching the DOM is cheaper than re-rendering from scratch.",
+          "projectUsage": "In V2 we hit a perf bug where a 200-row module table re-rendered on every keystroke. The fix was correct keys + React.memo — the diff was correct, we were just letting React think every row was new.",
+          "remember": "Two trees, one diff, minimal patch."
+        },
+        {
+          "id": "fe-forms-rhf-zod",
+          "question": "Forms — why React Hook Form + Zod?",
+          "answer": "React Hook Form uses uncontrolled inputs with refs — most components don't re-render on every keystroke, only on submit/validation. Zod gives you a schema as the source of truth: TypeScript types come from the schema, runtime validation runs from the same schema, and you wire it in with zodResolver. Fewer re-renders, no types-vs-validation drift, type-safe data after submit.",
+          "projectUsage": "Every form in Tempo V3 uses RHF + Zod. The Zod schema is generated from the Seed JSON module-definition schema by @cxt-tempo/seed-to-schema — form, validator, and backend contract are the same shape.",
+          "remember": "RHF for performance, Zod as the contract."
+        },
+        {
+          "id": "fe-perf-rerenders",
+          "question": "How do you stop unnecessary re-renders?",
+          "answer": "Five moves in order of impact. Lift state down so siblings don't re-render. Stable keys in lists. React.memo on heavy children with useCallback/useMemo for stable prop refs. Split contexts — one big context re-renders every consumer. Profile with React DevTools' Profiler before guessing — usually one component causes 90% of the re-renders.",
+          "projectUsage": "On Tempo V2 I cut module-table re-renders by ~80% by splitting the editor context (selection vs draft state) and keying rows on stable ID instead of array index.",
+          "remember": "Profile first. Split context, stable keys, memo heavy."
+        },
+        {
+          "id": "fe-bff",
+          "question": "The BFF pattern — what is it and why is it the right call?",
+          "answer": "BFF = Backend For Frontend. A thin server in front of your UI that aggregates downstream services into the exact shape your UI needs. Instead of the browser calling 15 services with 15 different shapes/auths, it calls one BFF, which fans out and stitches. Wins: one auth boundary, one place for trace propagation and SSRF protection, one place to shape data for the screen.",
+          "projectUsage": "Tempo V3 BFF is one Fastify /api/proxy route fanning out to 15 services. Adding a new service is ~50 lines from a typed-client template. W3C trace IDs forward through every outbound call.",
+          "remember": "One inbound surface, fan-out behind it."
+        },
+        {
+          "id": "fe-app-router",
+          "question": "Next.js App Router vs Pages Router — which and why?",
+          "answer": "App Router. Three reasons: Server Components (smaller JS, faster TTFB, direct data access on the server); streaming with Suspense (don't block on the slowest fetch); layouts as a first-class concept (shared UI doesn't unmount on navigation). Tradeoff: caching is more nuanced — you have to understand revalidate, force-dynamic, route segment config.",
+          "projectUsage": "Tempo V3 is App Router. Layouts give us a stable editor shell across tenant routes; Server Components let the catalog stream while the BFF resolves. ~60% cold-start build time reduction vs Electrode V1.",
+          "remember": "App Router = Server-first + streaming + persistent layouts."
+        },
+        {
+          "id": "fe-testing",
+          "question": "Frontend testing — what do you actually test?",
+          "answer": "Three layers. Component unit tests with Vitest + Testing Library — assert behaviour from the user's perspective, don't test implementation. Integration tests with MSW mocking the BFF — tests one screen's data flow end-to-end without a real server. E2E with Playwright against live stage — tiny number of tests, only the critical journeys. Pyramid: lots of unit, fewer integration, very few E2E.",
+          "projectUsage": "Tempo V3 has Vitest unit suites, MSW for BFF integration, Playwright against live stage for the publish flow. CI fails build if coverage drops below 70%.",
+          "remember": "Test behaviour, not implementation. Pyramid: lots / fewer / very few."
+        }
+      ]
+    },
+    {
+      "id": "java-spring",
+      "name": "Spring Boot & Core Java",
+      "anchor": "PRISM cxt-msg-asset-service — Java 21, Spring Boot 3.5.12, Hibernate JPA, QueryDSL 5, MapStruct, list-partitioned Postgres, Forklift outbox, 4 datasources.",
+      "items": [
+        {
+          "id": "java-di",
+          "question": "What is dependency injection and why do we use it?",
+          "answer": "DI is: the container creates your dependencies and hands them to you, instead of you constructing them inside your class. The point isn't fewer 'new' keywords — it's that your class declares what it needs, and at test time you swap real dependencies for fakes without touching production code. Spring's DI is constructor-based; mark a class @Service, declare its constructor, Spring wires the graph at startup.",
+          "projectUsage": "Every PRISM service uses constructor injection — MessageService takes MessageDAO, AssetDAO, KafkaProducerManager. In unit tests we hand-construct with mock DAOs; no Spring context needed.",
+          "remember": "Declare what you need. Container hands it to you. Tests swap it."
+        },
+        {
+          "id": "java-bean-scopes",
+          "question": "Spring Bean scopes — which do you actually use?",
+          "answer": "Singleton is the default and covers ~95% — one instance per Spring context, shared, stateless. Prototype gives you a fresh instance every injection, used for stateful builders. Request and session are web scopes — a new bean per HTTP request or session. Request scope is where you carry per-request state like authenticated tenant ID or trace context.",
+          "projectUsage": "PRISM's WcpHeaders bean is request-scoped — it carries tenantId for the lifetime of the request, and GenericBaseDAO.getDefaultPredicates() reads it to inject the tenant filter on every JPA query.",
+          "remember": "Singleton everywhere. Request scope for per-request state."
+        },
+        {
+          "id": "java-controller-advice",
+          "question": "Centralised exception handling with @RestControllerAdvice — how do you wire it?",
+          "answer": "One class annotated @RestControllerAdvice catches exceptions thrown anywhere in a controller and translates them to HTTP responses. Each handler is @ExceptionHandler(SomeException.class) returning a ResponseEntity with the right status + a uniform error envelope {code, message, traceId}. Business logic throws domain exceptions; the advice translates them. Controllers stay clean.",
+          "projectUsage": "PRISM's advice maps OptimisticLockingException → 409, EntityNotFoundException → 404, ValidationException → 422, anything else → 500 with the trace ID echoed back. The log line masks Authorization and Cookie headers before writing.",
+          "remember": "Throw domain. Advice translates to HTTP."
+        },
+        {
+          "id": "java-http-codes",
+          "question": "Mapping domain errors to HTTP codes — what's the table?",
+          "answer": "400 = the client sent a malformed request. 401 = no auth or bad auth. 403 = authed but not authorised. 404 = the entity genuinely doesn't exist. 409 = conflict; usually optimistic-lock collision or unique-constraint violation. 422 = request well-formed but business validation fails. 429 = rate limited. 5xx = your fault; usually 500 generic, 503 when a downstream is down. Rule: 4xx is the client; 5xx is you.",
+          "projectUsage": "PRISM's bulk-edit endpoint surfaces deeply-nested Postgres lock errors as a clean 409 with {conflictedAssetIds: [...]} — the UI can highlight rows instead of a 500 stack trace.",
+          "remember": "4xx your fault if you sent it. 5xx my fault if it broke."
+        },
+        {
+          "id": "java-optimistic-lock",
+          "question": "Optimistic locking with @Version — explain it.",
+          "answer": "You add a @Version column (lock_version BIGINT). On every read Hibernate captures the version; on UPDATE it writes WHERE id = ? AND lock_version = ? and increments. If two writers read v3, the first commits v4, the second's WHERE matches zero rows → OptimisticLockingFailureException. No table-level lock taken, no deadlock risk — at the cost of one rare retry.",
+          "projectUsage": "PRISM's BaseDO superclass has @Version on DB_LOCK_VERSION. Bulk edits on the same asset surface as a 409 with the asset ID — UI prompts 'edited by someone else, reload?' instead of overwriting silently.",
+          "remember": "Stamp on read, check on write, retry on miss."
+        },
+        {
+          "id": "java-rest-vs-graphql",
+          "question": "REST vs GraphQL — when do you pick which?",
+          "answer": "REST when each consumer wants a clear, cacheable resource and shapes are stable — e.g. an authoring backend with a UI plus three downstream services. GraphQL when you have many consumers with different shape needs and you want one endpoint that lets each ask for exactly what they need — cuts overfetching. Tradeoffs: GraphQL is harder to cache at the HTTP layer; REST forces versioning when shapes change.",
+          "projectUsage": "Tempo V2 was GraphQL; we moved Tempo V3's BFF to REST/JSON because the consumer is just our Next.js front-end. The BFF talks REST to 15 downstream services with a typed-client template — simpler than 15 GraphQL resolvers.",
+          "remember": "REST = stable shapes. GraphQL = many shapes from many consumers."
+        },
+        {
+          "id": "java-persistence-stack",
+          "question": "JPA / Hibernate / QueryDSL / MapStruct — what does each do?",
+          "answer": "JPA is the spec; Hibernate is the implementation that turns entity classes into SQL. QueryDSL is a type-safe query builder — instead of JPQL strings, you write query.from(QAsset.asset).where(asset.status.eq('ACTIVE')); compile-time checked, refactors safely. MapStruct generates entity↔DTO mapping code at compile time — no runtime reflection.",
+          "projectUsage": "PRISM uses all four. Asset and Message are JPA entities; partitioned tables and composite PKs declared via Hibernate. Dynamic search filters are QueryDSL. DTOs at the REST boundary are MapStruct-generated.",
+          "remember": "Hibernate persists. QueryDSL queries. MapStruct maps boundaries."
+        },
+        {
+          "id": "java-21-features",
+          "question": "Java 17 → 21 — what's worth knowing?",
+          "answer": "Records (immutable data carriers, replaces ~30 lines of class). Sealed classes (lock the type hierarchy at compile time — state-machine modelling). Pattern matching for switch (switch on type with deconstruction). Virtual threads (21) are the headline — green threads scheduled by the JVM, so blocking I/O is no longer expensive; you can write straight-line blocking code at scale. Spring Boot picks them up if you enable spring.threads.virtual.enabled.",
+          "projectUsage": "PRISM is Java 21; DTOs are records, our MessageState hierarchy is a sealed type. Haven't flipped virtual threads on in PRISM yet — workload doesn't need them. Tested them on a side project.",
+          "remember": "Records = data. Sealed = closed hierarchies. Virtual = cheap blocking I/O."
+        },
+        {
+          "id": "java-spring-startup",
+          "question": "Spring Boot startup — what actually happens?",
+          "answer": "Spring scans your packages for @Component/@Service/@Repository/@Configuration, builds a dependency graph, instantiates singletons in order. @ConfigurationProperties binds application.yml into typed config objects. Auto-configuration looks at the classpath and wires sensible defaults. The web server starts, the JPA EntityManagerFactory initialises, and any CommandLineRunner / ApplicationRunner beans run.",
+          "projectUsage": "PRISM's startup runs a Liquibase migration check before exposing the EntityManagerFactory — if a migration hasn't been applied to this branch, the service refuses to start. Catches 'pointed at a fresh branch' within seconds.",
+          "remember": "Scan → graph → instantiate → bind config → start web → run runners."
+        }
+      ]
+    },
+    {
+      "id": "microservices",
+      "name": "Microservices & Architecture",
+      "anchor": "PRISM Forklift outbox + Tempo authoring/delivery split + BFF for 15 services.",
+      "items": [
+        {
+          "id": "arch-dual-write",
+          "question": "What is the dual-write problem?",
+          "answer": "When your service must update a database AND publish a Kafka event in the same logical operation. The problem: there's no distributed transaction across Postgres and Kafka in practice. Write DB first, crash before Kafka → downstream consumers never hear. Write Kafka first, DB rollback → downstream sees an event for a state that doesn't exist. You need atomicity from the consumer's point of view.",
+          "projectUsage": "PRISM had to write to Postgres and emit to Kafka for every save. We used the transactional outbox pattern (next question) to make this atomic — downstream services (Pronto, IronBank, P13N) never see inconsistent state.",
+          "remember": "Two systems, one logical write, no distributed transaction → broken."
+        },
+        {
+          "id": "arch-outbox",
+          "question": "Transactional outbox pattern — how does it actually work?",
+          "answer": "Instead of writing to Kafka directly, your service writes the event row into an outbox table inside the same DB transaction as the entity mutation. Both succeed atomically, or both rollback. A separate drainer process reads outbox rows after commit and publishes to Kafka, marking them sent. If the drainer crashes mid-publish, it retries on restart — at-least-once delivery. Consumers must be idempotent.",
+          "projectUsage": "PRISM uses Walmart's Forklift for exactly this. Every Message or Asset mutation writes an outbox row in the same transaction; Forklift's drainer publishes to Kafka. Pronto, IronBank, asset-discovery, P13N never see a dual-write inconsistency.",
+          "remember": "Write the event into the DB. Drain to Kafka after commit."
+        },
+        {
+          "id": "arch-idempotency",
+          "question": "Idempotency and exactly-once — what's actually achievable?",
+          "answer": "Kafka delivery is at-least-once at the protocol level — true exactly-once is operationally expensive. The practical recipe: producer writes events with a deterministic event ID; consumer keeps a small table of processed event IDs (or uses a unique constraint on the side effect). Duplicate arrives → DB write fails the unique check → treated as success. Net effect: at-least-once + idempotent consumer = effectively exactly-once.",
+          "projectUsage": "PRISM's downstream consumers (e.g. asset-discovery) treat the outbox event UUID as a unique constraint. Never deduped at the broker; deduped at write time.",
+          "remember": "Exactly-once doesn't exist. At-least-once + idempotent does."
+        },
+        {
+          "id": "arch-authoring-delivery",
+          "question": "Authoring vs delivery — why are they split?",
+          "answer": "Editorial traffic is bursty, write-heavy, often slow (bulk publish p95 2.5s, spikes to 15s), tolerates multi-second propagation. Customer traffic is steady-state, read-heavy, must be sub-50ms p95, and an outage blanks the homepage. Mixing them forces both to optimise for the harder side. Splitting lets each side pick the right DB, cache, framework, and SLO.",
+          "projectUsage": "Tempo is the textbook split. Tempo Service writes to Postgres (authoring), Tempo Runtime reads from Cassandra (delivery), Kafka syncs between them. A 5-min Tempo Service outage in April didn't blank a single customer page.",
+          "remember": "Write-path and read-path are different products."
+        },
+        {
+          "id": "arch-kafka-sync",
+          "question": "Event-driven sync over Kafka — what does it replace?",
+          "answer": "The naive approach: read side periodically polls the write side's DB ('scan all updated rows since timestamp X'). Works but lags by the poll interval, hammers the write DB, gets weird around schema drift. Kafka push flips it: every write commits an event; read side consumes the topic and updates its store. Lag drops from minutes to seconds; write DB isn't scanned; contract is the event schema, not the table shape.",
+          "projectUsage": "Tempo's original sync was a periodic full DB scan from Tempo Service Postgres → Cosmos DB, 3–5 minutes of lag. The Kafka rewrite (Content Sync Service consuming KAFKA-V2-TEMPO-MOD-PROD) brought it to seconds and let the read side switch DBs to Cassandra cleanly.",
+          "remember": "Scan = polling. Kafka = push. Push wins for freshness and load."
+        },
+        {
+          "id": "arch-multi-tenant",
+          "question": "Multi-tenancy across 38 storefronts — what does it actually mean?",
+          "answer": "One service, many tenants, hard data isolation. Three layers. API: every request carries a tenant-id header; auth checks user has access. Data: every table has a tenant_id column; every query has WHERE tenant_id = ?. Operational: deploy in tenant groups so a bad rollout doesn't blast everything. The trap is forgetting the predicate in a new DAO — fix by injecting it at the framework level.",
+          "projectUsage": "PRISM's GenericBaseDAO.getDefaultPredicates() reads tenantId from a request-scoped WcpHeaders bean and injects the predicate on every JPA query. 25+ repositories get isolation for free; opt-out has to be explicit.",
+          "remember": "Inject the tenant predicate at the framework, not at the DAO."
+        },
+        {
+          "id": "arch-blast-radius",
+          "question": "Bounding blast radius — tenant-group canary + feature flags.",
+          "answer": "Two complementary tools. Tenant-group canary: split deployment into groups (TG1 = WM_GLASS, TG2 = CA+MX, TG3 = SAMs+long-tail). Roll new build to TG1 first; if healthy for an hour, roll TG2; then TG3. Feature flags: ship code dark, flip on per tenant via CCM. Both cheap, both let you roll back without a redeploy.",
+          "projectUsage": "Tempo Runtime Go rewrite deployed via three KITT files (kitt-wcp-tg1.yml, etc.). Tempo V3 UI's V2 fallback is feature-flag-driven through CCM — flip a flag and a tenant snaps back to V2 without a deploy.",
+          "remember": "Group your canary by tenant. Flip your changes by flag."
+        },
+        {
+          "id": "arch-circuit-bulkhead",
+          "question": "Circuit breaker / bulkhead — when and why?",
+          "answer": "Circuit breaker wraps a remote call. If it's been failing for N seconds, open the circuit and return a fallback immediately instead of waiting for timeouts. After cool-down, try one request; success closes the circuit. Bulkhead isolates resources per dependency — a pool of N threads for service A, separate from B — so a flood to A can't starve B.",
+          "projectUsage": "Tempo V3 BFF wraps each downstream in a Resilience4j circuit breaker with a per-service thread pool. When P13N had a 30-second hang in March, the editor stayed responsive — only the personalisation tab degraded.",
+          "remember": "Circuit breaker stops the bleeding. Bulkhead stops the spread."
+        },
+        {
+          "id": "arch-discovery",
+          "question": "Service discovery — how do you find your dependencies?",
+          "answer": "Two patterns. Static config: each downstream URL in config or CCM, keyed by service name. Simple, works inside K8s via DNS. Dynamic registry: services register themselves to a registry (Consul, Eureka) on startup. Dynamic is overkill at our scale — Kubernetes service DNS gives 90% of the value with zero extra moving parts. Reach for dynamic only when topology actually changes minute-to-minute.",
+          "projectUsage": "PRISM and Tempo V3 use CCM2 for downstream URLs + GKE service DNS for in-cluster calls. No separate registry.",
+          "remember": "K8s DNS first. Registry only if topology actually moves."
+        }
+      ]
+    },
+    {
+      "id": "databases",
+      "name": "Databases",
+      "anchor": "PRISM Postgres — list-partitioned assets, composite PK (asset_id, status), deferred-cascade FK, Liquibase, partial unique indexes.",
+      "items": [
+        {
+          "id": "db-list-partition",
+          "question": "What is list partitioning and when do you reach for it?",
+          "answer": "Postgres partitioning physically splits a logical table into several child tables; Postgres routes reads/writes by partition key. List partitioning keys by a discrete value (status, type, region). Hot data lives in one small table that fits in cache; archived sits in a larger one the planner can skip. Operationally you can drop a whole partition in one DDL instead of a million-row DELETE.",
+          "projectUsage": "PRISM's asset table is list-partitioned on status across assets_active / assets_inactive / assets_default. Active queries hit ~12k rows; archived sits in inactive. ARCHIVE is a partition row-move, not an UPDATE.",
+          "remember": "Split by a status-shaped key. Hot stays hot."
+        },
+        {
+          "id": "db-composite-pk",
+          "question": "Composite primary key — why (asset_id, status) not just asset_id?",
+          "answer": "With list partitioning, every partition has its own PK B-tree. If the PK is just asset_id, an asset's row in assets_active and assets_inactive would collide on the same key when you try to row-move it. Making the PK (asset_id, status) lets the same asset_id exist (temporarily, during a transition) in both partitions without violating uniqueness. Bonus: status becomes a free index.",
+          "projectUsage": "PRISM. The composite PK is what made ARCHIVE work as UPDATE asset SET status = 'ARCHIVED' — Postgres physically moves the row, both partitions are happy with their local PK, no key collision.",
+          "remember": "Partition + composite PK = no key collision during row-move."
+        },
+        {
+          "id": "db-deferred-fk",
+          "question": "Deferred-cascade FK — what does it solve?",
+          "answer": "A normal ON UPDATE CASCADE FK fires immediately when the parent row changes. During a partition row-move, the parent is briefly absent then reappears — an immediate cascade can see 'parent missing' and cascade a delete or just fail. Deferred means the constraint is checked at commit time, so the FK sees the final consistent state and the row-move succeeds.",
+          "projectUsage": "PRISM's asset_config has a deferred-cascade FK to asset. When an asset moves from assets_active → assets_inactive, the FK doesn't fire mid-move; it validates at commit when the asset is settled in its new partition.",
+          "remember": "Deferred = constraint checks at commit, not statement."
+        },
+        {
+          "id": "db-partial-unique",
+          "question": "Partial unique index — what's a real use case?",
+          "answer": "A unique index that only applies to rows matching a WHERE predicate. Lets you enforce uniqueness for a state, not the whole table. Classic case: 'only one in-progress ingestion per (tenant, metadata_key)' — you can't put a plain unique constraint on it because completed ingestions can repeat. CREATE UNIQUE INDEX ... ON ingestions(tenant, metadata_key) WHERE status = 'START' does it.",
+          "projectUsage": "PRISM's Figma auto-ingestion. Two concurrent webhooks for the same Figma layer hit the partial unique index and one fails with a clean conflict — single-flight protection without a distributed lock.",
+          "remember": "Unique only when the WHERE matches. Cheap single-flight."
+        },
+        {
+          "id": "db-cursor-pagination",
+          "question": "Cursor vs offset pagination — when does each break?",
+          "answer": "Offset (LIMIT 20 OFFSET 1000) is simple and supports jumping to page N, but Postgres has to scan + discard 1,000 rows; performance degrades linearly with offset. Worse, items shift between pages if data is inserted while paging. Cursor uses a stable key — usually (created_at, id) — and you fetch WHERE (created_at, id) < (last_seen). Constant time, stable under inserts, but you can't jump to page N.",
+          "projectUsage": "PRISM's /messages list is cursor-paginated on (updated_at, id) because editors page through 12k messages and offset got slow past page 50.",
+          "remember": "Offset for small lists. Cursor for big ones."
+        },
+        {
+          "id": "db-sql-vs-nosql",
+          "question": "SQL vs NoSQL — what's the real distinction?",
+          "answer": "Not 'structured vs unstructured.' The real question is access pattern. SQL gives you ad-hoc query flexibility, JOINs, transactional consistency across rows — pick when you don't know all queries upfront and you need ACID. NoSQL (Cassandra, DynamoDB) gives you predictable single-key reads at scale; you design the schema around the queries you'll run. Pick when you have one or two access patterns and you need horizontal scale.",
+          "projectUsage": "PRISM authoring is Postgres — many ad-hoc editor queries, transactional safety. Tempo Runtime delivery is Cassandra — one access pattern (get layout by tenant + channel + pageType), 100K reads/sec/region, no JOINs.",
+          "remember": "SQL = flexible queries. NoSQL = known access patterns at scale."
+        },
+        {
+          "id": "db-cassandra-consistency",
+          "question": "Cassandra consistency — LOCAL_QUORUM vs LOCAL_ONE?",
+          "answer": "Cassandra replicates writes across N nodes; the consistency level is how many must ACK before the op returns. LOCAL_QUORUM = majority of replicas in the local DC must ACK — survives one node failure, strong enough for most apps. LOCAL_ONE = first replica wins — fastest, but you might read stale data immediately after a write. Convention: write with QUORUM, read with ONE when stale-by-seconds is OK.",
+          "projectUsage": "Tempo Runtime writes with LOCAL_QUORUM (publish must be durable across the local DC) and reads with LOCAL_ONE (storefront read is allowed to be a few-second-stale; freshness comes from Kafka push + cache invalidation).",
+          "remember": "Quorum writes, fast reads, freshness from invalidation."
+        },
+        {
+          "id": "db-liquibase",
+          "question": "Liquibase / migrations — what discipline do you keep?",
+          "answer": "Every schema change is a versioned, ordered changelog file in the repo. Never edit an applied changeset; always write a new one. Migrations apply at deploy time or via a CI job — never by hand on prod. Tracker table makes re-runs idempotent. Reversibility is nice-to-have; in practice we forward-fix rather than down-migrate destructive changes.",
+          "projectUsage": "PRISM uses Liquibase changelogs under db/changelog/. Schema changes go through PR review; CI applies them to the dev branch automatically. Prod migrations run as a separate gated workflow.",
+          "remember": "Versioned. Append-only. Tracked. Never hand-applied."
+        },
+        {
+          "id": "db-indexes",
+          "question": "Indexes — what kinds and when?",
+          "answer": "B-tree is the default — equality and range on a column. Partial indexes apply to a WHERE subset (saves space + write cost). Composite on (a, b, c) accelerates filters by a, a+b, or a+b+c (left-prefix rule) — not by b alone. GIN is for full-text and JSONB containment. Don't over-index: every index adds write cost. Profile with EXPLAIN ANALYZE.",
+          "projectUsage": "PRISM's asset table has B-tree on (tenant_id, status, updated_at) for the 'recent assets' view, partial GIN on the JSONB asset_config for full-text search across translations.",
+          "remember": "B-tree common, partial cheap, composite left-prefix, GIN for JSONB."
+        }
+      ]
+    },
+    {
+      "id": "cloud",
+      "name": "GCP, Kubernetes & Cloud",
+      "anchor": "WCNP on GKE, Istio mTLS, multi-region active-active across useast4, uscentral, uswest, Akeyless for secrets.",
+      "items": [
+        {
+          "id": "cloud-gcp-framing",
+          "question": "How honestly do you frame your GCP experience?",
+          "answer": "I've run production workloads on GKE for ~3 years through Walmart's WCNP wrapper. I'm strong on Kubernetes — deployments, services, ingress, autoscaling, secrets, mTLS via Istio, observability. I've not driven raw GCP primitives like Cloud Run, Cloud SQL, IAM bindings, VPC Service Controls hands-on — the platform team handled those. The ramp is short because the concepts map cleanly: Cloud SQL is managed Postgres, IAM is RBAC-shaped, Cloud Run is managed kubectl run. No bluffing: GKE deep, raw GCP ramp.",
+          "projectUsage": "PRISM and Tempo Service run on GKE behind GSLB, Istio sidecars, Akeyless secrets, multi-region active-active. My GearNest side project is the first thing I'm building on raw GCP (Cloud Run + Cloud SQL + Pub/Sub) end-to-end.",
+          "remember": "GKE deep, raw GCP ramp. Don't bluff, frame the gap."
+        },
+        {
+          "id": "cloud-k8s-basics",
+          "question": "Kubernetes — what's actually in a deployment?",
+          "answer": "A Pod is one or more containers scheduled together on the same node, sharing network + storage. A Deployment manages a replicated set of pods. A Service gives you a stable virtual IP + DNS for that set so callers don't talk to ephemeral pod IPs. An Ingress routes external traffic to services. HorizontalPodAutoscaler scales replicas on CPU/memory/custom metrics. Everything is declarative YAML.",
+          "projectUsage": "PRISM is Deployment + Service + HPA, exposed via GSLB → Istio gateway → Service → Pod. HPA scales between 3 and 12 replicas on CPU > 70%.",
+          "remember": "Pod ⊂ Deployment ⊂ Service ⊂ Ingress. Everything declared."
+        },
+        {
+          "id": "cloud-istio",
+          "question": "Istio service mesh — what does it actually solve?",
+          "answer": "Three things. mTLS automatically between every pod — every internal call is mutually authenticated and encrypted, without each service implementing TLS. Traffic policy (timeouts, retries, circuit breakers, canary splits) as YAML — change them without redeploying code. Observability — every request gets a trace span automatically, every metric is labelled by service. Cost: extra sidecar per pod, some latency, operational complexity.",
+          "projectUsage": "PRISM and Tempo Service have Istio sidecars. Internal calls are mTLS — we don't reason about cert distribution. The Tempo Runtime Go canary used an Istio traffic split (1% → 5% → 25%).",
+          "remember": "mTLS, traffic shaping, observability — all without code changes."
+        },
+        {
+          "id": "cloud-multi-region",
+          "question": "Multi-region active-active — what does it cost you?",
+          "answer": "Two regions both serve traffic, both read+write the same logical data. The hard part is the data layer. Three patterns. Active-active stateless services + single-leader DB — easy for the service, DB is SPOF. Multi-master DB (CockroachDB, Spanner) — true active-active but heavy. Per-region partition — each region owns a slice of tenants. The cost is conflict resolution + consistency tradeoffs; the win is regional failure tolerance + latency.",
+          "projectUsage": "Tempo Service runs active-active across useast4, uscentral, EDC — stateless services, GSLB routes user to the nearest region, the DB is logically single-region with replication for DR.",
+          "remember": "Stateless = easy, stateful = pick your conflict model."
+        },
+        {
+          "id": "cloud-secrets",
+          "question": "Secrets management — what's the discipline?",
+          "answer": "Three rules. Never in env files on disk in prod — always fetched at startup from a secrets store. Rotated regularly — short-lived credentials > long-lived where possible. Scope-bound — each service has only the credentials it needs. Toolchain matters less than the discipline: Akeyless, Vault, AWS Secrets Manager, GCP Secret Manager all do this.",
+          "projectUsage": "PRISM and Tempo Service use Akeyless. The pod fetches DB creds + Kafka SASL + downstream API keys at startup. No secret hits a YAML file or kubectl edit.",
+          "remember": "Fetched, scoped, rotated. Never in YAML."
+        },
+        {
+          "id": "cloud-ha",
+          "question": "High availability — what's actually load-bearing?",
+          "answer": "Stack of decisions. No single instance of anything — ≥ 2 replicas of every service. Health checks that verify the service can serve, not just that the process is alive. Graceful shutdown — drain on SIGTERM so rolling updates don't drop in-flight requests. Stateless services so any pod can serve any request. Multi-AZ scheduling. Backups + tested restore for the data layer. Without backups, the rest buys you minutes.",
+          "projectUsage": "PRISM has all six. The one we caught the hard way: graceful shutdown — we were dropping requests on rolling deploys until we added SIGTERM drain + readiness probe gate.",
+          "remember": "Two of everything, drain on shutdown, tested restore."
+        },
+        {
+          "id": "cloud-cost",
+          "question": "Cost — where do K8s bills actually come from?",
+          "answer": "Three places. Right-sizing — overprovisioned requests on every pod add up across hundreds of pods. Egress — cross-region or cross-cloud traffic is expensive; in-region is free. Managed services (Cloud SQL, Memcached, Kafka) — easy to ignore until they're 60% of the bill. Fix: monitor cost per service in a dashboard, set a baseline, alert on regressions.",
+          "projectUsage": "PRISM runs at ~$11/day because workload is small and we sized pods to actual usage. Tempo Service is ~$767/day — that's where cross-region replication + Kafka topic spend lives.",
+          "remember": "Right-size pods, watch egress, monitor managed services."
+        }
+      ]
+    },
+    {
+      "id": "observability",
+      "name": "Observability & Logging",
+      "anchor": "PRISM + Tempo V3 — OpenTelemetry, OpenObserve logs, Prometheus + Grafana, W3C Trace Context >92% propagation.",
+      "items": [
+        {
+          "id": "obs-three-pillars",
+          "question": "Metrics vs Logs vs Traces — what's each for?",
+          "answer": "Metrics are numeric time-series (http_requests_total, cpu_seconds). Cheap, aggregable, alertable. Tell you 'something is wrong, here's the shape.' Logs are timestamped lines, structured ideally. Tell you 'what specifically happened, with full context.' Expensive at scale. Traces stitch a single request across services with timing. Tell you 'where did the time go.' Sampled. Discipline: metrics for alerting, traces for root cause, logs for the specific user incident.",
+          "projectUsage": "PRISM ships Prometheus metrics for RED (Rate / Errors / Duration), OTel traces sampled at 10%, structured JSON logs to OpenObserve. When the editor hit a 500, I went metrics → trace → log in that order.",
+          "remember": "Metrics for alarms. Traces for shape. Logs for specifics."
+        },
+        {
+          "id": "obs-prometheus",
+          "question": "Prometheus + Grafana — what's the model?",
+          "answer": "Prometheus scrapes your services on a /metrics endpoint at a regular interval, stores time-series locally. PromQL is the query language — rate(http_requests_total{status='500'}[5m]) gives you 500s per second. Grafana renders PromQL on dashboards. Alerts run as PromQL expressions on a schedule. Services expose numbers; Prometheus polls; Grafana draws; Alertmanager pages.",
+          "projectUsage": "PRISM exposes Prometheus metrics via Spring Boot Actuator. Four core dashboards: RED, JVM, DB connection pool, Kafka producer health. Alert thresholds are PromQL expressions in prometheus-rules.yml.",
+          "remember": "Scrape numbers. Query with PromQL. Draw with Grafana."
+        },
+        {
+          "id": "obs-opentelemetry",
+          "question": "OpenTelemetry — what does it standardise?",
+          "answer": "One SDK, one wire format, three signals (traces, metrics, logs). Before OTel: every vendor had their own SDK and wire format. After: instrument once with OTel, export to any backend (Jaeger, Tempo, Datadog, Honeycomb). The SDK auto-instruments common libraries so you don't write boilerplate. Manual spans cover business operations.",
+          "projectUsage": "Tempo V3 BFF and PRISM both run the OTel Java agent. Auto-instrumentation gave us HTTP/JDBC/Kafka spans for free. Added manual spans around the signal-aggregation step in PRISM's bulk publish because the auto trace stopped at the SQL call.",
+          "remember": "One SDK, one wire format, swap the backend anytime."
+        },
+        {
+          "id": "obs-w3c-trace",
+          "question": "W3C Trace Context — what is the spec and why does it matter?",
+          "answer": "A single HTTP header — traceparent — that carries the trace ID + parent span ID + flags in a standard format every modern library understands. Before: every vendor had its own header (X-B3-TraceId, X-Datadog-Trace-Id), so trace context died at the boundary between teams using different libraries. With W3C: any compliant SDK reads/writes the same header, so the trace stitches all the way through.",
+          "projectUsage": "Rolled out W3C traceparent propagation across the Tempo V3 BFF (PR #700). Validated >92% propagation success in stage (1,284 / 1,387 requests over 2 hours). First end-to-end distributed tracing in Tempo's history.",
+          "remember": "One header, every SDK, traces stitch across teams."
+        },
+        {
+          "id": "obs-debug-prod",
+          "question": "How do you actually debug a prod issue from logs?",
+          "answer": "Five-step discipline. Get the trace ID from the user's error or the alert. Filter logs by that trace ID — pulls every line across every service for that one request. Read by stack-frame source, not error string — two different bugs can throw the same message. Look for the first error, not the loudest — downstream errors are usually a consequence of an earlier one. Reproduce locally with the trace context as a seed.",
+          "projectUsage": "April Tempo Service /  returned 500 while /fn/ecv stayed 200. Following the trace, the error came from saber-wm-iam not our code — IAM provider issue. Took 4 minutes because we sorted by stack-frame source.",
+          "remember": "Trace ID → stack frame → first error. In that order."
+        },
+        {
+          "id": "obs-slo",
+          "question": "SLOs vs SLAs vs SLIs — what's the difference?",
+          "answer": "SLI = Service Level Indicator — the actual measurement ('fraction of requests that succeeded in <500ms'). SLO = Service Level Objective — the internal target on that SLI ('99.5% of requests in <500ms over a 30-day window'). SLA = Service Level Agreement — the contractual promise to a customer, usually weaker than the SLO. Pick SLIs that reflect user pain, set SLOs you can hit, communicate SLAs you can exceed.",
+          "projectUsage": "PRISM's SLO is 99.5% of writes <500ms over 30 days. SLI is the p99.5 latency. Not on the customer hot path so no external SLA — internal teams know our SLO.",
+          "remember": "SLI = what you measure. SLO = what you target. SLA = what you promise."
+        },
+        {
+          "id": "obs-stream-naming",
+          "question": "Stream-naming gotchas — what did you learn the hard way?",
+          "answer": "Naming conventions for log streams bite you in incidents. Nonprod and prod use different conventions — we use hyphens in nonprod (wcnp_cxt-tempo) and underscores in prod (wcnp_cxt_tempo). Grepping the wrong one in a prod incident wastes 10 minutes. Per-app _v1 streams are decoys — they often contain only Prometheus/Helm logs, never the app's structured logs.",
+          "projectUsage": "Documented in our runbook after an incident where I grepped wcnp_cxt-tempo_v1 for 8 minutes before realising the app logs were in wcnp_cxt_tempo.",
+          "remember": "Different conventions per env. Don't trust _v1."
+        }
+      ]
+    },
+    {
+      "id": "reliability",
+      "name": "Exception Handling & Reliability",
+      "anchor": "PRISM + Tempo V3 BFF — Kafka idempotency, SSRF/open-redirect protection, feature-flag rollback, partial-failure isolation.",
+      "items": [
+        {
+          "id": "rel-kafka-idem",
+          "question": "Kafka at-least-once + idempotent consumer — how do you actually wire it?",
+          "answer": "Producer publishes with acks=all and a deterministic event key (UUID). Consumer uses auto-commit off and manual commits after the side effect succeeds. The side effect must be idempotent — usually a unique constraint on the consumed event ID, or INSERT ... ON CONFLICT DO NOTHING. If the consumer crashes between processing and commit, the message replays; the unique constraint catches the duplicate.",
+          "projectUsage": "PRISM's downstream services (Pronto, IronBank, asset-discovery, P13N) all use this. The consumed event's UUID is the unique key in their side-effect tables. A replay just hits the conflict and is logged-and-discarded.",
+          "remember": "At-least-once delivery + unique key on the side effect = at-most-once effect."
+        },
+        {
+          "id": "rel-retry-backoff",
+          "question": "Retry with exponential backoff — what's the rule?",
+          "answer": "Don't retry forever, don't retry immediately. Three constants: base delay (200ms), multiplier (2), max delay (cap at 30s). Add jitter — randomise within ±25% — so a thundering herd of clients doesn't all retry at once. Total retry budget: 3–5 attempts is usual. Distinguish retriable (timeout, 503) from non-retriable (400, 401, 404).",
+          "projectUsage": "Tempo V3 BFF uses Resilience4j retry per downstream. Base 200ms, multiplier 2, max 5 attempts. Jitter prevents the BFF from synchronising retries against a downstream that just came back online.",
+          "remember": "Cap delay, add jitter, bound attempts, only retry retriables."
+        },
+        {
+          "id": "rel-validation",
+          "question": "Validation at boundaries — where does it actually live?",
+          "answer": "At every boundary, with the validator owning the contract. Inbound HTTP: Zod (TS) or @Valid + Bean Validation (Java) on the request DTO — reject malformed before it reaches business logic. Outbound to a downstream: still validate, because contracts drift. DB writes: rely on schema constraints (NOT NULL, CHECK, FK) as the last line. The mistake: validating once at the controller and trusting it through the stack.",
+          "projectUsage": "Tempo V3 BFF validates inbound with Zod, outbound to downstreams with Zod on the response. PRISM validates inbound with Bean Validation, lets Postgres enforce the rest.",
+          "remember": "Validate at every boundary. Don't trust the previous one."
+        },
+        {
+          "id": "rel-ssrf",
+          "question": "SSRF protection in a BFF — what's the attack and the fix?",
+          "answer": "SSRF (Server-Side Request Forgery): attacker sends a request that makes your server fetch a URL the attacker chose — typically pointing at internal metadata services (169.254.169.254 on AWS), internal admin endpoints, or a port scan of your VPC. Fix: never proxy an attacker-controlled URL. Maintain a per-downstream allowlist; for each outbound call, resolve the target against the allowlist; reject anything else. Don't follow redirects to off-list URLs.",
+          "projectUsage": "Tempo V3 BFF's /api/proxy accepts a service enum (one of the 15 known downstreams) and a path — never an arbitrary URL. The base URL is server-side. Closed the SSRF surface entirely.",
+          "remember": "Allowlist of services. Server-side base URL. Never proxy a URL."
+        },
+        {
+          "id": "rel-open-redirect",
+          "question": "Open-redirect protection — what's the attack?",
+          "answer": "Your app has a ?next= query param that controls where to send the user after login. Attacker sets ?next=https://evil.com/fake-login. User logs in, redirected to evil, who phishes the next thing. Fix: only honour same-origin redirects — parse the target URL, check origin === request.origin, otherwise drop the redirect. Don't allowlist domains (drift over time); always reduce to same-origin.",
+          "projectUsage": "Tempo V3 has tenant routing through /{tenant}/.... The middleware validates the post-login redirect is same-origin before honouring it.",
+          "remember": "Same-origin only. Don't allowlist."
+        },
+        {
+          "id": "rel-feature-flags",
+          "question": "Feature flags as a rollback tool — what makes them work?",
+          "answer": "Three properties. Off by default for new code — ship dark, flip on intentionally. Tenant-scoped or user-scoped — flip for one customer to validate before fleet rollout. Read at request time, not boot time — flipping a flag takes effect immediately, no redeploy. The flag store has to be fast (CCM-style). The trap: flags accumulate. Set an expiry date on each flag and clean them up when stable.",
+          "projectUsage": "Tempo V3's V2-fallback is a per-tenant CCM flag. During cutover we flipped one tenant at a time; if anything broke we flipped it off and they snapped back to V2 without a deploy.",
+          "remember": "Dark by default. Tenant-scoped. Read at request. Expire when stable."
+        },
+        {
+          "id": "rel-partial-failure",
+          "question": "Partial-failure isolation across downstream calls — how?",
+          "answer": "When your BFF fans out to N services, one slow downstream shouldn't stall the whole response. Three tools. Per-downstream timeouts — never inherit the default. Per-downstream circuit breakers — open the circuit if errors > threshold; serve a fallback. Per-downstream thread pools (bulkheads) — flood of requests to A can't starve threads serving B.",
+          "projectUsage": "Tempo V3 BFF wraps each of the 15 downstreams in a per-service Resilience4j config. When P13N hung for 30s in March, the editor stayed responsive — only the personalisation tab degraded.",
+          "remember": "Per-downstream timeout, breaker, and pool."
+        }
+      ]
+    },
+    {
+      "id": "sysdesign",
+      "name": "System Design",
+      "anchor": "Tempo / PRISM IS a content-delivery platform. If you get a CMS / content-delivery / signal-aggregation prompt, you've already built it.",
+      "items": [
+        {
+          "id": "sd-framework",
+          "question": "The 6-step system design framework — say it out loud.",
+          "answer": "1) Clarify requirements: functional + non-functional. Ask: how many users? reads vs writes? consistency? 2) Estimate scale: rough QPS, storage. 3) Define the API: key endpoints, inputs/outputs. 4) High-level design: client → LB → service → cache → DB → queue; trace one request. 5) Deep-dive 1–2 components: data model, caching, sync — lean on PRISM/Tempo. 6) Bottlenecks & tradeoffs: where it breaks, consistency vs availability, SPOFs.",
+          "projectUsage": "This exact 6-step order keeps you from rambling. Same fix as behavioural answers. Memorise the order; recite it cold before every design round.",
+          "remember": "Clarify → Estimate → API → High-level → Deep-dive → Tradeoffs."
+        },
+        {
+          "id": "sd-cms",
+          "question": "Design a content management + delivery system (your home turf).",
+          "answer": "Same shape as Tempo. Authoring write-path: editor → REST API → Postgres for transactional correctness, audit, ad-hoc queries. Kafka outbox: every commit publishes an event. Sync service: consumes events, writes into a denormalised store optimised for one access pattern. Delivery read-path: customer → CDN → BFF → in-process cache → distributed cache → wide-column store (Cassandra). Multi-tenant by tenant ID at every layer. Canary by tenant group.",
+          "projectUsage": "This is EXACTLY Tempo + PRISM. 38 tenants, 100K reads/sec/region target, 3-tier cache, Kafka-driven sync. I'll talk through real numbers: ~27 TPS write, 4K TPS read, Cassandra LOCAL_QUORUM/LOCAL_ONE, Ristretto + Meghacache + Cassandra.",
+          "remember": "Authoring + delivery split. Kafka in between. Tempo IS this system."
+        },
+        {
+          "id": "sd-url-shortener",
+          "question": "Design a URL shortener (the canonical warmup).",
+          "answer": "API: POST /shorten {longUrl} → {shortCode}, GET /:code → 301 redirect. ID generation: pre-generated counter + base62 gives ~62^7 = 3.5T short codes in 7 chars. Avoid hashing the URL (collisions, enumerable). Storage: KV store keyed by short code (Redis + DynamoDB) — single-key reads. Cache: LRU in-process catches the head, KV catches the rest. Analytics: every redirect emits an event to Kafka, processed offline.",
+          "projectUsage": "Walkthrough only — haven't built one. The shape (pre-generated IDs + KV + cache + async analytics) is standard.",
+          "remember": "Counter + base62. KV store. Cache the redirects. Async analytics."
+        },
+        {
+          "id": "sd-rate-limiter",
+          "question": "Design a rate limiter.",
+          "answer": "Algorithm: token bucket — N tokens refill at rate R, each request consumes one. Smooth, bursty-friendly. Sliding-window log is more accurate but stores more. Fixed-window counter is cheap but spiky at the boundary. Storage: Redis with atomic INCR + EXPIRE, or a Lua script for token bucket. Key shape: rate:user:{id} or rate:tenant:{id}. Response: 429 Too Many Requests + Retry-After header.",
+          "projectUsage": "We use Redis-backed rate limits on the Tempo V3 BFF — 60 req/min per user.",
+          "remember": "Token bucket. Redis INCR. 429 with Retry-After."
+        },
+        {
+          "id": "sd-notifications",
+          "question": "Design a notification system (push/email).",
+          "answer": "API: POST /notify {userId, type, payload}. Fan-out: dispatcher publishes to Kafka topic per channel (push, email, in-app). Per-channel workers: consume the topic, call provider (APNs/FCM, SES, in-app store), idempotent on event ID. User preferences: read at dispatch time. Retry: failed sends to delay queue, exponential backoff, dead-letter after N. Storage: persisted in notifications table for in-app history + analytics.",
+          "projectUsage": "Walkthrough — apply the outbox shape I know (publish to Kafka, per-channel workers, idempotent at the side effect).",
+          "remember": "Dispatcher → per-channel topic → idempotent worker → provider."
+        },
+        {
+          "id": "sd-chat",
+          "question": "Design a chat / real-time system.",
+          "answer": "Transport: WebSocket for full-duplex. Gateway: stateless WS gateway accepts connections, sticky-routes by user ID. Message bus: incoming messages publish to Kafka or Redis Pub/Sub keyed by conversation ID. Persistence: write to Cassandra partitioned by (conversation_id, message_time) — bounded partition, time-ordered scan. Delivery: gateway subscribes to its conversations, fans out to connected sockets. Offline clients read missed messages on reconnect via timestamp cursor.",
+          "projectUsage": "Walkthrough only. Cassandra partitioning shape is exactly the Tempo Runtime shape — keyed by a stable identifier, clustered by time.",
+          "remember": "WS gateway → Kafka/Redis → Cassandra by conv_id. Presence in Redis TTL."
+        },
+        {
+          "id": "sd-cache-strategy",
+          "question": "Caching strategy — when do you pick which?",
+          "answer": "Three patterns. Cache-aside: app reads cache; on miss, read DB and populate cache. Simple, app owns staleness. Write-through: app writes cache and DB synchronously. Strong consistency, latency cost. Write-behind: app writes cache; async flush to DB. Fast writes, risk of data loss on cache crash. Most systems use cache-aside with TTL. Invalidation strategy matters more than the pattern: TTL is honest, explicit invalidation on write is precise but harder.",
+          "projectUsage": "Tempo Runtime is 3-tier cache-aside: Ristretto in-process L1, Meghacache L2, Cassandra origin. Cache-aside with TTL + Kafka-driven invalidation on publish. Ristretto wins ~80% of reads in microseconds.",
+          "remember": "Cache-aside default. TTL is honest. Invalidate when you can afford to."
+        },
+        {
+          "id": "sd-qps-storage",
+          "question": "Estimating QPS and storage — what's the rough math?",
+          "answer": "Recipe. Active users × actions per user per day = total daily actions. Divide by 86,400 seconds = average QPS. Multiply by 3 for peak. Multiply by bytes per action for daily bytes; × 365 for yearly storage. Example: 10M DAU × 10 actions = 100M/day; avg = 1,160 QPS; peak ~3,500 QPS. At 1KB each = 100GB/day = 36TB/year → sharded relational or wide-column.",
+          "projectUsage": "Same shape estimation I run on PRISM scaling questions: 12k+ messages × ~10 writes/day per editor × ~50 editors = ~6k writes/day spread across business hours. Avg QPS is tiny; we sized for the bulk-publish spike.",
+          "remember": "DAU × actions/day. /86,400 = avg. ×3 = peak. ×bytes = storage."
+        },
+        {
+          "id": "sd-tradeoffs",
+          "question": "Bottlenecks and tradeoffs — how do you close strong?",
+          "answer": "Always end on tradeoffs — signals seniority. Three classes. CAP under partition: you pick C or A, can't have both. Most systems pick A and document the staleness window. Single points of failure: any one-of resource is a SPOF — DB primary, ID generator, config service. Mitigate with replicas, fallback IDs, cached config. Cost vs latency: every cache layer reduces latency and adds operational complexity; every replica reduces failure risk and adds cost.",
+          "projectUsage": "Tempo Runtime's tradeoff is eventual consistency between authoring and delivery (seconds via Kafka) for sub-50ms p95 reads. Editorial outages don't blank the homepage; that's the win for the split.",
+          "remember": "CAP, SPOFs, cost vs. latency. End on the tradeoff."
+        }
+      ]
+    }
+  ]
+}

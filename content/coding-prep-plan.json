@@ -1,0 +1,470 @@
+{
+  "meta": {
+    "title": "10-Day Coding & System Design Comeback",
+    "subtitle": "Rebuild the muscle — competent and calm, not frozen.",
+    "timePerDay": "4–6 focused hours",
+    "split": "~3–3.5 hrs coding, ~1–1.5 hrs system design",
+    "language": "JavaScript / TypeScript"
+  },
+  "rules": [
+    {
+      "id": "rule-1",
+      "title": "No AI, no autocomplete, no copilot — for all 10 days of practice.",
+      "body": "Plain editor or the LeetCode box. Type every character yourself. This feels awful for 2 days, then your recall comes back. The discomfort IS the muscle rebuilding."
+    },
+    {
+      "id": "rule-2",
+      "title": "The 5-minute think rule.",
+      "body": "Before writing any code, spend 5 minutes restating the problem, an example, and your approach out loud. Coding before you have a plan is what causes freezing."
+    },
+    {
+      "id": "rule-3",
+      "title": "The re-solve rule (most important).",
+      "body": "If stuck 25–30 min, read the solution — then CLOSE it and re-solve from a blank screen. Reading solutions feels productive but builds nothing. Re-solving from blank rebuilds recall."
+    },
+    {
+      "id": "rule-4",
+      "title": "Talk while you code.",
+      "body": "Narrate your thinking out loud, even alone. Interviews are spoken — you must practice coding and explaining at the same time. This also fixes the 'mind wandering' problem."
+    },
+    {
+      "id": "rule-5",
+      "title": "One pattern at a time.",
+      "body": "Don't jump around. Finish a pattern's problems before the next. Jumping around is how you feel busy but retain nothing."
+    },
+    {
+      "id": "rule-6",
+      "title": "Track a tiny log.",
+      "body": "Each day write: problems solved, which I failed, which pattern. Re-attempt failed ones 2 days later. This single habit beats doing 2× the volume."
+    },
+    {
+      "id": "rule-7",
+      "title": "Stop on time. Sleep.",
+      "body": "A tired brain doesn't encode memory. 4–6 focused hours beats 9 scattered ones. Protect sleep — it's when the learning consolidates."
+    }
+  ],
+  "dailyStructure": [
+    {
+      "block": "Coding (3–3.5 hrs)",
+      "body": "Warm up by re-solving 1 problem from yesterday (builds confidence), then 4–6 new problems on the day's pattern. Easy first, then medium."
+    },
+    {
+      "block": "System design (1–1.5 hrs)",
+      "body": "Learn the day's concept (read + take notes in your own words), then connect it to PRISM/Tempo — 'where did I use this in real life?'"
+    },
+    {
+      "block": "Wrap-up (15 min)",
+      "body": "Update your log — solved / failed / pattern. Note one thing that clicked and one that didn't."
+    }
+  ],
+  "days": [
+    {
+      "day": 1,
+      "title": "Rebuild basics + confidence",
+      "coding": {
+        "pattern": "Arrays, Strings, HashMaps",
+        "guidance": "Goal today is momentum — solve things you CAN do, rebuild the habit of finishing.",
+        "tasks": [
+          { "id": "d1-c-two-sum", "label": "Two Sum" },
+          { "id": "d1-c-valid-anagram", "label": "Valid Anagram" },
+          { "id": "d1-c-contains-duplicate", "label": "Contains Duplicate" },
+          { "id": "d1-c-group-anagrams", "label": "Group Anagrams" },
+          { "id": "d1-c-valid-palindrome", "label": "Valid Palindrome" },
+          {
+            "id": "d1-c-js-basics",
+            "label": "JS basics cold: Map, Set, arr.sort((a,b)=>a-b), for...of, string .split/.join"
+          }
+        ]
+      },
+      "systemDesign": {
+        "topic": "Building Blocks #1",
+        "concepts": "client → server → database. What an API is. HTTP verbs, status codes.",
+        "anchor": "PRISM REST controllers — every endpoint maps a domain action to an HTTP verb + status code. You've lived this.",
+        "tasks": [
+          {
+            "id": "d1-s-concepts",
+            "label": "Read + notes in own words: client → server → DB, API, HTTP verbs, status code semantics"
+          },
+          {
+            "id": "d1-s-anchor",
+            "label": "Write 1 paragraph: how PRISM maps domain errors → 409 / 422 / 404 via @RestControllerAdvice"
+          }
+        ]
+      },
+      "wrapup": [
+        {
+          "id": "d1-w-log",
+          "label": "Log: solved / failed / pattern. Note one thing that clicked + one that didn't."
+        }
+      ]
+    },
+    {
+      "day": 2,
+      "title": "Basics continued — two pointers + hashmap patterns",
+      "coding": {
+        "pattern": "Two Pointers, HashMap Patterns",
+        "guidance": "Pattern recognition: 'sorted array' or 'pair that sums to X' → think two pointers.",
+        "tasks": [
+          { "id": "d2-c-two-sum-ii", "label": "Two Sum II (sorted)" },
+          { "id": "d2-c-3sum", "label": "3Sum" },
+          { "id": "d2-c-move-zeroes", "label": "Move Zeroes" },
+          { "id": "d2-c-container-water", "label": "Container With Most Water" },
+          { "id": "d2-c-resolve", "label": "Re-solve 1 failed problem from Day 1, from blank" }
+        ]
+      },
+      "systemDesign": {
+        "topic": "Building Blocks #2 — SQL vs NoSQL",
+        "concepts": "SQL vs NoSQL by access pattern. Indexing, primary keys, partitioning.",
+        "anchor": "PRISM's Postgres partition-by-status (assets_active / assets_inactive / assets_default), composite PK (asset_id, status), deferred-cascade FK from asset_config. Tempo Runtime uses Cassandra because the access pattern is single-key (tenant, channel, pageType).",
+        "tasks": [
+          {
+            "id": "d2-s-concepts",
+            "label": "Read + notes: when SQL, when NoSQL, indexes (B-tree, partial, composite, GIN)"
+          },
+          {
+            "id": "d2-s-anchor",
+            "label": "Write 1 paragraph: why PRISM is list-partitioned on status — what the composite PK and deferred-cascade FK actually solve"
+          }
+        ]
+      },
+      "wrapup": [{ "id": "d2-w-log", "label": "Log: solved / failed / pattern" }]
+    },
+    {
+      "day": 3,
+      "title": "Sliding window + stacks",
+      "coding": {
+        "pattern": "Sliding Window, Stack",
+        "guidance": "Pattern: 'longest/shortest subarray with condition' → sliding window. 'Matching pairs / most recent' → stack.",
+        "tasks": [
+          { "id": "d3-c-buy-sell-stock", "label": "Best Time to Buy/Sell Stock" },
+          {
+            "id": "d3-c-longest-substring",
+            "label": "Longest Substring Without Repeating Characters"
+          },
+          { "id": "d3-c-valid-parentheses", "label": "Valid Parentheses" },
+          { "id": "d3-c-min-stack", "label": "Min Stack" }
+        ]
+      },
+      "systemDesign": {
+        "topic": "Caching",
+        "concepts": "Cache hit/miss, TTL, eviction (LRU/LFU), write-through vs write-back vs cache-aside.",
+        "anchor": "Tempo Runtime's 3-tier cache: Ristretto L1 (in-process LFU, µs) → Meghacache L2 (18 nodes, single-digit ms) → Cassandra origin (low-tens ms). Cache-aside with TTL + Kafka-driven invalidation on publish.",
+        "tasks": [
+          {
+            "id": "d3-s-concepts",
+            "label": "Read + notes: cache-aside vs write-through vs write-behind; LRU = doubly linked list + hashmap"
+          },
+          {
+            "id": "d3-s-anchor",
+            "label": "Write 1 paragraph: why Tempo Runtime has 3 tiers and how invalidation flows through Kafka on publish"
+          }
+        ]
+      },
+      "wrapup": [{ "id": "d3-w-log", "label": "Log: solved / failed / pattern" }]
+    },
+    {
+      "day": 4,
+      "title": "Queues + linked lists",
+      "coding": {
+        "pattern": "Queues, Linked Lists",
+        "guidance": "Linked list trick: draw the pointers on paper before coding. Always.",
+        "tasks": [
+          { "id": "d4-c-reverse-list", "label": "Reverse Linked List" },
+          { "id": "d4-c-merge-two-lists", "label": "Merge Two Sorted Lists" },
+          { "id": "d4-c-list-cycle", "label": "Linked List Cycle" },
+          { "id": "d4-c-queue-stacks", "label": "Implement Queue using Stacks" },
+          { "id": "d4-c-resolve", "label": "Re-attempt a Day 2–3 failure from blank" }
+        ]
+      },
+      "systemDesign": {
+        "topic": "Load Balancing & Scaling",
+        "concepts": "Horizontal vs vertical scaling, load balancer, statelessness, session affinity vs JWT.",
+        "anchor": "Tempo Service runs active-active across useast4 / uscentral / EDC on GKE. Stateless pods, GSLB routes the user to the nearest region. HA = no SPOF + tested restore.",
+        "tasks": [
+          {
+            "id": "d4-s-concepts",
+            "label": "Read + notes: horizontal vs vertical, stateless services, LB types (L4 vs L7), session strategies"
+          },
+          {
+            "id": "d4-s-anchor",
+            "label": "Write 1 paragraph: how Tempo Service stays stateless across 3 regions and what graceful shutdown gives you"
+          }
+        ]
+      },
+      "wrapup": [{ "id": "d4-w-log", "label": "Log: solved / failed / pattern" }]
+    },
+    {
+      "day": 5,
+      "title": "Trees + recursion",
+      "coding": {
+        "pattern": "Binary Trees, DFS/BFS",
+        "guidance": "Recursion template: base case first, then recurse on children, then combine. BFS = queue; DFS = recursion or stack. Memorise both templates.",
+        "tasks": [
+          { "id": "d5-c-invert-tree", "label": "Invert Binary Tree" },
+          { "id": "d5-c-max-depth", "label": "Max Depth of Binary Tree" },
+          { "id": "d5-c-same-tree", "label": "Same Tree" },
+          { "id": "d5-c-level-order", "label": "Level Order Traversal" },
+          { "id": "d5-c-validate-bst", "label": "Validate Binary Search Tree" }
+        ]
+      },
+      "systemDesign": {
+        "topic": "Message Queues — your strongest topic",
+        "concepts": "Async processing, pub/sub, Kafka, decoupling producers/consumers, the dual-write problem.",
+        "anchor": "PRISM Forklift transactional outbox: outbox row written inside the same DB transaction as the entity mutation; drainer publishes to Kafka after commit. At-least-once delivery + idempotent downstream consumers (Pronto, IronBank, asset-discovery, P13N) = effectively exactly-once effect. THIS IS YOUR SIGNATURE STORY — rehearse it.",
+        "tasks": [
+          {
+            "id": "d5-s-concepts",
+            "label": "Read + notes: dual-write problem, transactional outbox pattern, at-least-once delivery, idempotent consumers"
+          },
+          {
+            "id": "d5-s-anchor",
+            "label": "Write the 90-second Forklift outbox story end-to-end. Rehearse out loud, recorded."
+          },
+          {
+            "id": "d5-s-aside",
+            "label": "Bonus: PRISM Message Hierarchy is a tree (M0 parent + variants). Note how state machine traversal on the tree drives P13N decisions."
+          }
+        ]
+      },
+      "wrapup": [{ "id": "d5-w-log", "label": "Log: solved / failed / pattern" }]
+    },
+    {
+      "day": 6,
+      "title": "Binary search + more trees",
+      "coding": {
+        "pattern": "Binary Search, Tree problems",
+        "guidance": "Pattern: 'sorted' + 'find/optimise' → binary search. Watch the mid overflow + boundary conditions.",
+        "tasks": [
+          { "id": "d6-c-binary-search", "label": "Binary Search" },
+          { "id": "d6-c-rotated-sorted", "label": "Search in Rotated Sorted Array" },
+          { "id": "d6-c-lca", "label": "Lowest Common Ancestor of a BST" },
+          { "id": "d6-c-kth-smallest", "label": "Kth Smallest Element in a BST" },
+          { "id": "d6-c-resolve", "label": "Re-solve a tree problem from Day 5, from blank" }
+        ]
+      },
+      "systemDesign": {
+        "topic": "Reliability & Consistency",
+        "concepts": "Replication, consistency vs availability (CAP), idempotency, retries with backoff + jitter, circuit breakers, bulkheads.",
+        "anchor": "Outbox + idempotent consumers from Day 5. Cassandra LOCAL_QUORUM writes + LOCAL_ONE reads on Tempo Runtime (writes durable across the DC, reads fast — freshness comes from Kafka invalidation, not from strong-read consistency). Resilience4j per-downstream breaker + thread pool in the Tempo V3 BFF.",
+        "tasks": [
+          {
+            "id": "d6-s-concepts",
+            "label": "Read + notes: CAP, eventual consistency, idempotency, exponential backoff + jitter, circuit breaker, bulkhead"
+          },
+          {
+            "id": "d6-s-anchor",
+            "label": "Write 1 paragraph: why Tempo Runtime picks LOCAL_QUORUM writes / LOCAL_ONE reads — what tradeoff that's making"
+          }
+        ]
+      },
+      "wrapup": [{ "id": "d6-w-log", "label": "Log: solved / failed / pattern" }]
+    },
+    {
+      "day": 7,
+      "title": "Heaps + intervals + light DP",
+      "coding": {
+        "pattern": "Heaps, Intervals, Intro DP",
+        "guidance": "DP intro only — don't rabbit-hole. Learn the '1D memo' shape, that's enough for now. Heap = priority queue; 'top K' / 'Kth' → heap.",
+        "tasks": [
+          { "id": "d7-c-kth-largest", "label": "Kth Largest Element in an Array" },
+          { "id": "d7-c-merge-intervals", "label": "Merge Intervals" },
+          { "id": "d7-c-insert-interval", "label": "Insert Interval" },
+          { "id": "d7-c-climbing-stairs", "label": "Climbing Stairs" },
+          { "id": "d7-c-house-robber", "label": "House Robber" }
+        ]
+      },
+      "systemDesign": {
+        "topic": "Full Design Framework — practice on URL shortener",
+        "concepts": "The 6-step framework: clarify → estimate → API → high-level → deep-dive 1–2 → bottlenecks & tradeoffs.",
+        "anchor": "URL shortener walkthrough: pre-generated counter + base62 (3.5T short codes in 7 chars), KV store (Redis + DynamoDB), cache the redirects, async analytics via Kafka. Compare to Tempo's authoring/delivery split — same shape, different access patterns.",
+        "tasks": [
+          {
+            "id": "d7-s-framework",
+            "label": "Memorise the 6 steps cold — recite all 6 with no prompt"
+          },
+          {
+            "id": "d7-s-url-shortener",
+            "label": "Design URL shortener out loud, the full 6-step walk, recorded"
+          }
+        ]
+      },
+      "wrapup": [{ "id": "d7-w-log", "label": "Log: solved / failed / pattern" }]
+    },
+    {
+      "day": 8,
+      "title": "Timed simulation",
+      "coding": {
+        "pattern": "Mixed timed set",
+        "guidance": "Pick 4 random medium problems across patterns. 30 min each, timed, NO solution peeking until time's up. Narrate out loud the whole time. Then review: which patterns did you recognise fast? Which froze you?",
+        "tasks": [
+          {
+            "id": "d8-c-medium-1",
+            "label": "Medium problem #1 (30 min timed, narrated, no peeking)"
+          },
+          { "id": "d8-c-medium-2", "label": "Medium problem #2 (30 min timed)" },
+          { "id": "d8-c-medium-3", "label": "Medium problem #3 (30 min timed)" },
+          { "id": "d8-c-medium-4", "label": "Medium problem #4 (30 min timed)" },
+          {
+            "id": "d8-c-review",
+            "label": "Review: patterns recognised fast vs froze on. Log them."
+          }
+        ]
+      },
+      "systemDesign": {
+        "topic": "Practice design out loud — rate limiter, news feed",
+        "concepts": "Two more real designs to walk through. Rate limiter: token bucket in Redis, key by user/IP/tenant, 429 with Retry-After. News feed: fan-out-on-write vs fan-out-on-read, when each.",
+        "anchor": "Token bucket → Redis INCR + EXPIRE → 429. You used this exact shape on Tempo V3 BFF (60 req/min per user). News feed = fan-out tradeoff is the same shape as Tempo's authoring/delivery split.",
+        "tasks": [
+          {
+            "id": "d8-s-rate-limiter",
+            "label": "Design a rate limiter, full 6-step framework out loud, recorded"
+          },
+          {
+            "id": "d8-s-news-feed",
+            "label": "Design a news feed, full 6-step framework out loud, recorded"
+          },
+          {
+            "id": "d8-s-listen",
+            "label": "Listen back to recordings — flag wandering / rambling moments"
+          }
+        ]
+      },
+      "wrapup": [{ "id": "d8-w-log", "label": "Log: which patterns were sticky, which weren't" }]
+    },
+    {
+      "day": 9,
+      "title": "Timed simulation + weak spots",
+      "coding": {
+        "pattern": "Weak-pattern focus",
+        "guidance": "Redo the patterns that froze you on Day 8. 5–6 problems, timed. Confidence check: you've now solved ~40 problems — that's the proof, not a feeling.",
+        "tasks": [
+          { "id": "d9-c-weak-1", "label": "Weak-pattern problem #1 (timed)" },
+          { "id": "d9-c-weak-2", "label": "Weak-pattern problem #2 (timed)" },
+          { "id": "d9-c-weak-3", "label": "Weak-pattern problem #3 (timed)" },
+          { "id": "d9-c-weak-4", "label": "Weak-pattern problem #4 (timed)" },
+          {
+            "id": "d9-c-resolve-1",
+            "label": "Re-solve 3 hardest failures of the plan, from blank — #1"
+          },
+          { "id": "d9-c-resolve-2", "label": "Re-solve hardest failure #2, from blank" },
+          { "id": "d9-c-resolve-3", "label": "Re-solve hardest failure #3, from blank" }
+        ]
+      },
+      "systemDesign": {
+        "topic": "Design Tempo / PRISM — your secret weapon",
+        "concepts": "Take 'design a content management + delivery platform' as a real prompt. You've built it. Speak with operating authority, not theory.",
+        "anchor": "Authoring write-path (Tempo Service + PRISM) → Kafka outbox → Sync Service → Cassandra delivery (Tempo Runtime). 38 tenants, ~27 TPS writes, 4K TPS reads, p95 35–45 ms. Multi-tenant by tenant ID at every layer. Canary by tenant group (TG1/TG2/TG3). Deep-dive: partitioned Postgres + composite PK + deferred-cascade FK; Cassandra schema partitioned by (tenant, channel, pageType); 3-tier cache.",
+        "tasks": [
+          {
+            "id": "d9-s-cms-design",
+            "label": "Design Tempo/PRISM as if interview prompt — full 6-step framework, recorded"
+          },
+          {
+            "id": "d9-s-numbers",
+            "label": "Rehearse the rapid-fire numbers cold: 150×, 38 tenants, 12k+ msgs, ~27 TPS, p95 250ms, $11/day, >92% trace propagation, 15 services in BFF"
+          }
+        ]
+      },
+      "wrapup": [
+        {
+          "id": "d9-w-log",
+          "label": "Log: which numbers stuck, which I had to look up. Re-rehearse the misses."
+        }
+      ]
+    },
+    {
+      "day": 10,
+      "title": "Light review + rest — DO NOT CRAM",
+      "coding": {
+        "pattern": "Light review only",
+        "guidance": "Re-solve 5 problems you previously failed, from blank. If they go smoothly, you're ready. Re-read the pattern cheat list. Skim, don't grind. Stop early. Rest.",
+        "tasks": [
+          { "id": "d10-c-r1", "label": "Re-solve previously-failed problem #1, from blank" },
+          { "id": "d10-c-r2", "label": "Re-solve previously-failed problem #2" },
+          { "id": "d10-c-r3", "label": "Re-solve previously-failed problem #3" },
+          { "id": "d10-c-r4", "label": "Re-solve previously-failed problem #4" },
+          { "id": "d10-c-r5", "label": "Re-solve previously-failed problem #5" },
+          {
+            "id": "d10-c-patterns",
+            "label": "Skim the 11 patterns cheat list — name each one + when to use it, no answers from the doc"
+          }
+        ]
+      },
+      "systemDesign": {
+        "topic": "Light review — skim only",
+        "concepts": "Re-read the 6-step framework and your PRISM anchors. Don't take new notes. Skim only.",
+        "anchor": "Your unfair advantage: PRISM and Tempo are a real distributed system you built — CMS with authoring/delivery split, caching tiers, transactional outbox, partitioned databases, multi-region deployment. Most candidates invent these from theory. Speak from having operated them.",
+        "tasks": [
+          {
+            "id": "d10-s-framework",
+            "label": "Skim: 6 steps + your top-2 deep-dive prompts (CMS, message queues)"
+          },
+          {
+            "id": "d10-s-questions",
+            "label": "Prepare 2–3 questions to ask them at the end of the interview"
+          },
+          { "id": "d10-s-sleep", "label": "Stop early. Sleep well." }
+        ]
+      },
+      "wrapup": [
+        {
+          "id": "d10-w-log",
+          "label": "Log: how do I feel? (Don't expect zero nerves — calm-enough is the bar)"
+        }
+      ]
+    }
+  ],
+  "patterns": [
+    { "name": "Two Pointers", "when": "Sorted array, pair/triplet sums, palindrome checks" },
+    { "name": "Sliding Window", "when": "Longest/shortest subarray or substring with a condition" },
+    { "name": "HashMap / Set", "when": "Counting, dedupe, 'have I seen this', complement lookups" },
+    { "name": "Stack", "when": "Matching pairs, parentheses, 'most recent', monotonic problems" },
+    { "name": "BFS (queue)", "when": "Shortest path, level-by-level, grid traversal" },
+    { "name": "DFS (recursion)", "when": "All paths, tree/graph exploration, backtracking" },
+    { "name": "Binary Search", "when": "Sorted data, 'find' or 'minimise/maximise' an answer" },
+    { "name": "Heap / Priority Queue", "when": "Top K, Kth largest/smallest, merge K sorted" },
+    { "name": "Intervals", "when": "Overlapping ranges, merge, insert, meeting rooms" },
+    { "name": "Linked List pointers", "when": "Reverse, detect cycle, merge, middle node" },
+    {
+      "name": "1D Dynamic Programming",
+      "when": "'Number of ways', max/min with choices, climbing-stairs shape"
+    }
+  ],
+  "framework": {
+    "title": "The 6-Step System Design Framework",
+    "tagline": "Use this exact order on EVERY design question. The order itself stops you from wandering — same fix as behavioural answers.",
+    "steps": [
+      {
+        "step": 1,
+        "title": "Clarify requirements (3–5 min)",
+        "body": "Functional (what it does) + non-functional (scale, latency, consistency). Ask: how many users? reads vs writes? Don't design until you know the scale. Interviewers WANT you to ask."
+      },
+      {
+        "step": 2,
+        "title": "Estimate scale",
+        "body": "Rough numbers — QPS, storage, read/write ratio. Even ballpark shows you think about scale. Recipe: DAU × actions/day ÷ 86,400 = avg QPS, × 3 for peak, × bytes for storage."
+      },
+      {
+        "step": 3,
+        "title": "Define the API",
+        "body": "A few key endpoints with inputs/outputs. This grounds everything that follows."
+      },
+      {
+        "step": 4,
+        "title": "High-level design",
+        "body": "Draw the boxes: client → load balancer → service(s) → cache → database → queue. Talk through one request's path end to end."
+      },
+      {
+        "step": 5,
+        "title": "Deep-dive 1–2 components",
+        "body": "Pick the interesting parts — the data model, the caching strategy, how you keep things in sync. THIS is where your PRISM / outbox / partitioning knowledge shines. Steer toward what you've operated."
+      },
+      {
+        "step": 6,
+        "title": "Address bottlenecks & tradeoffs",
+        "body": "Where does it break at scale? Consistency vs availability? Single points of failure? Naming tradeoffs out loud is what separates senior from junior."
+      }
+    ],
+    "advantage": "PRISM and Tempo are a real distributed system you built — a CMS with authoring/delivery split, caching tiers, a transactional outbox, partitioned databases, and multi-region deployment. Most candidates invent these from theory. You can speak from having operated them. In the deep-dive step, steer toward what you know."
+  }
+}

@@ -89,6 +89,7 @@ The `/life` page renders a live Strava activity dashboard — YTD distance, all-
 - **Live Strava dashboard** (`/life`) — YTD run/ride/swim totals, all-time stats, recent activities. Server-side OAuth refresh-token flow, ISR-cached hourly; credentials never reach the browser. See architecture note above.
 - **Contact form** (`/connect`) — Zod-validated React Hook Form, hidden honeypot, server route saves to Neon then fans out two Resend emails in parallel (visitor copy + owner notification). Success/error states inline; the form clears on success.
 - **Owner-only admin dashboard** (`/admin`) — HMAC-signed session cookie (no third-party auth), 30-day activity bar chart, all-time / 30d / 7d counters, and a sortable submissions table. `/robots.txt` blocks crawlers from both `/admin` and `/api/*`.
+- **Personal interview prep tracker** (`/admin/coding-prep`) — same auth as `/admin`. Two tabs: a 10-day coding + system-design plan (per-task checkboxes + per-day daily notes that autosave with a debounced beacon) and a Reference Library of 75 Q&As with client-side search. Plan + library committed as JSON under `content/`; progress + notes persisted in Neon (`prep_progress`, `prep_notes`). See `content/README.md`.
 - **First-party visitor analytics** — privacy-conscious page-view counter (`page_views` table in Neon). Visitor identity is SHA-256(IP + UA + daily-salt), rotates at UTC midnight, never stored as PII. Client beacon (`<TrackPageView />`) fires once per pathname change; server route filters bots and skip-listed paths, dedupes via `UNIQUE (path, visitor_hash, view_date)`. Home page renders a 3-card strip under the connect CTA — unique visitors / visitors today / page views — refreshed every 5 min via ISR (`revalidate: 300`). Complements Vercel Analytics: that's the page-view dashboard owned by Vercel; this is the count you publicly display, owned by you.
 - **Code-generated NK favicon** — `app/icon.tsx` + `app/apple-icon.tsx` render PNGs via `next/og` at the edge (no committed binary).
 - **MarketMind project showcase** (`/projects/marketmind`, live at `marketmind.neeleshkakaraparthi.dev`) — 5-day-build stock-prediction app with multi-source signal breakdown, FinBERT + Llama-3 NLP pipeline on GitHub Actions cron, Supabase + RLS, gamification + animated result reveals. Rendered from a typed projects data file (`lib/projects/data.ts`), same pattern as case studies.
@@ -217,12 +218,15 @@ Build-time migrations couple every preview deploy to a destructive operation, sl
 
 All routes run on the Node runtime under `app/api/*`.
 
-| Method | Route               | Auth                      | What it does                                                                                                                                                           |
-| ------ | ------------------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| POST   | `/api/contact`      | None (Zod + honeypot)     | Validates the visitor contact form, inserts into `contacts` table, fans out two Resend emails in parallel (visitor copy + owner notification). Returns `{ok:true,id}`. |
-| POST   | `/api/track`        | None (UA + path filtered) | Page-view beacon. Computes daily SHA-256 visitor hash, inserts into `page_views` with `ON CONFLICT DO NOTHING`. Skips bots and `/api`, `/admin`, `/_next`, `/sitemap`. |
-| POST   | `/api/admin/login`  | Password (form post)      | Verifies `ADMIN_PASSWORD` with a timing-safe compare. Sets HMAC-signed `admin_session` cookie (7 day TTL) and 303-redirects to `/admin`.                               |
-| POST   | `/api/admin/logout` | Cookie present            | Clears the `admin_session` cookie and 303-redirects to `/admin/login`.                                                                                                 |
+| Method | Route                      | Auth                      | What it does                                                                                                                                                           |
+| ------ | -------------------------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| POST   | `/api/contact`             | None (Zod + honeypot)     | Validates the visitor contact form, inserts into `contacts` table, fans out two Resend emails in parallel (visitor copy + owner notification). Returns `{ok:true,id}`. |
+| POST   | `/api/track`               | None (UA + path filtered) | Page-view beacon. Computes daily SHA-256 visitor hash, inserts into `page_views` with `ON CONFLICT DO NOTHING`. Skips bots and `/api`, `/admin`, `/_next`, `/sitemap`. |
+| POST   | `/api/admin/login`         | Password (form post)      | Verifies `ADMIN_PASSWORD` with a timing-safe compare. Sets HMAC-signed `admin_session` cookie (7 day TTL) and 303-redirects to `/admin`.                               |
+| POST   | `/api/admin/logout`        | Cookie present            | Clears the `admin_session` cookie and 303-redirects to `/admin/login`.                                                                                                 |
+| POST   | `/api/admin/prep/progress` | Admin cookie              | Toggle a coding-prep task. Body `{ taskId, completed }`. UPSERT or DELETE on `prep_progress`.                                                                          |
+| POST   | `/api/admin/prep/notes`    | Admin cookie              | Save a daily note. Body `{ day: '01'..'10', body: string }`. UPSERT on `prep_notes`.                                                                                   |
+| POST   | `/api/admin/prep/reset`    | Admin cookie              | Wipe all `prep_progress` rows and `prep_notes` rows. No undo.                                                                                                          |
 
 Database access happens through `lib/db/queries.ts` (contacts) and `lib/analytics/queries.ts` (page views) — both use Drizzle, both lazy-initialize the Neon client (see Architecture Decisions).
 
@@ -317,6 +321,7 @@ See `.env.example` for the template.
 | Resume        | `/resume`               | 🔨 Planned  |
 | Connect       | `/connect`              | ✅ Live     |
 | Admin         | `/admin`                | ✅ Live     |
+| Coding Prep   | `/admin/coding-prep`    | ✅ Live     |
 
 ---
 

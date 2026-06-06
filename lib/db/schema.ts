@@ -50,3 +50,30 @@ export const pageViews = pgTable(
 
 export type PageView = typeof pageViews.$inferSelect
 export type NewPageView = typeof pageViews.$inferInsert
+
+/**
+ * Single-tenant — the only authenticated user is the site owner. No
+ * user_id column; auth is the cookie gate on /admin.
+ *
+ * Per-task progress for the 10-day coding/system-design prep plan.
+ * Keyed by the task_id strings declared in content/coding-prep-plan.json.
+ */
+export const prepProgress = pgTable('prep_progress', {
+  taskId: varchar('task_id', { length: 64 }).primaryKey(),
+  completed: timestamp('completed').notNull().defaultNow(),
+})
+
+export type PrepProgressRow = typeof prepProgress.$inferSelect
+export type NewPrepProgress = typeof prepProgress.$inferInsert
+
+/**
+ * Per-day free-text notes for the 10-day prep plan. Keyed by day number 1-10.
+ */
+export const prepNotes = pgTable('prep_notes', {
+  day: char('day', { length: 2 }).primaryKey(), // '01' .. '10' — char keeps sort order stable
+  body: text('body').notNull().default(''),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+})
+
+export type PrepNoteRow = typeof prepNotes.$inferSelect
+export type NewPrepNote = typeof prepNotes.$inferInsert

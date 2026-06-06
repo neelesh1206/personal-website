@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { LogOut, Mail } from 'lucide-react'
+import { Mail } from 'lucide-react'
 import { getAllContacts } from '@/lib/db/queries'
 import { isAdminAuthenticated } from '@/lib/admin/auth'
 
@@ -33,35 +33,25 @@ export default async function AdminPage() {
   ).length
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-12 sm:px-6">
-      <header className="mb-8 flex items-end justify-between gap-4">
-        <div>
-          <p className="text-sm font-medium text-indigo-600 dark:text-indigo-400">Admin</p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-            Contact submissions
-          </h1>
-          <p className="mt-1 max-w-2xl text-sm text-zinc-500 dark:text-zinc-400">
-            Form submissions from <code>/connect</code>. For page-view analytics (visitors,
-            referrers, devices, Core Web Vitals), see the{' '}
-            <a
-              href="https://vercel.com/neelesh1206s-projects/personal-website/analytics"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-indigo-600 hover:underline dark:text-indigo-400"
-            >
-              Vercel Analytics dashboard
-            </a>
-            .
-          </p>
-        </div>
-        <form action="/api/admin/logout" method="POST">
-          <button
-            type="submit"
-            className="inline-flex items-center gap-1 rounded-md border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-600 transition-colors hover:border-zinc-300 hover:text-zinc-900 dark:border-zinc-800 dark:text-zinc-300 dark:hover:border-zinc-700 dark:hover:text-zinc-50"
+    <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+      <header className="mb-8">
+        <p className="text-sm font-medium text-indigo-600 dark:text-indigo-400">Admin</p>
+        <h1 className="mt-1 text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+          Contact submissions
+        </h1>
+        <p className="mt-1 max-w-2xl text-sm text-zinc-500 dark:text-zinc-400">
+          Form submissions from <code>/connect</code>. For page-view analytics (visitors, referrers,
+          devices, Core Web Vitals), see the{' '}
+          <a
+            href="https://vercel.com/neelesh1206s-projects/personal-website/analytics"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-indigo-600 hover:underline dark:text-indigo-400"
           >
-            <LogOut size={12} /> Sign out
-          </button>
-        </form>
+            Vercel Analytics dashboard
+          </a>
+          .
+        </p>
       </header>
 
       <section className="mb-8 grid grid-cols-3 gap-3">
