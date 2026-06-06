@@ -1,24 +1,22 @@
 export type PlanTask = { id: string; label: string }
 
-export type PlanDayCoding = {
-  pattern: string
-  guidance?: string
-  tasks: PlanTask[]
-}
+export type PlanBlockType = 'educative-coding' | 'educative-sysdesign' | 'neetcode-reps' | 'wrapup'
 
-export type PlanDaySystem = {
-  topic: string
-  concepts: string
-  anchor: string
-  tasks: PlanTask[]
+export type PlanBlock = {
+  type: PlanBlockType
+  /** Block heading. Wrapup may omit. */
+  title?: string
+  items: PlanTask[]
 }
 
 export type PlanDay = {
   day: number
   title: string
-  coding: PlanDayCoding
-  systemDesign: PlanDaySystem
-  wrapup: PlanTask[]
+  /** Short framing tag, e.g. "[EASY]", "[MEDIUM]", "[SYNTHESIS]". */
+  badge: string
+  blocks: PlanBlock[]
+  /** One-line "what does success look like" line shown under the day's badges. */
+  successCheck: string
 }
 
 export type PlanRule = { id: string; title: string; body: string }

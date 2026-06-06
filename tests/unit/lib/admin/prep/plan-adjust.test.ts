@@ -194,24 +194,49 @@ describe('fullPlanDaysCompleted', () => {
       {
         day: 1,
         title: 't',
-        coding: { tasks: [{ id: 'd1-c-1' }, { id: 'd1-c-2' }] },
-        systemDesign: { tasks: [] },
-        wrapup: [],
+        badge: '[E]',
+        successCheck: '',
+        blocks: [
+          {
+            type: 'educative-coding',
+            title: 'X',
+            items: [
+              { id: 'd1-c1-1', label: 'a' },
+              { id: 'd1-c1-2', label: 'b' },
+            ],
+          },
+        ],
       },
       {
         day: 2,
         title: 't',
-        coding: { tasks: [{ id: 'd2-c-1' }, { id: 'd2-c-2' }, { id: 'd2-c-3' }] },
-        systemDesign: { tasks: [] },
-        wrapup: [],
+        badge: '[E]',
+        successCheck: '',
+        blocks: [
+          {
+            type: 'educative-coding',
+            title: 'X',
+            items: [
+              { id: 'd2-c1-1', label: 'a' },
+              { id: 'd2-c1-2', label: 'b' },
+            ],
+          },
+          {
+            type: 'neetcode-reps',
+            title: 'Y',
+            items: [{ id: 'd2-c2-1', label: 'c' }],
+          },
+        ],
       },
     ],
   } as unknown as Plan
 
-  it('counts only days where every coding task id is completed', () => {
-    expect(fullPlanDaysCompleted(plan, new Set(['d1-c-1', 'd1-c-2', 'd2-c-1', 'd2-c-2']))).toBe(1)
+  it('counts only days where every coding-type item id is completed', () => {
+    expect(fullPlanDaysCompleted(plan, new Set(['d1-c1-1', 'd1-c1-2', 'd2-c1-1', 'd2-c1-2']))).toBe(
+      1
+    )
     expect(
-      fullPlanDaysCompleted(plan, new Set(['d1-c-1', 'd1-c-2', 'd2-c-1', 'd2-c-2', 'd2-c-3']))
+      fullPlanDaysCompleted(plan, new Set(['d1-c1-1', 'd1-c1-2', 'd2-c1-1', 'd2-c1-2', 'd2-c2-1']))
     ).toBe(2)
   })
 

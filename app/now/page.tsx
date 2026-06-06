@@ -4,7 +4,9 @@ import { Heatmap } from '@/components/admin/coding-prep/dashboard/Heatmap'
 import { Card, CardContent } from '@/components/ui/card'
 import { getDailyLogs, getBadges, getSettings } from '@/lib/admin/prep/queries'
 import { BADGES, computeBadgeContext } from '@/lib/admin/prep/badges'
+import { planTotalTasks } from '@/lib/admin/prep/plan-helpers'
 import planContent from '@/content/coding-prep-plan.json'
+import type { Plan } from '@/lib/admin/prep/types'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -14,20 +16,7 @@ export const metadata = {
   description: 'What I am currently grinding on.',
 }
 
-type PlanFile = {
-  days: Array<{
-    coding: { tasks: Array<{ id: string }> }
-    systemDesign: { tasks: Array<{ id: string }> }
-    wrapup: Array<{ id: string }>
-  }>
-}
-
-function planTotalTasks(): number {
-  return (planContent as unknown as PlanFile).days.reduce(
-    (s, d) => s + d.coding.tasks.length + d.systemDesign.tasks.length + d.wrapup.length,
-    0
-  )
-}
+const PLAN = planContent as unknown as Plan
 
 export default async function NowPage() {
   let logs: Awaited<ReturnType<typeof getDailyLogs>> = []
@@ -44,10 +33,11 @@ export default async function NowPage() {
     consecutiveAnchorDays: 0,
     daysWithNoDeviation: 0,
     planComplete: false,
+    flashcardGrades: 0,
   }
   try {
     ;[logs, badges, settings] = await Promise.all([getDailyLogs(120), getBadges(), getSettings()])
-    ctx = await computeBadgeContext(planTotalTasks())
+    ctx = await computeBadgeContext(planTotalTasks(PLAN))
   } catch (err) {
     console.error('/now data load failed', err)
   }

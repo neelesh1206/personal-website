@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Tracks",
-    "note": "Track-agnostic config. Track 1 is the active 10-day interview prep — points at coding-prep-plan.json. Track 2 is the AI certifications stub — UI surfaces it as 'coming next' on the Dashboard until status flips to active and a planContentPath is filled in."
+    "note": "Track-agnostic config. Track 1 is the active 15-day interview prep — points at coding-prep-plan.json. Track 2 is the AI certifications stub — UI surfaces it as 'coming next' on the Dashboard until status flips to active and a planContentPath is filled in."
   },
   "tracks": [
     {

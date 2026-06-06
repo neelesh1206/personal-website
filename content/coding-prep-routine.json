@@ -39,7 +39,7 @@
       "duration": "45 min",
       "icon": "Network",
       "kind": "plan-anchor",
-      "body": "Today's design topic from the 10-day plan."
+      "body": "Today's design topic from the 15-day plan."
     },
     {
       "id": "crossfit",
@@ -83,6 +83,6 @@
     "title": "Free practice",
     "coding": "Pick 4–6 problems across patterns — heap, intervals, DP, or any pattern that still feels shaky. Mix easy + medium. Narrate, no AI.",
     "systemDesign": "Pick a system from the Reference Library you haven't rehearsed — design it out loud, recorded.",
-    "rule": "10-day plan is done. Daily structure stays. Keep showing up."
+    "rule": "15-day plan is done. Daily structure stays. Keep showing up."
   }
 }

@@ -19,6 +19,7 @@ import type {
 } from '@/lib/admin/prep/types'
 import type { Quote } from '@/lib/admin/prep/daily-quote'
 import type { LoadProfile } from '@/lib/admin/prep/plan-adjust'
+import { planTotalTasks } from '@/lib/admin/prep/plan-helpers'
 import { cn } from '@/lib/utils'
 
 type Tab = 'today' | 'plan' | 'library' | 'dashboard'
@@ -118,13 +119,7 @@ export function CodingPrepClient({
     void playTone('block-complete', !!settings.sound_enabled)
   }, [log.rewardEarned, settings.sound_enabled])
 
-  const totalTasks = useMemo(() => {
-    let n = 0
-    for (const d of plan.days) {
-      n += d.coding.tasks.length + d.systemDesign.tasks.length + d.wrapup.length
-    }
-    return n
-  }, [plan])
+  const totalTasks = useMemo(() => planTotalTasks(plan), [plan])
 
   const completedCount = completed.size
 
@@ -252,7 +247,7 @@ export function CodingPrepClient({
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                10-day plan progress
+                15-day plan progress
               </p>
               <p className="mt-1 text-2xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">
                 {completedCount}{' '}
@@ -286,7 +281,7 @@ export function CodingPrepClient({
           Today
         </TabButton>
         <TabButton active={tab === 'plan'} onClick={() => setTab('plan')}>
-          10-Day Plan
+          15-Day Plan
         </TabButton>
         <TabButton active={tab === 'library'} onClick={() => setTab('library')}>
           Reference Library

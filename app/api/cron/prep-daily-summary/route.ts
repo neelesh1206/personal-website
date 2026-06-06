@@ -12,25 +12,16 @@ import { refreshBadges } from '@/lib/admin/prep/refresh-badges'
 import { computeBadgeContext, BADGE_INDEX } from '@/lib/admin/prep/badges'
 import { generatePrepSummary, type DaySummaryOutput } from '@/lib/hf'
 import { gradeDay, buildCompletionLines, type CompletionLine } from '@/lib/admin/prep/day-grade'
+import { planTotalTasks } from '@/lib/admin/prep/plan-helpers'
 import planContent from '@/content/coding-prep-plan.json'
+import type { Plan } from '@/lib/admin/prep/types'
 
 export const runtime = 'nodejs'
 
-type PlanFile = {
-  days: Array<{
-    day: number
-    title: string
-    coding: { tasks: Array<{ id: string }> }
-    systemDesign: { tasks: Array<{ id: string }> }
-    wrapup: Array<{ id: string }>
-  }>
-}
+const PLAN = planContent as unknown as Plan
 
-function planTotalTasks(): number {
-  return (planContent as unknown as PlanFile).days.reduce(
-    (s, d) => s + d.coding.tasks.length + d.systemDesign.tasks.length + d.wrapup.length,
-    0
-  )
+function totalTasks(): number {
+  return planTotalTasks(PLAN)
 }
 
 function nextDayFocus(planStartDate: string | undefined, tomorrow: Date): string {
@@ -39,8 +30,7 @@ function nextDayFocus(planStartDate: string | undefined, tomorrow: Date): string
   start.setUTCHours(0, 0, 0, 0)
   const diff = Math.floor((tomorrow.getTime() - start.getTime()) / (24 * 3600 * 1000))
   const dayNum = diff + 1
-  const plan = planContent as unknown as PlanFile
-  const day = plan.days.find((d) => d.day === dayNum)
+  const day = PLAN.days.find((d) => d.day === dayNum)
   if (!day) return 'Free practice day. Pick a shaky pattern.'
   return `Day ${day.day}: ${day.title}`
 }
@@ -70,7 +60,7 @@ async function runDailySummary() {
   const today = todayKey()
   const log = await getOrInitDailyLog(today)
   await refreshBadges()
-  const ctx = await computeBadgeContext(planTotalTasks())
+  const ctx = await computeBadgeContext(totalTasks())
   const badges = await getBadges()
   const recentLogs = await getDailyLogs(7)
   const settings = await getSettings()

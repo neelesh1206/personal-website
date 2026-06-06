@@ -17,6 +17,7 @@ import { computeBadgeContext } from '@/lib/admin/prep/badges'
 import { refreshBadges } from '@/lib/admin/prep/refresh-badges'
 import { resolveDailyQuote } from '@/lib/admin/prep/resolve-daily-quote'
 import { slideCurrentPlanDay, pickLoadMode, buildLoadProfile } from '@/lib/admin/prep/plan-adjust'
+import { planTotalTasks } from '@/lib/admin/prep/plan-helpers'
 import { completionFromLog, buildCompletedPlanDays } from '@/lib/admin/prep/day-completion'
 import { patchDailyLog } from '@/lib/admin/prep/queries'
 import type { BadgeRecord, DailyLog, Library, Plan, Routine } from '@/lib/admin/prep/types'
@@ -82,11 +83,7 @@ export default async function CodingPrepPage() {
   const library = libraryJson as unknown as Library
   const routine = routineJson as unknown as Routine
 
-  const planTotalTasks = plan.days.reduce(
-    (s, d) => s + d.coding.tasks.length + d.systemDesign.tasks.length + d.wrapup.length,
-    0
-  )
-  const ctx = await computeBadgeContext(planTotalTasks)
+  const ctx = await computeBadgeContext(planTotalTasks(plan))
 
   // Plan-day slide + load mode.
   //   slideCurrentPlanDay: the lowest day not fully completed (the day

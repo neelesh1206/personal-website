@@ -1,12 +1,49 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { ChevronDown, ChevronRight, Code2, Network } from 'lucide-react'
+import { ChevronDown, ChevronRight, Code2, Network, Repeat, NotebookPen } from 'lucide-react'
 import { ChecklistItem } from './ChecklistItem'
 import { DailyNotes } from './DailyNotes'
 import { ProgressBar } from './ProgressBar'
-import type { PlanDay } from '@/lib/admin/prep/types'
+import type { PlanBlock, PlanBlockType, PlanDay } from '@/lib/admin/prep/types'
+import { allItems } from '@/lib/admin/prep/plan-helpers'
 import { cn } from '@/lib/utils'
+
+type BlockMeta = {
+  label: string
+  icon: React.ReactNode
+  accent: string
+  isCoding: boolean
+}
+
+const BLOCK_META: Record<PlanBlockType, BlockMeta> = {
+  'educative-coding': {
+    label: 'Educative · Coding',
+    icon: <Code2 size={14} className="text-orange-600 dark:text-orange-400" aria-hidden="true" />,
+    accent: 'text-orange-600 dark:text-orange-400',
+    isCoding: true,
+  },
+  'neetcode-reps': {
+    label: 'NeetCode reps',
+    icon: (
+      <Repeat size={14} className="text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+    ),
+    accent: 'text-emerald-600 dark:text-emerald-400',
+    isCoding: true,
+  },
+  'educative-sysdesign': {
+    label: 'Educative · System Design',
+    icon: <Network size={14} className="text-sky-600 dark:text-sky-400" aria-hidden="true" />,
+    accent: 'text-sky-600 dark:text-sky-400',
+    isCoding: false,
+  },
+  wrapup: {
+    label: 'Wrap-up',
+    icon: <NotebookPen size={14} className="text-zinc-500 dark:text-zinc-400" aria-hidden="true" />,
+    accent: 'text-zinc-500 dark:text-zinc-400',
+    isCoding: false,
+  },
+}
 
 export function DayCard({
   day,
@@ -24,13 +61,10 @@ export function DayCard({
   const [open, setOpen] = useState(false)
   const dayPadded = String(day.day).padStart(2, '0')
 
-  const allTasks = useMemo(
-    () => [...day.coding.tasks, ...day.systemDesign.tasks, ...day.wrapup],
-    [day]
-  )
-  const completedHere = allTasks.filter((t) => completed.has(t.id)).length
-  const totalHere = allTasks.length
-  const allDone = completedHere === totalHere
+  const tasks = useMemo(() => allItems(day), [day])
+  const completedHere = tasks.filter((t) => completed.has(t.id)).length
+  const totalHere = tasks.length
+  const allDone = totalHere > 0 && completedHere === totalHere
 
   return (
     <section
@@ -44,7 +78,7 @@ export function DayCard({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="grid w-full grid-cols-[auto_1fr_140px_auto] items-center gap-4 px-5 py-4 text-left transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-900/60"
+        className="grid w-full grid-cols-[auto_1fr_140px_auto] items-center gap-3 px-4 py-4 text-left transition-colors hover:bg-zinc-50 sm:gap-4 sm:px-5 dark:hover:bg-zinc-900/60"
         aria-expanded={open}
       >
         <div
@@ -57,11 +91,14 @@ export function DayCard({
         >
           {day.day}
         </div>
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-            Day {day.day}
+        <div className="min-w-0">
+          <p className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+            <span>Day {day.day}</span>
+            <span className="rounded bg-zinc-100 px-1.5 py-0.5 text-[9px] font-bold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+              {day.badge}
+            </span>
           </p>
-          <h3 className="mt-0.5 text-base font-semibold text-zinc-900 dark:text-zinc-50">
+          <h3 className="mt-0.5 truncate text-base font-semibold text-zinc-900 dark:text-zinc-50">
             {day.title}
           </h3>
         </div>
@@ -84,82 +121,23 @@ export function DayCard({
         )}
       >
         <div className="overflow-hidden">
-          <div className="space-y-6 border-t border-zinc-100 px-5 py-5 dark:border-zinc-900">
-            {/* Coding block */}
-            <div>
-              <div className="flex items-center gap-2">
-                <Code2
-                  size={14}
-                  className="text-orange-600 dark:text-orange-400"
-                  aria-hidden="true"
-                />
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                  Coding · {day.coding.pattern}
-                </h4>
-              </div>
-              {day.coding.guidance ? (
-                <p className="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
-                  {day.coding.guidance}
-                </p>
-              ) : null}
-              <ul className="mt-3 space-y-1.5">
-                {day.coding.tasks.map((t) => (
-                  <ChecklistItem
-                    key={t.id}
-                    task={t}
-                    checked={completed.has(t.id)}
-                    onChange={(next) => onToggleTask(t.id, next)}
-                  />
-                ))}
-              </ul>
+          <div className="space-y-6 border-t border-zinc-100 px-4 py-5 sm:px-5 dark:border-zinc-900">
+            {day.blocks.map((block, idx) => (
+              <BlockSection
+                key={`${block.type}-${idx}`}
+                block={block}
+                completed={completed}
+                onToggleTask={onToggleTask}
+              />
+            ))}
+
+            <div className="rounded-md border-l-2 border-emerald-400 bg-emerald-50/60 px-3 py-2 text-sm italic text-emerald-900 dark:border-emerald-500 dark:bg-emerald-950/30 dark:text-emerald-200">
+              <span className="mr-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700 not-italic dark:text-emerald-400">
+                Success
+              </span>
+              {day.successCheck}
             </div>
 
-            {/* System design block */}
-            <div>
-              <div className="flex items-center gap-2">
-                <Network size={14} className="text-sky-600 dark:text-sky-400" aria-hidden="true" />
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                  System Design · {day.systemDesign.topic}
-                </h4>
-              </div>
-              <p className="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
-                {day.systemDesign.concepts}
-              </p>
-              <p className="mt-2 rounded-md bg-indigo-50 p-3 text-xs leading-relaxed text-indigo-900 dark:bg-indigo-950/40 dark:text-indigo-200">
-                <span className="font-semibold">Anchor:</span> {day.systemDesign.anchor}
-              </p>
-              <ul className="mt-3 space-y-1.5">
-                {day.systemDesign.tasks.map((t) => (
-                  <ChecklistItem
-                    key={t.id}
-                    task={t}
-                    checked={completed.has(t.id)}
-                    onChange={(next) => onToggleTask(t.id, next)}
-                  />
-                ))}
-              </ul>
-            </div>
-
-            {/* Wrap-up */}
-            {day.wrapup.length > 0 ? (
-              <div>
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                  Wrap-up
-                </h4>
-                <ul className="mt-3 space-y-1.5">
-                  {day.wrapup.map((t) => (
-                    <ChecklistItem
-                      key={t.id}
-                      task={t}
-                      checked={completed.has(t.id)}
-                      onChange={(next) => onToggleTask(t.id, next)}
-                    />
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-
-            {/* Daily notes */}
             <div>
               <h4 className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                 Daily notes
@@ -174,5 +152,38 @@ export function DayCard({
         </div>
       </div>
     </section>
+  )
+}
+
+function BlockSection({
+  block,
+  completed,
+  onToggleTask,
+}: {
+  block: PlanBlock
+  completed: Set<string>
+  onToggleTask: (taskId: string, completed: boolean) => void
+}) {
+  const meta = BLOCK_META[block.type]
+  return (
+    <div>
+      <div className="flex items-center gap-2">
+        {meta.icon}
+        <h4 className={cn('text-xs font-semibold uppercase tracking-wider', meta.accent)}>
+          {block.title ? `${meta.label} · ${block.title}` : meta.label}
+        </h4>
+      </div>
+      <ul className="mt-3 space-y-1.5">
+        {block.items.map((t) => (
+          <ChecklistItem
+            key={t.id}
+            task={t}
+            checked={completed.has(t.id)}
+            isCodingTask={meta.isCoding}
+            onChange={(next) => onToggleTask(t.id, next)}
+          />
+        ))}
+      </ul>
+    </div>
   )
 }

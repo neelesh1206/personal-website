@@ -110,7 +110,7 @@ export const BADGES: Badge[] = [
   {
     id: 'finisher',
     name: 'Finisher',
-    tagline: 'Completed all 10 plan days.',
+    tagline: 'Completed all 15 plan days.',
     description: 'The full program. Hard part now: keep the structure going.',
     tier: 'gold',
     icon: 'Flag',

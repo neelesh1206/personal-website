@@ -114,7 +114,10 @@ export async function computeBadgeContext(planTotalTasks: number): Promise<EvalC
   }
   const perDayTarget = Math.max(1, Math.floor(planTotalTasks / 10))
   const fullPlanDaysCompleted = Object.values(byDay).filter((n) => n >= perDayTarget).length
-  const planComplete = fullPlanDaysCompleted >= 10
+  // The refresh-badges path always overrides this with the literal
+  // check + plan day count from content, so the constant here is the
+  // fallback for the stats path; align with the JSON.
+  const planComplete = fullPlanDaysCompleted >= 15
 
   return {
     studyStreak,

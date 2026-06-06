@@ -1,10 +1,15 @@
 {
   "meta": {
-    "title": "10-Day Coding & System Design Comeback",
-    "subtitle": "Rebuild the muscle — competent and calm, not frozen.",
-    "timePerDay": "4–6 focused hours",
-    "split": "~3–3.5 hrs coding, ~1–1.5 hrs system design",
-    "language": "JavaScript / TypeScript"
+    "title": "15-Day Strategic Plan — Educative + NeetCode",
+    "subtitle": "Strategic, not exhaustive. Highest-value patterns + core system design across 15 days.",
+    "timePerDay": "3–4 focused hours",
+    "split": "~2 hrs coding + ~1.5 hrs system design + log",
+    "language": "JavaScript / TypeScript",
+    "sources": [
+      "Grokking the Coding Interview Patterns (Educative)",
+      "Grokking the Modern System Design Interview (Educative)",
+      "NeetCode reinforcement"
+    ]
   },
   "rules": [
     {
@@ -60,371 +65,896 @@
   "days": [
     {
       "day": 1,
-      "title": "Rebuild basics + confidence",
-      "coding": {
-        "pattern": "Arrays, Strings, HashMaps",
-        "guidance": "Goal today is momentum — solve things you CAN do, rebuild the habit of finishing.",
-        "tasks": [
-          { "id": "d1-c-two-sum", "label": "Two Sum" },
-          { "id": "d1-c-valid-anagram", "label": "Valid Anagram" },
-          { "id": "d1-c-contains-duplicate", "label": "Contains Duplicate" },
-          { "id": "d1-c-group-anagrams", "label": "Group Anagrams" },
-          { "id": "d1-c-valid-palindrome", "label": "Valid Palindrome" },
-          {
-            "id": "d1-c-js-basics",
-            "label": "JS basics cold: Map, Set, arr.sort((a,b)=>a-b), for...of, string .split/.join"
-          }
-        ]
-      },
-      "systemDesign": {
-        "topic": "Building Blocks #1",
-        "concepts": "client → server → database. What an API is. HTTP verbs, status codes.",
-        "anchor": "PRISM REST controllers — every endpoint maps a domain action to an HTTP verb + status code. You've lived this.",
-        "tasks": [
-          {
-            "id": "d1-s-concepts",
-            "label": "Read + notes in own words: client → server → DB, API, HTTP verbs, status code semantics"
-          },
-          {
-            "id": "d1-s-anchor",
-            "label": "Write 1 paragraph: how PRISM maps domain errors → 409 / 422 / 404 via @RestControllerAdvice"
-          }
-        ]
-      },
-      "wrapup": [
+      "title": "Two Pointers",
+      "badge": "[EASY]",
+      "blocks": [
         {
-          "id": "d1-w-log",
-          "label": "Log: solved / failed / pattern. Note one thing that clicked + one that didn't."
+          "type": "educative-coding",
+          "title": "Grokking · Two Pointers",
+          "items": [
+            {
+              "id": "d1-c1-1",
+              "label": "Read 'Introduction to Two Pointers'"
+            },
+            {
+              "id": "d1-c1-2",
+              "label": "Valid Palindrome (easy)"
+            },
+            {
+              "id": "d1-c1-3",
+              "label": "Squares of a Sorted Array (easy)"
+            },
+            {
+              "id": "d1-c1-4",
+              "label": "Reverse String (easy)"
+            },
+            {
+              "id": "d1-c1-5",
+              "label": "Is Subsequence (easy)"
+            },
+            {
+              "id": "d1-c1-6",
+              "label": "3Sum (med) — then re-type from blank"
+            }
+          ]
+        },
+        {
+          "type": "educative-sysdesign",
+          "title": "Grokking SD · Intro + Interview framing",
+          "items": [
+            {
+              "id": "d1-s1-1",
+              "label": "Introduction to Modern System Design"
+            },
+            {
+              "id": "d1-s1-2",
+              "label": "Getting Ready for the System Design Interview"
+            },
+            {
+              "id": "d1-s1-3",
+              "label": "The Do's and Don'ts"
+            },
+            {
+              "id": "d1-s1-4",
+              "label": "Why Engineers Fail and Succeed"
+            }
+          ]
+        },
+        {
+          "type": "wrapup",
+          "title": null,
+          "items": [
+            {
+              "id": "d1-w-1",
+              "label": "Log: solved / failed / pattern. One thing that clicked + one that didn't."
+            }
+          ]
         }
-      ]
+      ],
+      "successCheck": "Momentum day. You can state in one sentence WHEN to use two pointers."
     },
     {
       "day": 2,
-      "title": "Basics continued — two pointers + hashmap patterns",
-      "coding": {
-        "pattern": "Two Pointers, HashMap Patterns",
-        "guidance": "Pattern recognition: 'sorted array' or 'pair that sums to X' → think two pointers.",
-        "tasks": [
-          { "id": "d2-c-two-sum-ii", "label": "Two Sum II (sorted)" },
-          { "id": "d2-c-3sum", "label": "3Sum" },
-          { "id": "d2-c-move-zeroes", "label": "Move Zeroes" },
-          { "id": "d2-c-container-water", "label": "Container With Most Water" },
-          { "id": "d2-c-resolve", "label": "Re-solve 1 failed problem from Day 1, from blank" }
-        ]
-      },
-      "systemDesign": {
-        "topic": "Building Blocks #2 — SQL vs NoSQL",
-        "concepts": "SQL vs NoSQL by access pattern. Indexing, primary keys, partitioning.",
-        "anchor": "PRISM's Postgres partition-by-status (assets_active / assets_inactive / assets_default), composite PK (asset_id, status), deferred-cascade FK from asset_config. Tempo Runtime uses Cassandra because the access pattern is single-key (tenant, channel, pageType).",
-        "tasks": [
-          {
-            "id": "d2-s-concepts",
-            "label": "Read + notes: when SQL, when NoSQL, indexes (B-tree, partial, composite, GIN)"
-          },
-          {
-            "id": "d2-s-anchor",
-            "label": "Write 1 paragraph: why PRISM is list-partitioned on status — what the composite PK and deferred-cascade FK actually solve"
-          }
-        ]
-      },
-      "wrapup": [{ "id": "d2-w-log", "label": "Log: solved / failed / pattern" }]
+      "title": "Fast & Slow Pointers",
+      "badge": "[EASY→MED]",
+      "blocks": [
+        {
+          "type": "educative-coding",
+          "title": "Grokking · Fast and Slow Pointers",
+          "items": [
+            {
+              "id": "d2-c1-1",
+              "label": "Read 'Introduction to Fast and Slow Pointers'"
+            },
+            {
+              "id": "d2-c1-2",
+              "label": "Linked List Cycle (easy)"
+            },
+            {
+              "id": "d2-c1-3",
+              "label": "Middle of the Linked List (easy)"
+            },
+            {
+              "id": "d2-c1-4",
+              "label": "Happy Number (easy)"
+            },
+            {
+              "id": "d2-c1-5",
+              "label": "Palindrome Linked List (easy)"
+            },
+            {
+              "id": "d2-c1-6",
+              "label": "Find the Duplicate Number (med)"
+            }
+          ]
+        },
+        {
+          "type": "educative-sysdesign",
+          "title": "Grokking SD · Preliminary Concepts",
+          "items": [
+            {
+              "id": "d2-s1-1",
+              "label": "Preliminary System Design Concepts (network abstraction, consistency, failure models — all 4 lessons)"
+            }
+          ]
+        },
+        {
+          "type": "wrapup",
+          "title": null,
+          "items": [
+            {
+              "id": "d2-w-1",
+              "label": "Re-solve one Day 1 problem from blank. Log it."
+            }
+          ]
+        }
+      ],
+      "successCheck": "Cycle detection feels automatic. Draw the pointers before coding."
     },
     {
       "day": 3,
-      "title": "Sliding window + stacks",
-      "coding": {
-        "pattern": "Sliding Window, Stack",
-        "guidance": "Pattern: 'longest/shortest subarray with condition' → sliding window. 'Matching pairs / most recent' → stack.",
-        "tasks": [
-          { "id": "d3-c-buy-sell-stock", "label": "Best Time to Buy/Sell Stock" },
-          {
-            "id": "d3-c-longest-substring",
-            "label": "Longest Substring Without Repeating Characters"
-          },
-          { "id": "d3-c-valid-parentheses", "label": "Valid Parentheses" },
-          { "id": "d3-c-min-stack", "label": "Min Stack" }
-        ]
-      },
-      "systemDesign": {
-        "topic": "Caching",
-        "concepts": "Cache hit/miss, TTL, eviction (LRU/LFU), write-through vs write-back vs cache-aside.",
-        "anchor": "Tempo Runtime's 3-tier cache: Ristretto L1 (in-process LFU, µs) → Meghacache L2 (18 nodes, single-digit ms) → Cassandra origin (low-tens ms). Cache-aside with TTL + Kafka-driven invalidation on publish.",
-        "tasks": [
-          {
-            "id": "d3-s-concepts",
-            "label": "Read + notes: cache-aside vs write-through vs write-behind; LRU = doubly linked list + hashmap"
-          },
-          {
-            "id": "d3-s-anchor",
-            "label": "Write 1 paragraph: why Tempo Runtime has 3 tiers and how invalidation flows through Kafka on publish"
-          }
-        ]
-      },
-      "wrapup": [{ "id": "d3-w-log", "label": "Log: solved / failed / pattern" }]
+      "title": "Sliding Window",
+      "badge": "[MEDIUM]",
+      "blocks": [
+        {
+          "type": "educative-coding",
+          "title": "Grokking · Sliding Window",
+          "items": [
+            {
+              "id": "d3-c1-1",
+              "label": "Read the Sliding Window intro"
+            },
+            {
+              "id": "d3-c1-2",
+              "label": "Work the easy/medium window problems in the chapter"
+            },
+            {
+              "id": "d3-c1-3",
+              "label": "Re-type the core template from blank"
+            }
+          ]
+        },
+        {
+          "type": "neetcode-reps",
+          "title": "NeetCode reinforcement",
+          "items": [
+            {
+              "id": "d3-c2-1",
+              "label": "Best Time to Buy/Sell Stock (easy)"
+            },
+            {
+              "id": "d3-c2-2",
+              "label": "Longest Substring Without Repeating Characters (med)"
+            }
+          ]
+        },
+        {
+          "type": "educative-sysdesign",
+          "title": "Grokking SD · Non-Functional Characteristics",
+          "items": [
+            {
+              "id": "d3-s1-1",
+              "label": "Availability, reliability, scalability, fault tolerance (work the 7 lessons)"
+            }
+          ]
+        },
+        {
+          "type": "wrapup",
+          "title": null,
+          "items": [
+            {
+              "id": "d3-w-1",
+              "label": "Log. Re-solve a Day 2 failure from blank."
+            }
+          ]
+        }
+      ],
+      "successCheck": "You can explain sliding window vs two pointers."
     },
     {
       "day": 4,
-      "title": "Queues + linked lists",
-      "coding": {
-        "pattern": "Queues, Linked Lists",
-        "guidance": "Linked list trick: draw the pointers on paper before coding. Always.",
-        "tasks": [
-          { "id": "d4-c-reverse-list", "label": "Reverse Linked List" },
-          { "id": "d4-c-merge-two-lists", "label": "Merge Two Sorted Lists" },
-          { "id": "d4-c-list-cycle", "label": "Linked List Cycle" },
-          { "id": "d4-c-queue-stacks", "label": "Implement Queue using Stacks" },
-          { "id": "d4-c-resolve", "label": "Re-attempt a Day 2–3 failure from blank" }
-        ]
-      },
-      "systemDesign": {
-        "topic": "Load Balancing & Scaling",
-        "concepts": "Horizontal vs vertical scaling, load balancer, statelessness, session affinity vs JWT.",
-        "anchor": "Tempo Service runs active-active across useast4 / uscentral / EDC on GKE. Stateless pods, GSLB routes the user to the nearest region. HA = no SPOF + tested restore.",
-        "tasks": [
-          {
-            "id": "d4-s-concepts",
-            "label": "Read + notes: horizontal vs vertical, stateless services, LB types (L4 vs L7), session strategies"
-          },
-          {
-            "id": "d4-s-anchor",
-            "label": "Write 1 paragraph: how Tempo Service stays stateless across 3 regions and what graceful shutdown gives you"
-          }
-        ]
-      },
-      "wrapup": [{ "id": "d4-w-log", "label": "Log: solved / failed / pattern" }]
+      "title": "Stacks + In-Place Linked List",
+      "badge": "[MEDIUM]",
+      "blocks": [
+        {
+          "type": "educative-coding",
+          "title": "Grokking · Stacks",
+          "items": [
+            {
+              "id": "d4-c1-1",
+              "label": "Read Stacks intro"
+            },
+            {
+              "id": "d4-c1-2",
+              "label": "Valid Parentheses-style problems"
+            },
+            {
+              "id": "d4-c1-3",
+              "label": "Min Stack-style problem"
+            }
+          ]
+        },
+        {
+          "type": "educative-coding",
+          "title": "Grokking · In-Place Manipulation of a Linked List",
+          "items": [
+            {
+              "id": "d4-c2-1",
+              "label": "Reverse a Linked List"
+            },
+            {
+              "id": "d4-c2-2",
+              "label": "Reverse a sublist — re-type from blank"
+            }
+          ]
+        },
+        {
+          "type": "educative-sysdesign",
+          "title": "Grokking SD · Back-of-Envelope + Building Blocks intro",
+          "items": [
+            {
+              "id": "d4-s1-1",
+              "label": "Back-of-the-Envelope Calculations (both lessons)"
+            },
+            {
+              "id": "d4-s1-2",
+              "label": "Introduction to Building Blocks"
+            }
+          ]
+        },
+        {
+          "type": "wrapup",
+          "title": null,
+          "items": [
+            {
+              "id": "d4-w-1",
+              "label": "Log."
+            }
+          ]
+        }
+      ],
+      "successCheck": "Reversing a list and matching-pairs problems are automatic."
     },
     {
       "day": 5,
-      "title": "Trees + recursion",
-      "coding": {
-        "pattern": "Binary Trees, DFS/BFS",
-        "guidance": "Recursion template: base case first, then recurse on children, then combine. BFS = queue; DFS = recursion or stack. Memorise both templates.",
-        "tasks": [
-          { "id": "d5-c-invert-tree", "label": "Invert Binary Tree" },
-          { "id": "d5-c-max-depth", "label": "Max Depth of Binary Tree" },
-          { "id": "d5-c-same-tree", "label": "Same Tree" },
-          { "id": "d5-c-level-order", "label": "Level Order Traversal" },
-          { "id": "d5-c-validate-bst", "label": "Validate Binary Search Tree" }
-        ]
-      },
-      "systemDesign": {
-        "topic": "Message Queues — your strongest topic",
-        "concepts": "Async processing, pub/sub, Kafka, decoupling producers/consumers, the dual-write problem.",
-        "anchor": "PRISM Forklift transactional outbox: outbox row written inside the same DB transaction as the entity mutation; drainer publishes to Kafka after commit. At-least-once delivery + idempotent downstream consumers (Pronto, IronBank, asset-discovery, P13N) = effectively exactly-once effect. THIS IS YOUR SIGNATURE STORY — rehearse it.",
-        "tasks": [
-          {
-            "id": "d5-s-concepts",
-            "label": "Read + notes: dual-write problem, transactional outbox pattern, at-least-once delivery, idempotent consumers"
-          },
-          {
-            "id": "d5-s-anchor",
-            "label": "Write the 90-second Forklift outbox story end-to-end. Rehearse out loud, recorded."
-          },
-          {
-            "id": "d5-s-aside",
-            "label": "Bonus: PRISM Message Hierarchy is a tree (M0 parent + variants). Note how state machine traversal on the tree drives P13N decisions."
-          }
-        ]
-      },
-      "wrapup": [{ "id": "d5-w-log", "label": "Log: solved / failed / pattern" }]
+      "title": "Modified Binary Search",
+      "badge": "[MEDIUM]",
+      "blocks": [
+        {
+          "type": "educative-coding",
+          "title": "Grokking · Modified Binary Search",
+          "items": [
+            {
+              "id": "d5-c1-1",
+              "label": "Read the chapter intro"
+            },
+            {
+              "id": "d5-c1-2",
+              "label": "Classic binary search"
+            },
+            {
+              "id": "d5-c1-3",
+              "label": "Search in Rotated Sorted Array (med)"
+            },
+            {
+              "id": "d5-c1-4",
+              "label": "Re-type the template from blank — watch left<=right and mid"
+            }
+          ]
+        },
+        {
+          "type": "educative-sysdesign",
+          "title": "Grokking SD · DNS + Load Balancers",
+          "items": [
+            {
+              "id": "d5-s1-1",
+              "label": "Domain Name System (2 lessons)"
+            },
+            {
+              "id": "d5-s1-2",
+              "label": "Load Balancers (3 lessons: placement, algorithms, tiers)"
+            }
+          ]
+        },
+        {
+          "type": "wrapup",
+          "title": null,
+          "items": [
+            {
+              "id": "d5-w-1",
+              "label": "Log. Re-solve a binary search problem from blank."
+            }
+          ]
+        }
+      ],
+      "successCheck": "'Sorted + find/optimize' instantly triggers binary search."
     },
     {
       "day": 6,
-      "title": "Binary search + more trees",
-      "coding": {
-        "pattern": "Binary Search, Tree problems",
-        "guidance": "Pattern: 'sorted' + 'find/optimise' → binary search. Watch the mid overflow + boundary conditions.",
-        "tasks": [
-          { "id": "d6-c-binary-search", "label": "Binary Search" },
-          { "id": "d6-c-rotated-sorted", "label": "Search in Rotated Sorted Array" },
-          { "id": "d6-c-lca", "label": "Lowest Common Ancestor of a BST" },
-          { "id": "d6-c-kth-smallest", "label": "Kth Smallest Element in a BST" },
-          { "id": "d6-c-resolve", "label": "Re-solve a tree problem from Day 5, from blank" }
-        ]
-      },
-      "systemDesign": {
-        "topic": "Reliability & Consistency",
-        "concepts": "Replication, consistency vs availability (CAP), idempotency, retries with backoff + jitter, circuit breakers, bulkheads.",
-        "anchor": "Outbox + idempotent consumers from Day 5. Cassandra LOCAL_QUORUM writes + LOCAL_ONE reads on Tempo Runtime (writes durable across the DC, reads fast — freshness comes from Kafka invalidation, not from strong-read consistency). Resilience4j per-downstream breaker + thread pool in the Tempo V3 BFF.",
-        "tasks": [
-          {
-            "id": "d6-s-concepts",
-            "label": "Read + notes: CAP, eventual consistency, idempotency, exponential backoff + jitter, circuit breaker, bulkhead"
-          },
-          {
-            "id": "d6-s-anchor",
-            "label": "Write 1 paragraph: why Tempo Runtime picks LOCAL_QUORUM writes / LOCAL_ONE reads — what tradeoff that's making"
-          }
-        ]
-      },
-      "wrapup": [{ "id": "d6-w-log", "label": "Log: solved / failed / pattern" }]
+      "title": "Tree DFS",
+      "badge": "[MEDIUM]",
+      "blocks": [
+        {
+          "type": "educative-coding",
+          "title": "Grokking · Tree Depth-First Search",
+          "items": [
+            {
+              "id": "d6-c1-1",
+              "label": "Read the Tree DFS intro"
+            },
+            {
+              "id": "d6-c1-2",
+              "label": "Invert/Max-Depth/Same-Tree style problems"
+            },
+            {
+              "id": "d6-c1-3",
+              "label": "Validate BST"
+            },
+            {
+              "id": "d6-c1-4",
+              "label": "Memorize template: base case → recurse → combine"
+            }
+          ]
+        },
+        {
+          "type": "educative-sysdesign",
+          "title": "Grokking SD · Databases",
+          "items": [
+            {
+              "id": "d6-s1-1",
+              "label": "Databases chapter (5 lessons: types, replication, partitioning, trade-offs)"
+            }
+          ]
+        },
+        {
+          "type": "wrapup",
+          "title": null,
+          "items": [
+            {
+              "id": "d6-w-1",
+              "label": "Log."
+            }
+          ]
+        }
+      ],
+      "successCheck": "You can write a DFS template from memory."
     },
     {
       "day": 7,
-      "title": "Heaps + intervals + light DP",
-      "coding": {
-        "pattern": "Heaps, Intervals, Intro DP",
-        "guidance": "DP intro only — don't rabbit-hole. Learn the '1D memo' shape, that's enough for now. Heap = priority queue; 'top K' / 'Kth' → heap.",
-        "tasks": [
-          { "id": "d7-c-kth-largest", "label": "Kth Largest Element in an Array" },
-          { "id": "d7-c-merge-intervals", "label": "Merge Intervals" },
-          { "id": "d7-c-insert-interval", "label": "Insert Interval" },
-          { "id": "d7-c-climbing-stairs", "label": "Climbing Stairs" },
-          { "id": "d7-c-house-robber", "label": "House Robber" }
-        ]
-      },
-      "systemDesign": {
-        "topic": "Full Design Framework — practice on URL shortener",
-        "concepts": "The 6-step framework: clarify → estimate → API → high-level → deep-dive 1–2 → bottlenecks & tradeoffs.",
-        "anchor": "URL shortener walkthrough: pre-generated counter + base62 (3.5T short codes in 7 chars), KV store (Redis + DynamoDB), cache the redirects, async analytics via Kafka. Compare to Tempo's authoring/delivery split — same shape, different access patterns.",
-        "tasks": [
-          {
-            "id": "d7-s-framework",
-            "label": "Memorise the 6 steps cold — recite all 6 with no prompt"
-          },
-          {
-            "id": "d7-s-url-shortener",
-            "label": "Design URL shortener out loud, the full 6-step walk, recorded"
-          }
-        ]
-      },
-      "wrapup": [{ "id": "d7-w-log", "label": "Log: solved / failed / pattern" }]
+      "title": "Tree BFS",
+      "badge": "[MEDIUM]",
+      "blocks": [
+        {
+          "type": "educative-coding",
+          "title": "Grokking · Tree Breadth-First Search",
+          "items": [
+            {
+              "id": "d7-c1-1",
+              "label": "Read the Tree BFS intro"
+            },
+            {
+              "id": "d7-c1-2",
+              "label": "Level Order Traversal"
+            },
+            {
+              "id": "d7-c1-3",
+              "label": "Other BFS traversal problems"
+            },
+            {
+              "id": "d7-c1-4",
+              "label": "Memorize template: queue-based"
+            }
+          ]
+        },
+        {
+          "type": "educative-sysdesign",
+          "title": "Grokking SD · Key-Value Store + CDN",
+          "items": [
+            {
+              "id": "d7-s1-1",
+              "label": "Key-Value Store (5 lessons)"
+            },
+            {
+              "id": "d7-s1-2",
+              "label": "Content Delivery Network (start — caching strategies)"
+            }
+          ]
+        },
+        {
+          "type": "wrapup",
+          "title": null,
+          "items": [
+            {
+              "id": "d7-w-1",
+              "label": "Re-solve Level Order from blank. Log."
+            }
+          ]
+        }
+      ],
+      "successCheck": "BFS via queue is automatic. Half the patterns done."
     },
     {
       "day": 8,
-      "title": "Timed simulation",
-      "coding": {
-        "pattern": "Mixed timed set",
-        "guidance": "Pick 4 random medium problems across patterns. 30 min each, timed, NO solution peeking until time's up. Narrate out loud the whole time. Then review: which patterns did you recognise fast? Which froze you?",
-        "tasks": [
-          {
-            "id": "d8-c-medium-1",
-            "label": "Medium problem #1 (30 min timed, narrated, no peeking)"
-          },
-          { "id": "d8-c-medium-2", "label": "Medium problem #2 (30 min timed)" },
-          { "id": "d8-c-medium-3", "label": "Medium problem #3 (30 min timed)" },
-          { "id": "d8-c-medium-4", "label": "Medium problem #4 (30 min timed)" },
-          {
-            "id": "d8-c-review",
-            "label": "Review: patterns recognised fast vs froze on. Log them."
-          }
-        ]
-      },
-      "systemDesign": {
-        "topic": "Practice design out loud — rate limiter, news feed",
-        "concepts": "Two more real designs to walk through. Rate limiter: token bucket in Redis, key by user/IP/tenant, 429 with Retry-After. News feed: fan-out-on-write vs fan-out-on-read, when each.",
-        "anchor": "Token bucket → Redis INCR + EXPIRE → 429. You used this exact shape on Tempo V3 BFF (60 req/min per user). News feed = fan-out tradeoff is the same shape as Tempo's authoring/delivery split.",
-        "tasks": [
-          {
-            "id": "d8-s-rate-limiter",
-            "label": "Design a rate limiter, full 6-step framework out loud, recorded"
-          },
-          {
-            "id": "d8-s-news-feed",
-            "label": "Design a news feed, full 6-step framework out loud, recorded"
-          },
-          {
-            "id": "d8-s-listen",
-            "label": "Listen back to recordings — flag wandering / rambling moments"
-          }
-        ]
-      },
-      "wrapup": [{ "id": "d8-w-log", "label": "Log: which patterns were sticky, which weren't" }]
+      "title": "Top K Elements + Two Heaps",
+      "badge": "[MEDIUM]",
+      "blocks": [
+        {
+          "type": "educative-coding",
+          "title": "Grokking · Top K Elements",
+          "items": [
+            {
+              "id": "d8-c1-1",
+              "label": "Read intro"
+            },
+            {
+              "id": "d8-c1-2",
+              "label": "Kth Largest Element"
+            },
+            {
+              "id": "d8-c1-3",
+              "label": "Top K Frequent"
+            }
+          ]
+        },
+        {
+          "type": "educative-coding",
+          "title": "Grokking · Two Heaps",
+          "items": [
+            {
+              "id": "d8-c2-1",
+              "label": "Read intro"
+            },
+            {
+              "id": "d8-c2-2",
+              "label": "Find Median from Data Stream"
+            }
+          ]
+        },
+        {
+          "type": "educative-sysdesign",
+          "title": "Grokking SD · Distributed Cache",
+          "items": [
+            {
+              "id": "d8-s1-1",
+              "label": "Distributed Cache chapter (high-level + detailed design)"
+            }
+          ]
+        },
+        {
+          "type": "wrapup",
+          "title": null,
+          "items": [
+            {
+              "id": "d8-w-1",
+              "label": "Log. Heap = priority queue; 'top K / Kth' → heap."
+            }
+          ]
+        }
+      ],
+      "successCheck": "You reach for a heap on 'top K' without thinking."
     },
     {
       "day": 9,
-      "title": "Timed simulation + weak spots",
-      "coding": {
-        "pattern": "Weak-pattern focus",
-        "guidance": "Redo the patterns that froze you on Day 8. 5–6 problems, timed. Confidence check: you've now solved ~40 problems — that's the proof, not a feeling.",
-        "tasks": [
-          { "id": "d9-c-weak-1", "label": "Weak-pattern problem #1 (timed)" },
-          { "id": "d9-c-weak-2", "label": "Weak-pattern problem #2 (timed)" },
-          { "id": "d9-c-weak-3", "label": "Weak-pattern problem #3 (timed)" },
-          { "id": "d9-c-weak-4", "label": "Weak-pattern problem #4 (timed)" },
-          {
-            "id": "d9-c-resolve-1",
-            "label": "Re-solve 3 hardest failures of the plan, from blank — #1"
-          },
-          { "id": "d9-c-resolve-2", "label": "Re-solve hardest failure #2, from blank" },
-          { "id": "d9-c-resolve-3", "label": "Re-solve hardest failure #3, from blank" }
-        ]
-      },
-      "systemDesign": {
-        "topic": "Design Tempo / PRISM — your secret weapon",
-        "concepts": "Take 'design a content management + delivery platform' as a real prompt. You've built it. Speak with operating authority, not theory.",
-        "anchor": "Authoring write-path (Tempo Service + PRISM) → Kafka outbox → Sync Service → Cassandra delivery (Tempo Runtime). 38 tenants, ~27 TPS writes, 4K TPS reads, p95 35–45 ms. Multi-tenant by tenant ID at every layer. Canary by tenant group (TG1/TG2/TG3). Deep-dive: partitioned Postgres + composite PK + deferred-cascade FK; Cassandra schema partitioned by (tenant, channel, pageType); 3-tier cache.",
-        "tasks": [
-          {
-            "id": "d9-s-cms-design",
-            "label": "Design Tempo/PRISM as if interview prompt — full 6-step framework, recorded"
-          },
-          {
-            "id": "d9-s-numbers",
-            "label": "Rehearse the rapid-fire numbers cold: 150×, 38 tenants, 12k+ msgs, ~27 TPS, p95 250ms, $11/day, >92% trace propagation, 15 services in BFF"
-          }
-        ]
-      },
-      "wrapup": [
+      "title": "Intervals + K-way Merge",
+      "badge": "[MEDIUM]",
+      "blocks": [
         {
-          "id": "d9-w-log",
-          "label": "Log: which numbers stuck, which I had to look up. Re-rehearse the misses."
+          "type": "educative-coding",
+          "title": "Grokking · Intervals",
+          "items": [
+            {
+              "id": "d9-c1-1",
+              "label": "Read intro"
+            },
+            {
+              "id": "d9-c1-2",
+              "label": "Merge Intervals"
+            },
+            {
+              "id": "d9-c1-3",
+              "label": "Insert Interval"
+            },
+            {
+              "id": "d9-c1-4",
+              "label": "Intervals Intersection"
+            }
+          ]
+        },
+        {
+          "type": "educative-coding",
+          "title": "Grokking · K-way Merge",
+          "items": [
+            {
+              "id": "d9-c2-1",
+              "label": "Read intro"
+            },
+            {
+              "id": "d9-c2-2",
+              "label": "Merge K Sorted Lists"
+            }
+          ]
+        },
+        {
+          "type": "educative-sysdesign",
+          "title": "Grokking SD · Messaging Queue + Pub-Sub",
+          "items": [
+            {
+              "id": "d9-s1-1",
+              "label": "Distributed Messaging Queue (chapter)"
+            },
+            {
+              "id": "d9-s1-2",
+              "label": "Pub-Sub (3 lessons)"
+            }
+          ]
+        },
+        {
+          "type": "wrapup",
+          "title": null,
+          "items": [
+            {
+              "id": "d9-w-1",
+              "label": "Log. Intervals → sort by start, then merge."
+            }
+          ]
         }
-      ]
+      ],
+      "successCheck": "Interval problems have a clear template now."
     },
     {
       "day": 10,
-      "title": "Light review + rest — DO NOT CRAM",
-      "coding": {
-        "pattern": "Light review only",
-        "guidance": "Re-solve 5 problems you previously failed, from blank. If they go smoothly, you're ready. Re-read the pattern cheat list. Skim, don't grind. Stop early. Rest.",
-        "tasks": [
-          { "id": "d10-c-r1", "label": "Re-solve previously-failed problem #1, from blank" },
-          { "id": "d10-c-r2", "label": "Re-solve previously-failed problem #2" },
-          { "id": "d10-c-r3", "label": "Re-solve previously-failed problem #3" },
-          { "id": "d10-c-r4", "label": "Re-solve previously-failed problem #4" },
-          { "id": "d10-c-r5", "label": "Re-solve previously-failed problem #5" },
-          {
-            "id": "d10-c-patterns",
-            "label": "Skim the 11 patterns cheat list — name each one + when to use it, no answers from the doc"
-          }
-        ]
-      },
-      "systemDesign": {
-        "topic": "Light review — skim only",
-        "concepts": "Re-read the 6-step framework and your PRISM anchors. Don't take new notes. Skim only.",
-        "anchor": "Your unfair advantage: PRISM and Tempo are a real distributed system you built — CMS with authoring/delivery split, caching tiers, transactional outbox, partitioned databases, multi-region deployment. Most candidates invent these from theory. Speak from having operated them.",
-        "tasks": [
-          {
-            "id": "d10-s-framework",
-            "label": "Skim: 6 steps + your top-2 deep-dive prompts (CMS, message queues)"
-          },
-          {
-            "id": "d10-s-questions",
-            "label": "Prepare 2–3 questions to ask them at the end of the interview"
-          },
-          { "id": "d10-s-sleep", "label": "Stop early. Sleep well." }
-        ]
-      },
-      "wrapup": [
+      "title": "Hash Maps + Knowing What to Track",
+      "badge": "[MEDIUM]",
+      "blocks": [
         {
-          "id": "d10-w-log",
-          "label": "Log: how do I feel? (Don't expect zero nerves — calm-enough is the bar)"
+          "type": "educative-coding",
+          "title": "Grokking · Hash Maps",
+          "items": [
+            {
+              "id": "d10-c1-1",
+              "label": "Read intro"
+            },
+            {
+              "id": "d10-c1-2",
+              "label": "Work the hashmap problems"
+            }
+          ]
+        },
+        {
+          "type": "educative-coding",
+          "title": "Grokking · Knowing What to Track",
+          "items": [
+            {
+              "id": "d10-c2-1",
+              "label": "Read intro"
+            },
+            {
+              "id": "d10-c2-2",
+              "label": "Anagram/permutation/frequency problems"
+            }
+          ]
+        },
+        {
+          "type": "educative-sysdesign",
+          "title": "Grokking SD · Rate Limiter",
+          "items": [
+            {
+              "id": "d10-s1-1",
+              "label": "Rate Limiter chapter (5 lessons: algorithms, traffic management)"
+            }
+          ]
+        },
+        {
+          "type": "wrapup",
+          "title": null,
+          "items": [
+            {
+              "id": "d10-w-1",
+              "label": "Log."
+            }
+          ]
         }
-      ]
+      ],
+      "successCheck": "Counting/frequency problems are second nature."
+    },
+    {
+      "day": 11,
+      "title": "RESHADED + first case study",
+      "badge": "[SYNTHESIS]",
+      "blocks": [
+        {
+          "type": "educative-sysdesign",
+          "title": "Grokking SD · Concluding Building Blocks + RESHADED",
+          "items": [
+            {
+              "id": "d11-s1-1",
+              "label": "Concluding the Building Blocks Discussion (4 lessons)"
+            },
+            {
+              "id": "d11-s1-2",
+              "label": "Learn the RESHADED framework cold"
+            }
+          ]
+        },
+        {
+          "type": "educative-sysdesign",
+          "title": "Grokking SD · Design TinyURL",
+          "items": [
+            {
+              "id": "d11-s2-1",
+              "label": "System Design: TinyURL — full walkthrough"
+            }
+          ]
+        },
+        {
+          "type": "neetcode-reps",
+          "title": "Coding maintenance",
+          "items": [
+            {
+              "id": "d11-c1-1",
+              "label": "2 mixed medium problems from any learned pattern, timed 30 min each, no AI"
+            }
+          ]
+        },
+        {
+          "type": "wrapup",
+          "title": null,
+          "items": [
+            {
+              "id": "d11-w-1",
+              "label": "Log. Say the RESHADED steps out loud."
+            }
+          ]
+        }
+      ],
+      "successCheck": "You can recite RESHADED and applied it to one real design."
+    },
+    {
+      "day": 12,
+      "title": "Subsets + Backtracking",
+      "badge": "[MED→HARD]",
+      "blocks": [
+        {
+          "type": "educative-coding",
+          "title": "Grokking · Subsets",
+          "items": [
+            {
+              "id": "d12-c1-1",
+              "label": "Read intro"
+            },
+            {
+              "id": "d12-c1-2",
+              "label": "Subsets, Permutations, Combinations"
+            }
+          ]
+        },
+        {
+          "type": "educative-coding",
+          "title": "Grokking · Backtracking",
+          "items": [
+            {
+              "id": "d12-c2-1",
+              "label": "Read intro"
+            },
+            {
+              "id": "d12-c2-2",
+              "label": "Word Search or Combination Sum (one problem)"
+            }
+          ]
+        },
+        {
+          "type": "educative-sysdesign",
+          "title": "Grokking SD · Design Twitter",
+          "items": [
+            {
+              "id": "d12-s1-1",
+              "label": "Design Twitter — full walkthrough (caching, storage, fan-out)"
+            }
+          ]
+        },
+        {
+          "type": "wrapup",
+          "title": null,
+          "items": [
+            {
+              "id": "d12-w-1",
+              "label": "Log. Backtracking is just controlled DFS with undo."
+            }
+          ]
+        }
+      ],
+      "successCheck": "You understand the subsets/backtracking template shape."
+    },
+    {
+      "day": 13,
+      "title": "Dynamic Programming (1D) + Graphs intro",
+      "badge": "[HARD-ish]",
+      "blocks": [
+        {
+          "type": "educative-coding",
+          "title": "Grokking · Dynamic Programming",
+          "items": [
+            {
+              "id": "d13-c1-1",
+              "label": "Read intro"
+            },
+            {
+              "id": "d13-c1-2",
+              "label": "Climbing Stairs / House Robber (1D memo shape only — don't rabbit-hole)"
+            }
+          ]
+        },
+        {
+          "type": "educative-coding",
+          "title": "Grokking · Graphs",
+          "items": [
+            {
+              "id": "d13-c2-1",
+              "label": "Read intro"
+            },
+            {
+              "id": "d13-c2-2",
+              "label": "Number of Islands (BFS/DFS on grid)"
+            }
+          ]
+        },
+        {
+          "type": "educative-sysdesign",
+          "title": "Grokking SD · Design a Newsfeed System",
+          "items": [
+            {
+              "id": "d13-s1-1",
+              "label": "Newsfeed System — full walkthrough"
+            }
+          ]
+        },
+        {
+          "type": "wrapup",
+          "title": null,
+          "items": [
+            {
+              "id": "d13-w-1",
+              "label": "Log. DP = remember subproblem answers. Don't over-study it."
+            }
+          ]
+        }
+      ],
+      "successCheck": "You recognize the 1D-DP shape and can traverse a graph."
+    },
+    {
+      "day": 14,
+      "title": "Timed simulation + mock",
+      "badge": "[PRESSURE]",
+      "blocks": [
+        {
+          "type": "neetcode-reps",
+          "title": "Timed coding set",
+          "items": [
+            {
+              "id": "d14-c1-1",
+              "label": "4 random medium problems across learned patterns, 30 min each, TIMED, no AI, narrate out loud"
+            },
+            {
+              "id": "d14-c1-2",
+              "label": "Use Educative's AI Mock Interview for one coding round"
+            }
+          ]
+        },
+        {
+          "type": "educative-sysdesign",
+          "title": "Grokking SD · Design Uber OR WhatsApp + AI Mock",
+          "items": [
+            {
+              "id": "d14-s1-1",
+              "label": "One more case study (Uber or WhatsApp)"
+            },
+            {
+              "id": "d14-s1-2",
+              "label": "Educative AI Mock Interview — one system design round, out loud"
+            }
+          ]
+        },
+        {
+          "type": "wrapup",
+          "title": null,
+          "items": [
+            {
+              "id": "d14-w-1",
+              "label": "Log which patterns you spotted fast vs froze on."
+            }
+          ]
+        }
+      ],
+      "successCheck": "Pressure rep done. ~50+ problems solved across the plan. That's your proof."
+    },
+    {
+      "day": 15,
+      "title": "Light review + rest — DO NOT CRAM",
+      "badge": "[TAPER]",
+      "blocks": [
+        {
+          "type": "neetcode-reps",
+          "title": "Light review",
+          "items": [
+            {
+              "id": "d15-c1-1",
+              "label": "Re-solve 5 previously-failed problems from blank. Smooth = ready."
+            },
+            {
+              "id": "d15-c1-2",
+              "label": "Skim the pattern list — don't grind"
+            }
+          ]
+        },
+        {
+          "type": "educative-sysdesign",
+          "title": "SD review",
+          "items": [
+            {
+              "id": "d15-s1-1",
+              "label": "Re-read RESHADED + your strongest case study once"
+            },
+            {
+              "id": "d15-s1-2",
+              "label": "Design 'a content management + delivery platform' out loud (this is Tempo/PRISM — your home turf)"
+            }
+          ]
+        },
+        {
+          "type": "wrapup",
+          "title": null,
+          "items": [
+            {
+              "id": "d15-w-1",
+              "label": "Prepare 2–3 questions to ask interviewers. Sleep early."
+            }
+          ]
+        }
+      ],
+      "successCheck": "Arrive calm and confident. No new material today."
     }
   ],
   "patterns": [
-    { "name": "Two Pointers", "when": "Sorted array, pair/triplet sums, palindrome checks" },
-    { "name": "Sliding Window", "when": "Longest/shortest subarray or substring with a condition" },
-    { "name": "HashMap / Set", "when": "Counting, dedupe, 'have I seen this', complement lookups" },
-    { "name": "Stack", "when": "Matching pairs, parentheses, 'most recent', monotonic problems" },
-    { "name": "BFS (queue)", "when": "Shortest path, level-by-level, grid traversal" },
-    { "name": "DFS (recursion)", "when": "All paths, tree/graph exploration, backtracking" },
-    { "name": "Binary Search", "when": "Sorted data, 'find' or 'minimise/maximise' an answer" },
-    { "name": "Heap / Priority Queue", "when": "Top K, Kth largest/smallest, merge K sorted" },
-    { "name": "Intervals", "when": "Overlapping ranges, merge, insert, meeting rooms" },
-    { "name": "Linked List pointers", "when": "Reverse, detect cycle, merge, middle node" },
+    {
+      "name": "Two Pointers",
+      "when": "Sorted array, pair/triplet sums, palindrome checks"
+    },
+    {
+      "name": "Sliding Window",
+      "when": "Longest/shortest subarray or substring with a condition"
+    },
+    {
+      "name": "HashMap / Set",
+      "when": "Counting, dedupe, 'have I seen this', complement lookups"
+    },
+    {
+      "name": "Stack",
+      "when": "Matching pairs, parentheses, 'most recent', monotonic problems"
+    },
+    {
+      "name": "BFS (queue)",
+      "when": "Shortest path, level-by-level, grid traversal"
+    },
+    {
+      "name": "DFS (recursion)",
+      "when": "All paths, tree/graph exploration, backtracking"
+    },
+    {
+      "name": "Binary Search",
+      "when": "Sorted data, 'find' or 'minimise/maximise' an answer"
+    },
+    {
+      "name": "Heap / Priority Queue",
+      "when": "Top K, Kth largest/smallest, merge K sorted"
+    },
+    {
+      "name": "Intervals",
+      "when": "Overlapping ranges, merge, insert, meeting rooms"
+    },
+    {
+      "name": "Linked List pointers",
+      "when": "Reverse, detect cycle, merge, middle node"
+    },
     {
       "name": "1D Dynamic Programming",
       "when": "'Number of ways', max/min with choices, climbing-stairs shape"

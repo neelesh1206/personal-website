@@ -7,25 +7,12 @@ import {
   BADGE_INDEX,
 } from './badges'
 import { fullPlanDaysCompleted } from './plan-adjust'
+import { planTotalTasks } from './plan-helpers'
 import { getCompletedTaskIds } from './queries'
 import planContent from '@/content/coding-prep-plan.json'
 import type { Plan } from './types'
 
-type PlanFile = {
-  days: Array<{
-    coding: { tasks: Array<{ id: string }> }
-    systemDesign: { tasks: Array<{ id: string }> }
-    wrapup: Array<{ id: string }>
-  }>
-}
-
-function getPlanTotalTasks(): number {
-  const plan = planContent as unknown as PlanFile
-  return plan.days.reduce(
-    (sum, d) => sum + d.coding.tasks.length + d.systemDesign.tasks.length + d.wrapup.length,
-    0
-  )
-}
+const PLAN_TOTAL_DAYS = (planContent as unknown as Plan).days.length
 
 /**
  * Recompute eligibility and unlock any newly earned badges.
@@ -33,13 +20,14 @@ function getPlanTotalTasks(): number {
  */
 export async function refreshBadges(): Promise<string[]> {
   try {
-    const ctx = await computeBadgeContext(getPlanTotalTasks())
+    const plan = planContent as unknown as Plan
+    const ctx = await computeBadgeContext(planTotalTasks(plan))
     // Pattern Master tighten — replace the heuristic count with the
     // literal "every coding task of this plan day is completed" count.
     const completed = await getCompletedTaskIds()
-    const literal = fullPlanDaysCompleted(planContent as unknown as Plan, completed)
+    const literal = fullPlanDaysCompleted(plan, completed)
     ctx.fullPlanDaysCompleted = literal
-    ctx.planComplete = literal >= 10
+    ctx.planComplete = literal >= PLAN_TOTAL_DAYS
     const eligible = evaluateBadges(ctx)
     const already = await getAlreadyUnlockedBadges()
     const fresh = eligible.filter((id) => !already.has(id) && BADGE_INDEX[id])

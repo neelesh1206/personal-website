@@ -6,27 +6,28 @@ import type { PlanTask } from '@/lib/admin/prep/types'
 import { cn } from '@/lib/utils'
 
 /**
- * Per-task row on the 10-Day Plan tab.
+ * Per-task row on the 15-Day Plan tab.
  *
- * Coding tasks (taskId matches /d\d+-c-/) gain a secondary "re-solved
- * from blank" button next to the label. Tapping it POSTs to
- * /api/admin/prep/resolves, grants +25 XP (the premium rep), and
- * increments the The Re-Solver badge counter. It's idempotent per
- * resolve row, never per task — so re-solving the same problem multiple
- * times on different sessions each grant once.
+ * Coding tasks (educative-coding + neetcode-reps blocks — caller passes
+ * `isCodingTask={true}`) gain a secondary "re-solved from blank" button
+ * next to the label. Tapping it POSTs to /api/admin/prep/resolves,
+ * grants +25 XP (the premium rep), and increments the The Re-Solver
+ * badge counter. Idempotent per resolve row, never per task — re-
+ * solving the same problem in different sessions each grants once.
  */
 export function ChecklistItem({
   task,
   checked,
+  isCodingTask = false,
   onChange,
 }: {
   task: PlanTask
   checked: boolean
+  isCodingTask?: boolean
   onChange: (next: boolean) => void
 }) {
   const [resolving, setResolving] = useState(false)
   const [resolvedJustNow, setResolvedJustNow] = useState(false)
-  const isCodingTask = /^d\d+-c-/.test(task.id)
 
   async function resolveFromBlank(e: React.MouseEvent) {
     e.preventDefault()

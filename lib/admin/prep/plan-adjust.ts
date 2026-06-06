@@ -20,6 +20,7 @@
  */
 
 import type { Plan } from './types'
+import { codingItems } from './plan-helpers'
 
 export type LoadMode = 'full' | 'core' | 're-entry' | 'maintenance'
 
@@ -202,7 +203,7 @@ export function countConsecutiveMissedDays(
 export function fullPlanDaysCompleted(plan: Plan, completedTaskIds: Set<string>): number {
   let n = 0
   for (const d of plan.days) {
-    const ids = d.coding.tasks.map((t) => t.id)
+    const ids = codingItems(d).map((t) => t.id)
     if (ids.length === 0) continue
     if (ids.every((id) => completedTaskIds.has(id))) n += 1
   }

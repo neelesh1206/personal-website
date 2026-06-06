@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { isAdminAuthenticated } from '@/lib/admin/auth'
 import { setTaskCompleted, grantXp, revokeXp, getTotalXp } from '@/lib/admin/prep/queries'
 import { SourceId, crossedLevelUp } from '@/lib/admin/prep/xp'
+import { isCodingTaskId } from '@/lib/admin/prep/plan-helpers'
 
 export const runtime = 'nodejs'
 
@@ -36,7 +37,7 @@ export async function POST(req: NextRequest) {
   // aren't problems solved. Honest scoreboard rule: untick = revoke.
   let xp = 0
   let levelUp: string | null = null
-  if (/^d\d+-c-/.test(taskId)) {
+  if (isCodingTaskId(taskId)) {
     const sid = SourceId.task(taskId)
     if (completed) {
       const before = await getTotalXp()

@@ -22,6 +22,7 @@ import { Separator } from '@/components/ui/separator'
 import type { DailyLog, Plan, Routine, RoutineBlock, SettingsMap } from '@/lib/admin/prep/types'
 import type { Quote } from '@/lib/admin/prep/daily-quote'
 import type { LoadProfile } from '@/lib/admin/prep/plan-adjust'
+import { todaysSysDesignTopic, todaysSysDesignAnchor } from '@/lib/admin/prep/plan-helpers'
 import { cn } from '@/lib/utils'
 import { PomodoroBlock } from './PomodoroBlock'
 import { JournalCard } from './JournalCard'
@@ -640,10 +641,10 @@ function BlockRenderer(props: {
               </summary>
               <div className="px-3 pb-3">
                 <p className="font-medium text-zinc-900 dark:text-zinc-50">
-                  {planDay.systemDesign.topic}
+                  {todaysSysDesignTopic(planDay)}
                 </p>
                 <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">
-                  {planDay.systemDesign.anchor}
+                  {todaysSysDesignAnchor(planDay)}
                 </p>
               </div>
             </details>
@@ -652,10 +653,10 @@ function BlockRenderer(props: {
               {planDay ? (
                 <>
                   <p className="font-medium text-zinc-900 dark:text-zinc-50">
-                    {planDay.systemDesign.topic}
+                    {todaysSysDesignTopic(planDay)}
                   </p>
                   <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">
-                    {planDay.systemDesign.anchor}
+                    {todaysSysDesignAnchor(planDay)}
                   </p>
                 </>
               ) : (

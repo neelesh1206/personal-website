@@ -12,6 +12,12 @@ import { slideCurrentPlanDay, pickLoadMode, buildLoadProfile } from '@/lib/admin
 import { completionFromLog, buildCompletedPlanDays } from '@/lib/admin/prep/day-completion'
 import { resolveDailyQuote } from '@/lib/admin/prep/resolve-daily-quote'
 import { buildMorningBrief } from '@/lib/admin/prep/morning-brief'
+import {
+  codingItems,
+  todaysCodingPattern,
+  todaysSysDesignTopic,
+  todaysSysDesignAnchor,
+} from '@/lib/admin/prep/plan-helpers'
 import planContent from '@/content/coding-prep-plan.json'
 import type { Plan } from '@/lib/admin/prep/types'
 
@@ -124,10 +130,10 @@ async function runMorningBrief() {
     isMaintenance: slide.isMaintenance,
     isCarryingForward,
     loadProfile,
-    codingPattern: planDay?.coding.pattern ?? null,
-    codingTaskCount: planDay?.coding.tasks.length ?? 0,
-    systemDesignTopic: planDay?.systemDesign.topic ?? null,
-    systemDesignAnchor: planDay?.systemDesign.anchor ?? null,
+    codingPattern: planDay ? todaysCodingPattern(planDay) : null,
+    codingTaskCount: planDay ? codingItems(planDay).length : 0,
+    systemDesignTopic: planDay ? todaysSysDesignTopic(planDay) : null,
+    systemDesignAnchor: planDay ? todaysSysDesignAnchor(planDay) : null,
     yesterdayAvoided: yesterdayLogRow?.journalAvoided?.trim() || undefined,
   })
 
