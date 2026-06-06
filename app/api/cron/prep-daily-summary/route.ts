@@ -16,11 +16,20 @@ import planContent from '@/content/coding-prep-plan.json'
 export const runtime = 'nodejs'
 
 type PlanFile = {
-  days: Array<{ day: number; theme: string; tasks: Array<{ id: string }> }>
+  days: Array<{
+    day: number
+    title: string
+    coding: { tasks: Array<{ id: string }> }
+    systemDesign: { tasks: Array<{ id: string }> }
+    wrapup: Array<{ id: string }>
+  }>
 }
 
 function planTotalTasks(): number {
-  return (planContent as unknown as PlanFile).days.reduce((s, d) => s + d.tasks.length, 0)
+  return (planContent as unknown as PlanFile).days.reduce(
+    (s, d) => s + d.coding.tasks.length + d.systemDesign.tasks.length + d.wrapup.length,
+    0
+  )
 }
 
 function nextDayFocus(planStartDate: string | undefined, tomorrow: Date): string {
@@ -32,7 +41,7 @@ function nextDayFocus(planStartDate: string | undefined, tomorrow: Date): string
   const plan = planContent as unknown as PlanFile
   const day = plan.days.find((d) => d.day === dayNum)
   if (!day) return 'Free practice day. Pick a shaky pattern.'
-  return `Day ${day.day}: ${day.theme}`
+  return `Day ${day.day}: ${day.title}`
 }
 
 export async function GET(req: NextRequest) {
