@@ -22,9 +22,19 @@ export default defineConfig({
         'lib/email/resend.ts',
         'lib/strava/client.ts',
         'lib/analytics/queries.ts',
+        // Coding-prep data-access + external-service clients — DB wrappers,
+        // Resend/Slack/HuggingFace API surfaces. Exercised via the cron
+        // route and the /admin/coding-prep e2e flow, not unit coverage.
+        'lib/admin/prep/queries.ts',
+        'lib/admin/prep/badges.ts',
+        'lib/admin/prep/refresh-badges.ts',
+        'lib/hf.ts',
+        'lib/slack.ts',
         // Pure data / constants, no logic to test.
         'lib/case-studies/data.ts',
         'lib/writing/data.ts',
+        'lib/projects/data.ts',
+        'lib/admin/prep/badges-data.ts',
         'lib/metadata.ts',
         '**/types.ts',
       ],
