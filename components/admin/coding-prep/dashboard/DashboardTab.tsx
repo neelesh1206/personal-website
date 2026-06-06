@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Heatmap } from './Heatmap'
 import { BadgeWall } from './BadgeWall'
 import { DashboardCharts } from './DashboardCharts'
+import { ComingNextCard } from './ComingNextCard'
 import { BADGES, type Badge } from '@/lib/admin/prep/badges-data'
 import type { DailyLog, BadgeRecord } from '@/lib/admin/prep/types'
 
@@ -106,6 +107,8 @@ export function DashboardTab({
           <BadgeWall badges={BADGES as Badge[]} unlockedIds={unlockedIds} variant="admin" />
         </CardContent>
       </Card>
+
+      <ComingNextCard />
     </div>
   )
 }

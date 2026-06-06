@@ -1,0 +1,27 @@
+{
+  "meta": {
+    "title": "Tracks",
+    "note": "Track-agnostic config. Track 1 is the active 10-day interview prep — points at coding-prep-plan.json. Track 2 is the AI certifications stub — UI surfaces it as 'coming next' on the Dashboard until status flips to active and a planContentPath is filled in."
+  },
+  "tracks": [
+    {
+      "id": "interview-prep-10d",
+      "name": "Interview Prep (10-day)",
+      "shortName": "Interview Prep",
+      "status": "active",
+      "tagline": "Coding + system design, rebuild the muscle.",
+      "planContentPath": "coding-prep-plan.json",
+      "iconName": "Brain"
+    },
+    {
+      "id": "ai-certifications",
+      "name": "AI Certifications",
+      "shortName": "AI Certs",
+      "status": "coming-soon",
+      "tagline": "Courses, certs, progress %, LinkedIn-ready credentials.",
+      "planContentPath": null,
+      "iconName": "GraduationCap",
+      "comingNote": "Modules + target dates + progress %, with an 'add to LinkedIn' reminder when each one finishes."
+    }
+  ]
+}
