@@ -73,3 +73,18 @@ Run in order:
 1. `npm run typecheck` — must pass with zero errors
 2. `npm run lint` — must pass with zero errors
 3. `npm run build` — must compile cleanly
+
+## Responsive / Cross-Device Requirements (apply to EVERY UI change)
+
+Everything must work flawlessly on **both** mobile and desktop. Mobile is a first-class target, not an afterthought. If a commit touches the UI, verify it against every requirement below before pushing — and explicitly state in the commit message which breakpoints you checked.
+
+- **Mobile-first build:** design for small screens first, then enhance for larger. Verify layouts at **375 px** (iPhone SE), **390 px** (standard phone), **768 px** (tablet), and **1280 px+** (desktop). Nothing should overflow, clip, or require horizontal scrolling at any of these widths.
+- **Touch targets:** all interactive elements (buttons, checkboxes, tabs, grade buttons, card reveals) at least **44 × 44 px** on mobile, with comfortable spacing so a fat-finger never hits the wrong one.
+- **Navigation on mobile:** tab bars that don't fit become a sticky bottom nav or a horizontal-scroll tab strip. Never a cramped row that wraps or truncates.
+- **Long content on mobile:** stack cards/blocks vertically. Keep the primary action thumb-reachable (lower-center of screen). Modals / dialogs / sheets are full-width and dismissible by swipe or an obvious close button.
+- **Gestures on mobile where natural** (swipe to advance a card, swipe up to reveal) **but always provide a visible button alternative** — never gesture-only.
+- **Desktop enhancements** (multi-column where it helps, keyboard shortcuts, hover states) must never break the mobile layout.
+- **Typography:** **min ~16 px body** on mobile (avoids iOS zoom-on-focus). Headings scale down gracefully on small screens.
+- **Sticky elements:** progress bars / dominant-action indicators stay visible while scrolling on both mobile and desktop without covering content.
+- **Dark mode parity** on every screen size.
+- **Test and confirm:** before finishing a UI commit, explicitly confirm in the commit message that you checked the layout at 375, 390, 768, and 1280 px and that all interactions work with both touch and mouse+keyboard.
