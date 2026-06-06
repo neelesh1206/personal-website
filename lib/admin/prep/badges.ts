@@ -7,6 +7,7 @@ import {
   prepProgress,
   prepResolves,
   prepApplications,
+  prepXpEvents,
   type PrepDailyLogRow,
 } from '@/lib/db/schema'
 
@@ -23,6 +24,8 @@ type EvalContext = {
   consecutiveAnchorDays: number
   daysWithNoDeviation: number
   planComplete: boolean
+  /** Total flashcard grades from the XP ledger ('flashcard-grade' action). */
+  flashcardGrades: number
 }
 
 /**
@@ -44,6 +47,7 @@ export function evaluateBadges(ctx: EvalContext): string[] {
   if (ctx.totalResolves >= 10) out.push('the-resolver')
   if (ctx.consecutiveAnchorDays >= 7) out.push('showed-up')
   if (ctx.planComplete) out.push('finisher')
+  if (ctx.flashcardGrades >= 100) out.push('active-recall')
   return out
 }
 
@@ -75,6 +79,12 @@ export async function computeBadgeContext(planTotalTasks: number): Promise<EvalC
 
   const [appsRow] = await db.select({ n: sql<number>`COUNT(*)::int` }).from(prepApplications)
   const totalApplications = appsRow?.n ?? 0
+
+  const [flashRow] = await db
+    .select({ n: sql<number>`COUNT(*)::int` })
+    .from(prepXpEvents)
+    .where(sql`${prepXpEvents.action} = 'flashcard-grade' AND ${prepXpEvents.xp} > 0`)
+  const flashcardGrades = flashRow?.n ?? 0
 
   // Daily log rows in descending date order, for streak walks.
   const logs = await db
@@ -117,6 +127,7 @@ export async function computeBadgeContext(planTotalTasks: number): Promise<EvalC
     consecutiveAnchorDays,
     daysWithNoDeviation,
     planComplete,
+    flashcardGrades,
   }
 }
 

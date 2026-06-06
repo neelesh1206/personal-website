@@ -127,6 +127,7 @@ export type SettingsMap = {
   reward_minutes?: number
   sound_enabled?: boolean
   my_wins?: string[]
+  cards_per_session?: number
 }
 
 export type Library = {

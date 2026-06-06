@@ -115,6 +115,15 @@ export const BADGES: Badge[] = [
     tier: 'gold',
     icon: 'Flag',
   },
+  {
+    id: 'active-recall',
+    name: 'Active Recall',
+    tagline: '100 flashcards graded.',
+    description:
+      'You drilled the Q&A 100 times via retrieval — not re-reading. This is the rep that actually moves recall into long-term memory.',
+    tier: 'gold',
+    icon: 'Brain',
+  },
 ]
 
 export const BADGE_INDEX: Record<string, Badge> = Object.fromEntries(BADGES.map((b) => [b.id, b]))

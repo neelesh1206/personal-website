@@ -11,6 +11,7 @@ const ALLOWED_KEYS = new Set([
   'reward_minutes',
   'sound_enabled',
   'my_wins',
+  'cards_per_session',
 ])
 
 export async function GET() {

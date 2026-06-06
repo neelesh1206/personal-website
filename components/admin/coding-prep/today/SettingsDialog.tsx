@@ -32,6 +32,9 @@ export function SettingsDialog({
   const [reward, setReward] = useState(String(initialSettings.reward_minutes ?? 30))
   const [soundEnabled, setSoundEnabled] = useState(initialSettings.sound_enabled ?? false)
   const [myWins, setMyWins] = useState((initialSettings.my_wins ?? []).join('\n'))
+  const [cardsPerSession, setCardsPerSession] = useState(
+    String(initialSettings.cards_per_session ?? 15)
+  )
   const [saving, setSaving] = useState(false)
 
   async function save() {
@@ -50,6 +53,7 @@ export function SettingsDialog({
             .split('\n')
             .map((line) => line.trim())
             .filter(Boolean),
+          cards_per_session: Math.max(5, Math.min(50, Number.parseInt(cardsPerSession, 10) || 15)),
         }),
       })
       if (res.ok) {
@@ -146,6 +150,19 @@ export function SettingsDialog({
             />
             <p className="mt-1 text-[11px] text-zinc-500">
               Surfaced in the AI encouragement line when you&apos;ve missed a day.
+            </p>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium">Flashcards per session</label>
+            <Input
+              type="number"
+              min={5}
+              max={50}
+              value={cardsPerSession}
+              onChange={(e) => setCardsPerSession(e.target.value)}
+            />
+            <p className="mt-1 text-[11px] text-zinc-500">
+              Default 15. The deck still picks due / weak first.
             </p>
           </div>
         </div>
