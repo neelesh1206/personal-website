@@ -1,7 +1,15 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { isAdminAuthenticated } from '@/lib/admin/auth'
-import { patchDailyLog, todayKey } from '@/lib/admin/prep/queries'
+import {
+  patchDailyLog,
+  getDailyLog,
+  grantXp,
+  revokeXp,
+  getTotalXp,
+  todayKey,
+} from '@/lib/admin/prep/queries'
 import { refreshBadges } from '@/lib/admin/prep/refresh-badges'
+import { SourceId, XP_RATES, JOURNAL_DAILY_CAP, crossedLevelUp } from '@/lib/admin/prep/xp'
 
 export const runtime = 'nodejs'
 
@@ -52,7 +60,61 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Snapshot the pre-state so we can detect 'just flipped to true'
+  // for the boolean XP triggers (anchor / train / read-aloud) and
+  // 'first non-empty' for journal fields.
+  const prev = await getDailyLog(date)
   const row = await patchDailyLog(date, patch)
+
+  // XP grants — only on the transition that represents real new work.
+  const before = await getTotalXp()
+  let xp = 0
+
+  // Anchor
+  if (patch.morningAnchorRead === true && !prev?.morningAnchorRead) {
+    xp += (await grantXp({ action: 'morning-anchor', sourceId: SourceId.anchor(date) })).granted
+  } else if (patch.morningAnchorRead === false && prev?.morningAnchorRead) {
+    await revokeXp('morning-anchor', SourceId.anchor(date))
+  }
+
+  // Train
+  if (patch.trainedToday === true && !prev?.trainedToday) {
+    xp += (await grantXp({ action: 'train', sourceId: SourceId.train(date) })).granted
+  } else if (patch.trainedToday === false && prev?.trainedToday) {
+    await revokeXp('train', SourceId.train(date))
+  }
+
+  // Read aloud
+  if (patch.readAloud === true && !prev?.readAloud) {
+    xp += (await grantXp({ action: 'read-aloud', sourceId: SourceId.readAloud(date) })).granted
+  } else if (patch.readAloud === false && prev?.readAloud) {
+    await revokeXp('read-aloud', SourceId.readAloud(date))
+  }
+
+  // Journal fields — first time a field becomes non-empty grants +3,
+  // capped at JOURNAL_DAILY_CAP (12 = all four fields filled). The
+  // SourceId per-field encoding makes the cap natural: each field can
+  // grant at most once per day.
+  const journalKeys = [
+    ['journalFinished', 'finished'],
+    ['journalAvoided', 'avoided'],
+    ['journalWin', 'win'],
+    ['journalDeviation', 'deviation'],
+  ] as const
+  for (const [field, shortName] of journalKeys) {
+    const next = patch[field]
+    const wasEmpty = !prev || ((prev as Record<string, unknown>)[field] as string)?.trim() === ''
+    if (typeof next === 'string' && next.trim().length > 0 && wasEmpty) {
+      const res = await grantXp({
+        action: 'journal-field',
+        sourceId: SourceId.journalField(date, shortName),
+        xp: Math.min(XP_RATES['journal-field'], JOURNAL_DAILY_CAP),
+      })
+      xp += res.granted
+    }
+  }
+
   const newBadges = await refreshBadges()
-  return NextResponse.json({ ok: true, row, newBadges })
+  const levelUp = xp > 0 ? crossedLevelUp(before, before + xp) : null
+  return NextResponse.json({ ok: true, row, newBadges, xp, levelUp })
 }

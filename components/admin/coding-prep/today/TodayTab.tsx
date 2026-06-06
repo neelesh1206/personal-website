@@ -121,6 +121,7 @@ export function TodayTab({
   initialSettings,
   initialStudyStreak,
   initialTrainStreak,
+  totalXp,
   onPatchLog,
   onToggleRoutineTask,
   onAddApplication,
@@ -136,6 +137,7 @@ export function TodayTab({
   initialSettings: SettingsMap
   initialStudyStreak: number
   initialTrainStreak: number
+  totalXp: number
   onPatchLog: (patch: Partial<DailyLog>) => Promise<void>
   onToggleRoutineTask: (taskId: string, completed: boolean) => Promise<string[]>
   onAddApplication: (company: string, role: string) => Promise<string[]>
@@ -222,6 +224,7 @@ export function TodayTab({
         planTheme={planDay?.title}
         studyStreak={initialStudyStreak}
         trainStreak={initialTrainStreak}
+        totalXp={totalXp}
         evidenceLine={settings.evidence_line}
         settings={settings}
         onSettingsSaved={(s) => {

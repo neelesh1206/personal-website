@@ -3,6 +3,7 @@
 import { Flame, Calendar, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SettingsDialog } from './SettingsDialog'
+import { LevelChip } from './LevelChip'
 import type { SettingsMap } from '@/lib/admin/prep/types'
 import { cn } from '@/lib/utils'
 
@@ -13,6 +14,7 @@ export function HeroHeader({
   planTheme,
   studyStreak,
   trainStreak,
+  totalXp,
   evidenceLine,
   settings,
   onSettingsSaved,
@@ -23,6 +25,7 @@ export function HeroHeader({
   planTheme?: string
   studyStreak: number
   trainStreak: number
+  totalXp: number
   evidenceLine?: string
   settings: SettingsMap
   onSettingsSaved: (s: SettingsMap) => void
@@ -96,10 +99,11 @@ export function HeroHeader({
               </Button>
             }
           />
-          <div className="flex gap-3">
+          <div className="flex flex-wrap items-end gap-3">
             <StreakChip label="Study" value={studyStreak} active />
             <StreakChip label="Gym" value={trainStreak} />
           </div>
+          <LevelChip totalXp={totalXp} />
         </div>
       </div>
 

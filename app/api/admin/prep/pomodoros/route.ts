@@ -1,6 +1,13 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { isAdminAuthenticated } from '@/lib/admin/auth'
-import { startPomodoro, completePomodoro } from '@/lib/admin/prep/queries'
+import {
+  startPomodoro,
+  completePomodoro,
+  getRecentPomodoros,
+  grantXp,
+  getTotalXp,
+} from '@/lib/admin/prep/queries'
+import { SourceId, crossedLevelUp } from '@/lib/admin/prep/xp'
 
 export const runtime = 'nodejs'
 
@@ -39,5 +46,21 @@ export async function PATCH(req: NextRequest) {
   const id = typeof body.id === 'number' ? body.id : null
   if (id === null) return NextResponse.json({ error: 'id required' }, { status: 400 })
   await completePomodoro(id)
-  return NextResponse.json({ ok: true })
+
+  // XP only for focus sprints, not break sessions. The latest row is the
+  // one being completed (PATCH runs immediately after the timer hits 0).
+  let xp = 0
+  let levelUp: string | null = null
+  const recent = await getRecentPomodoros(5)
+  const target = recent.find((p) => p.id === id)
+  if (target && target.kind === 'focus') {
+    const before = await getTotalXp()
+    const res = await grantXp({
+      action: 'finish-sprint',
+      sourceId: SourceId.pomodoro(id),
+    })
+    xp = res.granted
+    if (xp > 0) levelUp = crossedLevelUp(before, before + xp)
+  }
+  return NextResponse.json({ ok: true, xp, levelUp })
 }

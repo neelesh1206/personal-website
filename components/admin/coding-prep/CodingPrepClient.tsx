@@ -1,6 +1,7 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
+import { XpToastStack, type XpToastItem } from './today/XpToast'
 import { PlanTab } from './PlanTab'
 import { LibraryTab } from './LibraryTab'
 import { ResetDialog } from './ResetDialog'
@@ -44,6 +45,7 @@ export function CodingPrepClient({
   initialLogs,
   initialBadges,
   initialStats,
+  initialTotalXp,
 }: {
   plan: Plan
   library: Library
@@ -59,6 +61,7 @@ export function CodingPrepClient({
   initialLogs: DailyLog[]
   initialBadges: BadgeRecord[]
   initialStats: Stats
+  initialTotalXp: number
 }) {
   const [tab, setTab] = useState<Tab>('today')
   const [completed, setCompleted] = useState<Set<string>>(new Set(initialCompleted))
@@ -67,6 +70,21 @@ export function CodingPrepClient({
   const [log, setLog] = useState(initialLog)
   const [badges, setBadges] = useState(initialBadges)
   const [settings, setSettings] = useState(initialSettings)
+  const [totalXp, setTotalXp] = useState(initialTotalXp)
+  const [xpToasts, setXpToasts] = useState<XpToastItem[]>([])
+
+  /** Push a +XP / level-up notification onto the stack. */
+  const pushXp = useCallback((xp: number, levelUp?: string | null) => {
+    if (!xp || xp <= 0) return
+    setTotalXp((t) => t + xp)
+    setXpToasts((items) => [
+      ...items,
+      { id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, xp, levelUp },
+    ])
+  }, [])
+  const dismissXp = useCallback((id: string) => {
+    setXpToasts((items) => items.filter((t) => t.id !== id))
+  }, [])
 
   const totalTasks = useMemo(() => {
     let n = 0
@@ -92,6 +110,8 @@ export function CodingPrepClient({
         body: JSON.stringify({ taskId, completed: next }),
       })
       if (!res.ok) throw new Error(`progress save failed: ${res.status}`)
+      const json = (await res.json()) as { xp?: number; levelUp?: string | null }
+      if (json.xp && json.xp > 0) pushXp(json.xp, json.levelUp)
     } catch (err) {
       console.error(err)
       setCompleted((prev) => {
@@ -126,6 +146,7 @@ export function CodingPrepClient({
       setCompleted(new Set())
       setNotes({})
       setBadges([])
+      setTotalXp(0)
       setResetOpen(false)
     } catch (err) {
       console.error(err)
@@ -135,11 +156,15 @@ export function CodingPrepClient({
   async function patchDailyLog(patch: Partial<DailyLog>) {
     setLog((l) => ({ ...l, ...patch }))
     try {
-      await fetch('/api/admin/prep/daily-log', {
+      const res = await fetch('/api/admin/prep/daily-log', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ date: todayKey, ...patch }),
       })
+      if (res.ok) {
+        const json = (await res.json()) as { xp?: number; levelUp?: string | null }
+        if (json.xp && json.xp > 0) pushXp(json.xp, json.levelUp)
+      }
     } catch (err) {
       console.error(err)
     }
@@ -153,7 +178,12 @@ export function CodingPrepClient({
         body: JSON.stringify({ taskId, completed: c }),
       })
       if (!res.ok) return []
-      const json = (await res.json()) as { newBadges?: string[] }
+      const json = (await res.json()) as {
+        newBadges?: string[]
+        xp?: number
+        levelUp?: string | null
+      }
+      if (json.xp && json.xp > 0) pushXp(json.xp, json.levelUp)
       return json.newBadges ?? []
     } catch (err) {
       console.error(err)
@@ -169,7 +199,12 @@ export function CodingPrepClient({
         body: JSON.stringify({ company, role }),
       })
       if (!res.ok) return []
-      const json = (await res.json()) as { newBadges?: string[] }
+      const json = (await res.json()) as {
+        newBadges?: string[]
+        xp?: number
+        levelUp?: string | null
+      }
+      if (json.xp && json.xp > 0) pushXp(json.xp, json.levelUp)
       return json.newBadges ?? []
     } catch (err) {
       console.error(err)
@@ -179,6 +214,7 @@ export function CodingPrepClient({
 
   return (
     <>
+      <XpToastStack items={xpToasts} onDone={dismissXp} />
       {tab !== 'today' ? (
         <section className="mb-6 rounded-2xl border border-zinc-200 bg-zinc-50/50 p-5 dark:border-zinc-800 dark:bg-zinc-900/30">
           <div className="flex flex-wrap items-end justify-between gap-3">
@@ -240,6 +276,7 @@ export function CodingPrepClient({
           initialSettings={settings}
           initialStudyStreak={initialStats.studyStreak}
           initialTrainStreak={initialStats.trainStreak}
+          totalXp={totalXp}
           onPatchLog={patchDailyLog}
           onToggleRoutineTask={async (id, c) => {
             const fresh = await toggleRoutineTask(id, c)
