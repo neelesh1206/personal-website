@@ -248,6 +248,161 @@ function parseQuoteOutput(raw: string): QuotePickOutput | null {
   return { quoteId, reflection }
 }
 
+/* ------------------------------------------------------------------ *
+ * Optional AI re-plan — adjusts ONLY the load + tone, never the
+ * curriculum, never the discipline metrics. Strict JSON in / strict
+ * JSON out. Silent fallback on any failure.
+ * ------------------------------------------------------------------ */
+
+export type ReplanInput = {
+  currentDay: number | null
+  planDayTitle: string
+  loadMode: 'full' | 'core' | 're-entry' | 'maintenance'
+  defaultSprints: number
+  defaultAppTarget: number
+  completedYesterday: string[]
+  missedYesterday: boolean
+  daysMissed: number
+  recentJournal: Array<{
+    date: string
+    finished: string
+    avoided: string
+    win: string
+    mood: number | null
+  }>
+  myWins: string[]
+}
+
+export type ReplanOutput = {
+  sprints: number
+  appTarget: number
+  systemDesign: 'full' | 'collapsed' | 'hidden'
+  encouragementLine: string
+  focusHint: string
+}
+
+export async function replanDay(
+  input: ReplanInput,
+  onError?: (msg: string) => void
+): Promise<ReplanOutput | null> {
+  const apiKey = process.env.HUGGINGFACE_API_KEY
+  if (!apiKey) {
+    onError?.('HUGGINGFACE_API_KEY not set')
+    return null
+  }
+  const model = process.env.HUGGINGFACE_SUMMARY_MODEL ?? DEFAULT_MODEL
+  const provider = process.env.HUGGINGFACE_PROVIDER as
+    | 'auto'
+    | 'hf-inference'
+    | 'together'
+    | 'fireworks-ai'
+    | 'nebius'
+    | undefined
+
+  const journalBlock =
+    input.recentJournal
+      .slice(0, 3)
+      .map(
+        (r) =>
+          `- ${r.date} (mood ${r.mood ?? '?'}): finished=${r.finished || '-'} | avoided=${r.avoided || '-'} | win=${r.win || '-'}`
+      )
+      .join('\n') || '- (no recent journal)'
+
+  const winsBlock =
+    input.myWins.length > 0 ? input.myWins.map((w) => `- ${w}`).join('\n') : '- (none on file)'
+
+  const prompt = `You are tuning a fixed study plan for a senior engineer. Output ONLY valid JSON matching the schema below. No markdown, no preface, no commentary outside the JSON. You may ONLY adjust load (sprints, appTarget, systemDesign) and tone (two strings). You MUST NOT invent new topics, problems, or curriculum. You MUST NOT reference streaks, badges, XP, or levels. Never use shame language ("you missed", "you failed"). If the user missed days, the tone should be warm, calm, and forward-looking, optionally name-checking one of their wins for grounding.
+
+Schema (return EXACTLY this shape):
+{"sprints": <int 1..3>, "appTarget": <int 0..5>, "systemDesign": <"full"|"collapsed"|"hidden">, "encouragementLine": "<one sentence, max 22 words>", "focusHint": "<one sentence, max 18 words>"}
+
+Context:
+- Today's plan day: ${input.currentDay ?? 'maintenance'} — ${input.planDayTitle}
+- Suggested load mode (deterministic baseline): ${input.loadMode}
+- Default sprints: ${input.defaultSprints}, default appTarget: ${input.defaultAppTarget}
+- Yesterday completed: ${input.completedYesterday.join(', ') || 'nothing logged'}
+- Missed yesterday: ${input.missedYesterday}
+- Consecutive missed days back: ${input.daysMissed}
+- Recent journal:
+${journalBlock}
+- User's real wins (for grounding, name-check at most one):
+${winsBlock}
+
+Return ONLY the JSON.`
+
+  try {
+    const client = new InferenceClient(apiKey)
+    const res = await client.chatCompletion({
+      model,
+      provider: provider && provider !== 'auto' ? provider : undefined,
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 220,
+      temperature: 0.3,
+    })
+    const raw = res.choices?.[0]?.message?.content ?? ''
+    if (typeof raw !== 'string' || !raw.trim()) {
+      onError?.('empty response')
+      return null
+    }
+    return parseReplanJson(raw, onError)
+  } catch (err) {
+    const msg = err instanceof Error ? `${err.name}: ${err.message}` : String(err)
+    onError?.(msg)
+    console.error('hf replanDay failed', err)
+    return null
+  }
+}
+
+function parseReplanJson(raw: string, onError?: (msg: string) => void): ReplanOutput | null {
+  // Extract the JSON object — be lenient if model added a stray prefix.
+  const start = raw.indexOf('{')
+  const end = raw.lastIndexOf('}')
+  if (start < 0 || end < 0 || end < start) {
+    onError?.(`no JSON object in response: ${raw.slice(0, 200)}`)
+    return null
+  }
+  const jsonStr = raw.slice(start, end + 1)
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(jsonStr)
+  } catch (err) {
+    onError?.(`json parse failed: ${(err as Error).message}`)
+    return null
+  }
+  if (typeof parsed !== 'object' || parsed === null) {
+    onError?.('parsed is not an object')
+    return null
+  }
+  const p = parsed as Record<string, unknown>
+  const sprints = clampInt(p.sprints, 1, 3)
+  const appTarget = clampInt(p.appTarget, 0, 5)
+  const sd = String(p.systemDesign ?? 'full')
+  const systemDesign: ReplanOutput['systemDesign'] =
+    sd === 'full' || sd === 'collapsed' || sd === 'hidden' ? sd : 'full'
+  const enc = String(p.encouragementLine ?? '')
+    .trim()
+    .slice(0, 240)
+  const focus = String(p.focusHint ?? '')
+    .trim()
+    .slice(0, 200)
+  // Defensive: strip any model-leaked shame language.
+  if (/missed yesterday|you failed|broke the chain/i.test(enc + ' ' + focus)) {
+    onError?.('shame language detected — rejecting')
+    return null
+  }
+  if (sprints === null || appTarget === null) {
+    onError?.('sprints / appTarget out of range')
+    return null
+  }
+  return { sprints, appTarget, systemDesign, encouragementLine: enc, focusHint: focus }
+}
+
+function clampInt(v: unknown, lo: number, hi: number): number | null {
+  const n = typeof v === 'number' ? v : Number.parseInt(String(v), 10)
+  if (!Number.isFinite(n)) return null
+  return Math.max(lo, Math.min(hi, Math.floor(n)))
+}
+
 function parseLabeledOutput(raw: string): DaySummaryOutput | null {
   let narrative = ''
   let tomorrow = ''
