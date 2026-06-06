@@ -12,13 +12,16 @@ import {
   prepResolves,
   prepWords,
   prepBadges,
+  prepXpEvents,
   type PrepDailyLogRow,
   type PrepApplicationRow,
   type PrepPomodoroRow,
   type PrepWordRow,
   type PrepResolveRow,
   type PrepBadgeRow,
+  type PrepXpEventRow,
 } from '@/lib/db/schema'
+import { XP_RATES, type XpAction } from './xp'
 
 /* ---------------------------------------------------------------- *
  * Existing 10-day plan progress + notes.
@@ -77,6 +80,7 @@ export async function resetAllProgress(): Promise<void> {
   await db.delete(prepResolves)
   await db.delete(prepWords)
   await db.delete(prepBadges)
+  await db.delete(prepXpEvents)
 }
 
 /* ---------------------------------------------------------------- *
@@ -278,4 +282,117 @@ export async function getWords(limit = 200): Promise<PrepWordRow[]> {
 
 export async function getBadges(): Promise<PrepBadgeRow[]> {
   return db.select().from(prepBadges).orderBy(desc(prepBadges.unlockedAt))
+}
+
+/* ---------------------------------------------------------------- *
+ * XP ledger.
+ *
+ * grantXp() is idempotent — UNIQUE (action, source_id) means re-firing
+ * the same handler doesn't double-credit. revokeXp() inserts a
+ * matching negative-XP row so the SUM stays honest if the user
+ * unticks something they already got credit for.
+ *
+ * Both functions are *side effects only* — they never throw user-
+ * facing errors. Logging on failure preserves the principle that the
+ * scoreboard is honest but a transient DB hiccup mustn't break the
+ * mutation that the user actually cares about.
+ * ---------------------------------------------------------------- */
+
+export async function grantXp(args: {
+  action: XpAction
+  sourceId: string
+  /** Override the default rate. Used by the journal-field cap, where we
+   * grant the leftover amount up to the per-day ceiling. */
+  xp?: number
+}): Promise<{ granted: number; alreadyGranted: boolean }> {
+  const amount = args.xp ?? XP_RATES[args.action]
+  if (amount <= 0) return { granted: 0, alreadyGranted: false }
+  try {
+    const res = await db
+      .insert(prepXpEvents)
+      .values({ action: args.action, sourceId: args.sourceId, xp: amount })
+      .onConflictDoNothing({
+        target: [prepXpEvents.action, prepXpEvents.sourceId],
+      })
+      .returning({ id: prepXpEvents.id })
+    if (res.length === 0) return { granted: 0, alreadyGranted: true }
+    return { granted: amount, alreadyGranted: false }
+  } catch (err) {
+    console.error('grantXp failed', { action: args.action, sourceId: args.sourceId }, err)
+    return { granted: 0, alreadyGranted: false }
+  }
+}
+
+export async function revokeXp(action: XpAction, sourceId: string): Promise<void> {
+  try {
+    // Sum existing rows for this (action, source_id). If positive, insert
+    // a matching negative row tagged with a `:revoke` suffix so the
+    // UNIQUE constraint doesn't reject it.
+    const existing = await db
+      .select({ total: sql<number>`COALESCE(SUM(${prepXpEvents.xp}), 0)::int` })
+      .from(prepXpEvents)
+      .where(sql`${prepXpEvents.action} = ${action} AND ${prepXpEvents.sourceId} = ${sourceId}`)
+    const net = existing[0]?.total ?? 0
+    if (net <= 0) return
+    await db.insert(prepXpEvents).values({
+      action,
+      sourceId: `${sourceId}:revoke:${Date.now()}`,
+      xp: -net,
+    })
+  } catch (err) {
+    console.error('revokeXp failed', { action, sourceId }, err)
+  }
+}
+
+export async function getTotalXp(): Promise<number> {
+  try {
+    const [row] = await db
+      .select({ total: sql<number>`COALESCE(SUM(${prepXpEvents.xp}), 0)::int` })
+      .from(prepXpEvents)
+    return row?.total ?? 0
+  } catch (err) {
+    console.error('getTotalXp failed', err)
+    return 0
+  }
+}
+
+export async function getXpToday(date: string = todayKey()): Promise<number> {
+  try {
+    const [row] = await db
+      .select({ total: sql<number>`COALESCE(SUM(${prepXpEvents.xp}), 0)::int` })
+      .from(prepXpEvents)
+      .where(sql`DATE(${prepXpEvents.occurredAt}) = ${date}`)
+    return row?.total ?? 0
+  } catch (err) {
+    console.error('getXpToday failed', err)
+    return 0
+  }
+}
+
+export async function getRecentXpEvents(limit = 200): Promise<PrepXpEventRow[]> {
+  try {
+    return db.select().from(prepXpEvents).orderBy(desc(prepXpEvents.occurredAt)).limit(limit)
+  } catch (err) {
+    console.error('getRecentXpEvents failed', err)
+    return []
+  }
+}
+
+/** Daily cumulative XP totals for the chart. Ascending by date. */
+export async function getDailyXpTotals(days = 90): Promise<Array<{ date: string; xp: number }>> {
+  try {
+    const rows = await db
+      .select({
+        date: sql<string>`TO_CHAR(DATE(${prepXpEvents.occurredAt}), 'YYYY-MM-DD')`,
+        xp: sql<number>`COALESCE(SUM(${prepXpEvents.xp}), 0)::int`,
+      })
+      .from(prepXpEvents)
+      .groupBy(sql`DATE(${prepXpEvents.occurredAt})`)
+      .orderBy(sql`DATE(${prepXpEvents.occurredAt}) ASC`)
+      .limit(days)
+    return rows.map((r) => ({ date: r.date, xp: r.xp }))
+  } catch (err) {
+    console.error('getDailyXpTotals failed', err)
+    return []
+  }
 }

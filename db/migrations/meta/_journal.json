@@ -36,6 +36,13 @@
       "when": 1780719287165,
       "tag": "0004_striped_silhouette",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1780723740087,
+      "tag": "0005_yielding_cobalt_man",
+      "breakpoints": true
     }
   ]
 }

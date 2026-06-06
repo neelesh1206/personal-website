@@ -122,6 +122,15 @@ export const prepDailyLog = pgTable('prep_daily_log', {
   journalWin: text('journal_win').notNull().default(''),
   journalDeviation: text('journal_deviation').notNull().default(''),
   noDeviation: boolean('no_deviation').notNull().default(false),
+  // Plan adjustment — load mode picked for today. 'full' = both Pomodoro
+  // sprints + all app targets + full system-design block; 'core' = 1
+  // sprint + reduced apps; 're-entry' = 1 sprint + 1 app, soft copy;
+  // 'maintenance' = post-Day-10 free-practice mode.
+  loadMode: varchar('load_mode', { length: 16 }).notNull().default('full'),
+  adjustedByAi: boolean('adjusted_by_ai').notNull().default(false),
+  // Denormalized — which plan day this calendar day is anchored to.
+  // Slides: stays at K+1 until day K is fully complete.
+  currentPlanDay: smallint('current_plan_day'),
   // Daily quote — picked once per day. The id references a quote in
   // content/coding-prep-quotes.json. The reflection is the AI-generated
   // one-sentence "why this quote, today" connector that ties the chosen
@@ -204,3 +213,29 @@ export const prepBadges = pgTable('prep_badges', {
 
 export type PrepBadgeRow = typeof prepBadges.$inferSelect
 export type NewPrepBadge = typeof prepBadges.$inferInsert
+
+/**
+ * XP ledger — append-only. Every grant is one row; revocations are
+ * matching negative-XP rows so SUM(xp) is the canonical total. The
+ * UNIQUE (action, source_id) constraint makes grants idempotent —
+ * re-running a mutation can't double-credit. Source IDs encode the
+ * thing that produced the XP, e.g. `task:d1-c-1`, `app:42`,
+ * `anchor:2026-06-06`, `fullday:2026-06-06`.
+ */
+export const prepXpEvents = pgTable(
+  'prep_xp_events',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    occurredAt: timestamp('occurred_at').notNull().defaultNow(),
+    action: varchar('action', { length: 32 }).notNull(),
+    sourceId: varchar('source_id', { length: 80 }).notNull(),
+    xp: integer('xp').notNull(),
+  },
+  (table) => [
+    uniqueIndex('uq_prep_xp_action_source').on(table.action, table.sourceId),
+    index('idx_prep_xp_occurred_at').on(table.occurredAt),
+  ]
+)
+
+export type PrepXpEventRow = typeof prepXpEvents.$inferSelect
+export type NewPrepXpEvent = typeof prepXpEvents.$inferInsert
