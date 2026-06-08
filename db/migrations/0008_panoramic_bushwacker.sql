@@ -1,0 +1,1 @@
+ALTER TABLE "prep_daily_log" ADD COLUMN "skipped_quote_ids" jsonb DEFAULT '[]'::jsonb NOT NULL;

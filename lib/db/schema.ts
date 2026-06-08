@@ -140,6 +140,15 @@ export const prepDailyLog = pgTable('prep_daily_log', {
   // anchored to the day in the activity feed.
   dailyQuoteId: varchar('daily_quote_id', { length: 64 }),
   dailyQuoteReflection: text('daily_quote_reflection').notNull().default(''),
+  // Quotes the user explicitly skipped via the ↻ refresh button today.
+  // Each refresh appends the currently-cached daily_quote_id here and
+  // nulls daily_quote_id, so the next resolve picks a genuinely
+  // different quote instead of re-landing on the same deterministic
+  // FNV-of-date index.
+  skippedQuoteIds: jsonb('skipped_quote_ids')
+    .notNull()
+    .default(sql`'[]'::jsonb`)
+    .$type<string[]>(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 })
 

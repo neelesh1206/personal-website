@@ -45,10 +45,13 @@ export async function resolveDailyQuote(args: {
     }
   }
 
-  // Recently-shown quote ids (last 20 days, strictly before today).
-  // Both the AI candidate pool and the deterministic fallback consult
-  // this set so the same quote doesn't surface two days in a row.
+  // Recently-shown quote ids (last 20 days, strictly before today) +
+  // any quotes the user explicitly skipped via the ↻ refresh button
+  // today. Both the AI candidate pool and the deterministic fallback
+  // consult this set so the same quote doesn't surface two days in a
+  // row AND each refresh genuinely picks something new.
   const recentlyShown = await getRecentDailyQuoteIds(todayKey, 20)
+  for (const id of todayLog.skippedQuoteIds ?? []) recentlyShown.add(id)
 
   // 2. AI pick (best effort)
   const aiPick = await tryAIPick({

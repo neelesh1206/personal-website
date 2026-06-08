@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { isAdminAuthenticated } from '@/lib/admin/auth'
-import { clearTodayDailyQuote, todayKey } from '@/lib/admin/prep/queries'
+import { skipTodayDailyQuote, todayKey } from '@/lib/admin/prep/queries'
 
 export const runtime = 'nodejs'
 
@@ -14,6 +14,6 @@ export async function POST() {
   if (!(await isAdminAuthenticated())) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
-  await clearTodayDailyQuote(todayKey())
+  await skipTodayDailyQuote(todayKey())
   return NextResponse.json({ ok: true })
 }

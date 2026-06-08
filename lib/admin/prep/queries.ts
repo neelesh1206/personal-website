@@ -219,22 +219,35 @@ export async function getRecentDailyQuoteIds(
 }
 
 /**
- * Wipe today's cached quote choice so the next page render re-resolves
- * (calls HF + dedup pipeline). Used by the manual "refresh quote"
- * button.
+ * Append the currently-cached daily_quote_id to skipped_quote_ids and
+ * null out daily_quote_id so the next render re-resolves. Each refresh
+ * grows the skip set, guaranteeing the next pick is different — without
+ * this, the deterministic fallback (FNV-of-date) returns the same quote
+ * every render regardless of how many times you click the button.
+ *
+ * Idempotent on missing rows; safe to call before today's log has been
+ * touched. If daily_quote_id is already null, the skip set is unchanged.
  */
-export async function clearTodayDailyQuote(date: string): Promise<void> {
+export async function skipTodayDailyQuote(date: string): Promise<void> {
   try {
     await db
       .update(prepDailyLog)
       .set({
+        skippedQuoteIds: sql`
+          CASE
+            WHEN ${prepDailyLog.dailyQuoteId} IS NULL THEN ${prepDailyLog.skippedQuoteIds}
+            WHEN ${prepDailyLog.skippedQuoteIds} @> jsonb_build_array(${prepDailyLog.dailyQuoteId})
+              THEN ${prepDailyLog.skippedQuoteIds}
+            ELSE ${prepDailyLog.skippedQuoteIds} || jsonb_build_array(${prepDailyLog.dailyQuoteId})
+          END
+        `,
         dailyQuoteId: sql`NULL`,
-        dailyQuoteReflection: sql`NULL`,
+        dailyQuoteReflection: '',
         updatedAt: sql`now()`,
       })
       .where(eq(prepDailyLog.logDate, date))
   } catch (err) {
-    console.error('clearTodayDailyQuote failed:', err)
+    console.error('skipTodayDailyQuote failed:', err)
   }
 }
 
