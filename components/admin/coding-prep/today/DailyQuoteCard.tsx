@@ -1,7 +1,9 @@
 'use client'
 
+import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Quote as QuoteIcon } from 'lucide-react'
+import { Quote as QuoteIcon, RefreshCw } from 'lucide-react'
 import type { Quote } from '@/lib/admin/prep/daily-quote'
 import { cn } from '@/lib/utils'
 
@@ -24,6 +26,25 @@ const LABEL: Record<Quote['category'], string> = {
 }
 
 export function DailyQuoteCard({ quote, reflection }: { quote: Quote; reflection?: string }) {
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
+  const [shuffling, setShuffling] = useState(false)
+
+  function handleRefresh() {
+    setShuffling(true)
+    fetch('/api/admin/prep/daily-quote/refresh', { method: 'POST' })
+      .then((r) => {
+        if (!r.ok) throw new Error(`refresh failed: ${r.status}`)
+        startTransition(() => router.refresh())
+      })
+      .catch((err) => {
+        console.error(err)
+        setShuffling(false)
+      })
+  }
+
+  const busy = shuffling || isPending
+
   return (
     <motion.figure
       initial={{ opacity: 0, y: 8 }}
@@ -40,9 +61,25 @@ export function DailyQuoteCard({ quote, reflection }: { quote: Quote; reflection
         aria-hidden
       />
       <div className="relative">
-        <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400">
-          Daily anchor · {LABEL[quote.category]}
-        </p>
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400">
+            Daily anchor · {LABEL[quote.category]}
+          </p>
+          <button
+            type="button"
+            onClick={handleRefresh}
+            disabled={busy}
+            aria-label="Get a different quote"
+            title="Get a different quote"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full text-zinc-500 transition-colors hover:bg-white/60 hover:text-zinc-900 disabled:opacity-50 dark:text-zinc-400 dark:hover:bg-white/[0.06] dark:hover:text-zinc-100"
+          >
+            <RefreshCw
+              className={cn('h-4 w-4', busy && 'animate-spin')}
+              strokeWidth={2}
+              aria-hidden
+            />
+          </button>
+        </div>
         <blockquote
           style={{ fontFamily: 'var(--font-display), Georgia, serif' }}
           className="text-[1.35rem] leading-snug text-zinc-900 sm:text-2xl md:text-[1.7rem] dark:text-zinc-50"

@@ -1,6 +1,6 @@
 import 'server-only'
 import { getDailyQuote, getCandidateQuotes, getQuoteById, type Quote } from './daily-quote'
-import { patchDailyLog, getDailyLog } from './queries'
+import { patchDailyLog, getDailyLog, getRecentDailyQuoteIds } from './queries'
 import { pickDailyQuote } from '@/lib/hf'
 import type { PrepDailyLogRow } from '@/lib/db/schema'
 
@@ -45,6 +45,11 @@ export async function resolveDailyQuote(args: {
     }
   }
 
+  // Recently-shown quote ids (last 20 days, strictly before today).
+  // Both the AI candidate pool and the deterministic fallback consult
+  // this set so the same quote doesn't surface two days in a row.
+  const recentlyShown = await getRecentDailyQuoteIds(todayKey, 20)
+
   // 2. AI pick (best effort)
   const aiPick = await tryAIPick({
     todayKey,
@@ -52,6 +57,7 @@ export async function resolveDailyQuote(args: {
     planDayTheme,
     studyStreak,
     gymStreak,
+    excludeIds: recentlyShown,
   })
 
   if (aiPick) {
@@ -60,7 +66,7 @@ export async function resolveDailyQuote(args: {
   }
 
   // 3. Deterministic fallback
-  const fallback = getDailyQuote(todayKey, planDayTheme)
+  const fallback = getDailyQuote(todayKey, planDayTheme, recentlyShown)
   await persist(todayKey, fallback.id, '')
   return { quote: fallback, reflection: '' }
 }
@@ -71,10 +77,17 @@ async function tryAIPick(args: {
   planDayTheme: string | undefined
   studyStreak: number
   gymStreak: number
+  excludeIds: Set<string>
 }): Promise<ResolvedQuote | null> {
   if (!process.env.HUGGINGFACE_API_KEY) return null
 
-  const candidates = getCandidateQuotes(args.todayKey, args.planDayTheme, 18)
+  // Over-fetch then drop recently-shown, then cap at 18 for prompt size.
+  // If the dedupe leaves us with too few candidates (rare — only when
+  // the user has cycled most of the theme-matched pool), fall back to
+  // the unfiltered list for that day rather than ship an empty pool.
+  const rawCandidates = getCandidateQuotes(args.todayKey, args.planDayTheme, 30)
+  const filtered = rawCandidates.filter((c) => !args.excludeIds.has(c.id))
+  const candidates = (filtered.length >= 6 ? filtered : rawCandidates).slice(0, 18)
 
   // Yesterday's journal — best signal for "what is the user wrestling with"
   const yesterdayKey = isoMinusOneDay(args.todayKey)

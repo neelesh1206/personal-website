@@ -25,11 +25,22 @@ const QUOTES: Quote[] = (quotesContent as unknown as QuotesFile).quotes
  * is still deterministic, so refreshing on Day 3 always shows the same
  * Day 3 quote.
  */
-export function getDailyQuote(dateKey: string, planDayTheme?: string): Quote {
+export function getDailyQuote(
+  dateKey: string,
+  planDayTheme?: string,
+  excludeIds?: Set<string>
+): Quote {
   const themeTags = themeToTags(planDayTheme)
   const matching =
     themeTags.length > 0 ? QUOTES.filter((q) => q.tags.some((t) => themeTags.includes(t))) : QUOTES
-  const pool = matching.length > 0 ? matching : QUOTES
+  let pool = matching.length > 0 ? matching : QUOTES
+  if (excludeIds && excludeIds.size > 0) {
+    const filtered = pool.filter((q) => !excludeIds.has(q.id))
+    // Only honor the exclusion if at least one candidate survives — we
+    // never want to return undefined just because the user has cycled
+    // through every theme-matched quote recently.
+    if (filtered.length > 0) pool = filtered
+  }
   const idx = hashDate(dateKey) % pool.length
   return pool[idx]!
 }

@@ -192,6 +192,52 @@ export async function getDailyLog(date: string): Promise<PrepDailyLogRow | null>
   return row ?? null
 }
 
+/**
+ * Quote ids set on any prep_daily_log row strictly before `beforeDate`,
+ * within the most recent `lookbackDays` rows. Used by resolveDailyQuote
+ * to dedupe against recently-shown quotes so the same line doesn't
+ * surface two days in a row.
+ */
+export async function getRecentDailyQuoteIds(
+  beforeDate: string,
+  lookbackDays = 20
+): Promise<Set<string>> {
+  try {
+    const rows = await db
+      .select({ id: prepDailyLog.dailyQuoteId })
+      .from(prepDailyLog)
+      .where(
+        sql`${prepDailyLog.logDate} < ${beforeDate} AND ${prepDailyLog.dailyQuoteId} IS NOT NULL`
+      )
+      .orderBy(desc(prepDailyLog.logDate))
+      .limit(lookbackDays)
+    return new Set(rows.map((r) => r.id).filter((id): id is string => !!id))
+  } catch (err) {
+    console.error('getRecentDailyQuoteIds failed:', err)
+    return new Set()
+  }
+}
+
+/**
+ * Wipe today's cached quote choice so the next page render re-resolves
+ * (calls HF + dedup pipeline). Used by the manual "refresh quote"
+ * button.
+ */
+export async function clearTodayDailyQuote(date: string): Promise<void> {
+  try {
+    await db
+      .update(prepDailyLog)
+      .set({
+        dailyQuoteId: sql`NULL`,
+        dailyQuoteReflection: sql`NULL`,
+        updatedAt: sql`now()`,
+      })
+      .where(eq(prepDailyLog.logDate, date))
+  } catch (err) {
+    console.error('clearTodayDailyQuote failed:', err)
+  }
+}
+
 export async function patchDailyLog(
   date: string,
   patch: Partial<Omit<PrepDailyLogRow, 'logDate' | 'updatedAt'>>
