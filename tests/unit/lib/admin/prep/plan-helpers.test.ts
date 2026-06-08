@@ -7,6 +7,7 @@ import {
   wrapupItems,
   allItems,
   planTotalTasks,
+  planDaysWithAllItemsCompleted,
   todaysCodingPattern,
   todaysSysDesignTopic,
   todaysSysDesignAnchor,
@@ -16,8 +17,9 @@ import {
 import type { Plan, PlanDay } from '@/lib/admin/prep/types'
 
 function day(overrides: Partial<PlanDay> = {}): PlanDay {
+  const n = overrides.day ?? 1
   return {
-    day: 1,
+    day: n,
     title: 'Two Pointers',
     badge: '[EASY]',
     successCheck: 'win',
@@ -26,26 +28,26 @@ function day(overrides: Partial<PlanDay> = {}): PlanDay {
         type: 'educative-coding',
         title: 'Grokking · Two Pointers',
         items: [
-          { id: 'd1-c1-1', label: 'Read intro' },
-          { id: 'd1-c1-2', label: 'Valid Palindrome' },
+          { id: `d${n}-c1-1`, label: 'Read intro' },
+          { id: `d${n}-c1-2`, label: 'Valid Palindrome' },
         ],
       },
       {
         type: 'neetcode-reps',
         title: 'NeetCode reps',
-        items: [{ id: 'd1-c2-1', label: 'Best Time to Buy/Sell' }],
+        items: [{ id: `d${n}-c2-1`, label: 'Best Time to Buy/Sell' }],
       },
       {
         type: 'educative-sysdesign',
         title: 'Grokking SD · Intro',
         items: [
-          { id: 'd1-s1-1', label: 'Why it matters' },
-          { id: 'd1-s1-2', label: 'Interview framing' },
+          { id: `d${n}-s1-1`, label: 'Why it matters' },
+          { id: `d${n}-s1-2`, label: 'Interview framing' },
         ],
       },
       {
         type: 'wrapup',
-        items: [{ id: 'd1-w-1', label: 'Log it' }],
+        items: [{ id: `d${n}-w-1`, label: 'Log it' }],
       },
     ],
     ...overrides,
@@ -95,6 +97,41 @@ describe('planTotalTasks', () => {
   it('sums all items across all days', () => {
     const plan = { days: [day(), day({ day: 2 })] } as unknown as Plan
     expect(planTotalTasks(plan)).toBe(12)
+  })
+})
+
+describe('planDaysWithAllItemsCompleted', () => {
+  const plan = { days: [day(), day({ day: 2 })] } as unknown as Plan
+
+  it('empty completed set → no days complete', () => {
+    const s = planDaysWithAllItemsCompleted(plan, new Set())
+    expect([...s]).toEqual([])
+  })
+
+  it('partial completion → that day is NOT in the set', () => {
+    // Day 1 has 6 items total; we tick 5
+    const s = planDaysWithAllItemsCompleted(
+      plan,
+      new Set(['d1-c1-1', 'd1-c1-2', 'd1-c2-1', 'd1-s1-1', 'd1-s1-2'])
+    )
+    expect(s.has(1)).toBe(false)
+  })
+
+  it('every item of a day ticked → that day IS in the set', () => {
+    // All 6 items of Day 1
+    const s = planDaysWithAllItemsCompleted(
+      plan,
+      new Set(['d1-c1-1', 'd1-c1-2', 'd1-c2-1', 'd1-s1-1', 'd1-s1-2', 'd1-w-1'])
+    )
+    expect(s.has(1)).toBe(true)
+    expect(s.has(2)).toBe(false)
+  })
+
+  it('skips days with no items rather than counting them as done', () => {
+    const emptyDay = { day: 3, title: 't', badge: '', successCheck: '', blocks: [] }
+    const p = { days: [...plan.days, emptyDay] } as unknown as Plan
+    const s = planDaysWithAllItemsCompleted(p, new Set())
+    expect(s.has(3)).toBe(false)
   })
 })
 

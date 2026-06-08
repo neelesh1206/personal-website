@@ -4,16 +4,17 @@ import { postSlack, header, section, divider, context } from '@/lib/slack'
 import {
   getOrInitDailyLog,
   getDailyLog,
-  getDailyLogs,
+  getCompletedTaskIds,
   getSettings,
   todayKey,
 } from '@/lib/admin/prep/queries'
 import { slideCurrentPlanDay, pickLoadMode, buildLoadProfile } from '@/lib/admin/prep/plan-adjust'
-import { completionFromLog, buildCompletedPlanDays } from '@/lib/admin/prep/day-completion'
+import { completionFromLog } from '@/lib/admin/prep/day-completion'
 import { resolveDailyQuote } from '@/lib/admin/prep/resolve-daily-quote'
 import { buildMorningBrief } from '@/lib/admin/prep/morning-brief'
 import {
   codingItems,
+  planDaysWithAllItemsCompleted,
   todaysCodingPattern,
   todaysSysDesignTopic,
   todaysSysDesignAnchor,
@@ -49,15 +50,12 @@ async function runMorningBrief() {
   const plan = planContent as unknown as Plan
   const settings = await getSettings()
   const todayLog = await getOrInitDailyLog(today)
-  const logs = await getDailyLogs(30)
+  const completed = await getCompletedTaskIds()
 
-  // Plan-day slide + load mode — same logic as the page, run here so
-  // the cron is self-sufficient.
-  const completedPlanDays = buildCompletedPlanDays({
-    planStartDate: settings.plan_start_date,
-    logs,
-    totalDays: plan.days.length,
-  })
+  // Plan-day slide — same logic as the page. Driven by prep_progress
+  // (the plan-task checkboxes the user actually ticks), not by daily-
+  // log counters.
+  const completedPlanDays = planDaysWithAllItemsCompleted(plan, completed)
   const slide = slideCurrentPlanDay({
     planStartDate: settings.plan_start_date,
     todayKey: today,

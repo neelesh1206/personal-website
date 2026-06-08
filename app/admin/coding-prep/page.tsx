@@ -17,8 +17,8 @@ import { computeBadgeContext } from '@/lib/admin/prep/badges'
 import { refreshBadges } from '@/lib/admin/prep/refresh-badges'
 import { resolveDailyQuote } from '@/lib/admin/prep/resolve-daily-quote'
 import { slideCurrentPlanDay, pickLoadMode, buildLoadProfile } from '@/lib/admin/prep/plan-adjust'
-import { planTotalTasks } from '@/lib/admin/prep/plan-helpers'
-import { completionFromLog, buildCompletedPlanDays } from '@/lib/admin/prep/day-completion'
+import { planDaysWithAllItemsCompleted, planTotalTasks } from '@/lib/admin/prep/plan-helpers'
+import { completionFromLog } from '@/lib/admin/prep/day-completion'
 import { patchDailyLog } from '@/lib/admin/prep/queries'
 import type { BadgeRecord, DailyLog, Library, Plan, Routine } from '@/lib/admin/prep/types'
 import planJson from '@/content/coding-prep-plan.json'
@@ -86,17 +86,15 @@ export default async function CodingPrepPage() {
   const ctx = await computeBadgeContext(planTotalTasks(plan))
 
   // Plan-day slide + load mode.
-  //   slideCurrentPlanDay: the lowest day not fully completed (the day
-  //   "slides" — calendar moves forward, plan content stays anchored to
-  //   the earliest unfinished day).
-  //   pickLoadMode: based on yesterday's completion ONLY, decide if
-  //   today loads at full / core / re-entry. Discipline metrics
+  //   slideCurrentPlanDay: the lowest day whose plan-task checkboxes
+  //   aren't all ticked (the day "slides" — calendar moves forward,
+  //   plan content stays anchored to the earliest unfinished day).
+  //   "Completed" here is driven by prep_progress checkboxes (the
+  //   visible action the user performs), not by daily-log counters.
+  //   pickLoadMode: based on yesterday's daily-log completion, decide
+  //   if today loads at full / core / re-entry. Discipline metrics
   //   (streaks, XP, badges) are NEVER consulted here.
-  const completedPlanDays = buildCompletedPlanDays({
-    planStartDate: settings.plan_start_date,
-    logs,
-    totalDays: plan.days.length,
-  })
+  const completedPlanDays = planDaysWithAllItemsCompleted(plan, completed)
   const slide = slideCurrentPlanDay({
     planStartDate: settings.plan_start_date,
     todayKey: today,

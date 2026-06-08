@@ -42,6 +42,30 @@ export function planTotalTasks(plan: Plan): number {
 }
 
 /**
+ * Which plan days are *fully checked off* in prep_progress (i.e. every
+ * item across every block — coding, system design, neetcode-reps, and
+ * wrapup — is present in the completed set).
+ *
+ * This is the canonical signal for the plan-day slide. A day's tasks
+ * are the explicit user-facing checkboxes on the 15-Day Plan tab;
+ * ticking them is the act that should advance the slide. The daily-log
+ * counters (problemsSolved / applicationsCount / anchorRead) drive
+ * streaks + load mode independently — they are not the slide signal.
+ */
+export function planDaysWithAllItemsCompleted(
+  plan: Plan,
+  completedTaskIds: Set<string>
+): Set<number> {
+  const done = new Set<number>()
+  for (const d of plan.days) {
+    const ids = allItems(d).map((t) => t.id)
+    if (ids.length === 0) continue
+    if (ids.every((id) => completedTaskIds.has(id))) done.add(d.day)
+  }
+  return done
+}
+
+/**
  * Top-line "what pattern is today about" — the day's title is already
  * the pattern (e.g. "Two Pointers", "Tree DFS"), so we use that
  * verbatim. The first coding block's title is the long form (e.g.
