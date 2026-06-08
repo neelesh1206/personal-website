@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils'
 const TABS = [
   { href: '/admin', label: 'Submissions' },
   { href: '/admin/coding-prep', label: 'Coding Prep' },
+  { href: '/admin/interview-prep', label: 'Interview Prep' },
 ]
 
 export function AdminNav() {
@@ -17,7 +18,7 @@ export function AdminNav() {
   return (
     <header className="sticky top-16 z-40 border-b border-zinc-200 bg-white/80 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/80">
       <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-        <nav className="flex items-center gap-1">
+        <nav className="-mx-1 flex items-center gap-1 overflow-x-auto px-1">
           {TABS.map((t) => {
             const active = t.href === '/admin' ? pathname === '/admin' : pathname.startsWith(t.href)
             return (

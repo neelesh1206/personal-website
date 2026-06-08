@@ -126,6 +126,7 @@ export type SettingsMap = {
   sound_enabled?: boolean
   my_wins?: string[]
   cards_per_session?: number
+  interview_delivery_rules?: string[]
 }
 
 export type Library = {

@@ -50,6 +50,13 @@
       "when": 1780727927108,
       "tag": "0006_flimsy_blizzard",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1780894108410,
+      "tag": "0007_graceful_darkstar",
+      "breakpoints": true
     }
   ]
 }

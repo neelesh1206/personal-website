@@ -44,3 +44,6 @@ next-env.d.ts
 
 # Vitest coverage
 coverage/
+
+# Sensitive prep content — DB-backed, never commit local JSON exports
+content/interview-prep.json

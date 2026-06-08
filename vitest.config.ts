@@ -29,6 +29,7 @@ export default defineConfig({
         'lib/admin/prep/badges.ts',
         'lib/admin/prep/refresh-badges.ts',
         'lib/admin/prep/resolve-daily-quote.ts',
+        'lib/admin/prep/interview-queries.ts',
         'lib/admin/prep/day-completion.ts',
         'lib/admin/prep/celebrate.ts',
         'lib/admin/prep/flashcard-deck.ts',

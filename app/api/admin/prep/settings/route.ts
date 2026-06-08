@@ -12,6 +12,7 @@ const ALLOWED_KEYS = new Set([
   'sound_enabled',
   'my_wins',
   'cards_per_session',
+  'interview_delivery_rules',
 ])
 
 export async function GET() {

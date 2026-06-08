@@ -14,6 +14,7 @@ import {
   smallint,
   jsonb,
 } from 'drizzle-orm/pg-core'
+import { sql } from 'drizzle-orm'
 
 export const contacts = pgTable('contacts', {
   id: serial('id').primaryKey(),
@@ -213,6 +214,34 @@ export const prepBadges = pgTable('prep_badges', {
 
 export type PrepBadgeRow = typeof prepBadges.$inferSelect
 export type NewPrepBadge = typeof prepBadges.$inferInsert
+
+/**
+ * Recruiter-screen interview prep — Q&A reference for /admin/interview-prep.
+ * Single-tenant, admin-only. Content is sensitive (recruiter names,
+ * internal Walmart system details, layoff context) — DB-backed
+ * specifically because the JSON should never live in the public repo.
+ */
+export const prepInterviewQuestions = pgTable(
+  'prep_interview_questions',
+  {
+    id: varchar('id', { length: 64 }).primaryKey(),
+    question: text('question').notNull(),
+    cues: jsonb('cues')
+      .notNull()
+      .default(sql`'[]'::jsonb`),
+    answer: text('answer').notNull().default(''),
+    followUps: jsonb('follow_ups')
+      .notNull()
+      .default(sql`'[]'::jsonb`),
+    cueLine: text('cue_line').notNull().default(''),
+    sortOrder: smallint('sort_order').notNull().default(0),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => [index('idx_prep_interview_sort').on(table.sortOrder)]
+)
+
+export type PrepInterviewQuestionRow = typeof prepInterviewQuestions.$inferSelect
+export type NewPrepInterviewQuestion = typeof prepInterviewQuestions.$inferInsert
 
 /**
  * Reference-library flashcards — SM-2-lite scheduling state, one row
